@@ -1,4 +1,4 @@
-# Comapi-JS
+# Comapi Foundation
 
 ## Project Structure
 

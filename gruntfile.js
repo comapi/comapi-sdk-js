@@ -125,7 +125,7 @@ module.exports = function (grunt) {
         uglify: {
             dist: {
                 files: {
-                    'build/bundle/comapiBundle.min.js': ['build/bundle/comapiBundle.js']
+                    'build/bundle/comapi-foundation.min.js': ['build/bundle/comapi-foundation.js']
                 }
             }
         },
@@ -154,7 +154,7 @@ module.exports = function (grunt) {
                 entry: './build/output/foundation.js',
                 output: {
                     path: './build/bundle',
-                    filename: "comapiBundle.js",
+                    filename: "comapi-foundation.js",
                     library: ["COMAPI"],
                     libraryTarget: "var",
                 },
@@ -224,6 +224,7 @@ module.exports = function (grunt) {
         'typescript',
         'webpack',
         'replace',
+        'uglify',
         'jsdoc',
     ]);
 

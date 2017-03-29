@@ -1,8 +1,15 @@
 {
-  "name": "Comapi-JS",
+  "name": "comapi-sdk-js",
   "version": "1.0.0",
   "scripts": {
     "test": "karma start  --browsers PhantomJS"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/comapi/comapi-sdk-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/comapi/comapi-sdk-js/issues"
   },
   "dependencies": {
     "@types/jasmine": "^2.5.35",
@@ -40,5 +47,6 @@
     "webpack": "^1.13.3",
     "ws": "^1.1.1"
   },
-  "build": "0"
+  "build": "0",
+  "license": "MIT"
 }

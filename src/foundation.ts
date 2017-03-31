@@ -253,10 +253,10 @@ export class Foundation {
     /**
      * Method to get current session
      * @method Foundation#session
-     * @returns {ISession} - Returns an Isession interface
+     * @returns {ISession} - Returns an ISession interface
      */
     public get session(): ISession {
-        return this._sessionManager.sessionInfo.session;
+        return this._sessionManager.sessionInfo ? this._sessionManager.sessionInfo.session : null;
     }
 
 

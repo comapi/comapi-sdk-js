@@ -224,8 +224,8 @@ Foundation.initialise(comapiConfig)
         console.log("sdk initialised", sdk);        
         return sdk.startSession();
     })
-    .then(sessionInfo => {
-        console.log("session started", sessionInfo);
+    .then(session => {
+        console.log("session started", session);
     })
     .catch(error => {
         console.error("Something went wrong", error);

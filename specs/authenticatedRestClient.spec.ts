@@ -74,7 +74,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
     it("should get a new token on the fly if needed", done => {
 
         var expired = dateAdd(new Date(), "hour", -1).toISOString();
-        sessionManager.sessionInfo.expiry = expired;
+        sessionManager.sessionInfo.session.expiresOn = expired;
 
         // just call the refresh method as it validates the auth token
 

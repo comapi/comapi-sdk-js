@@ -1,10 +1,10 @@
 import {
-    ISessionInfo,
     IEventManager,
     ILogger,
     IRestClient,
     ILocalStorageData,
     ISessionManager,
+    ISession,
     IDeviceManager,
     IFacebookManager,
     IConversationManager,
@@ -201,13 +201,13 @@ export class Foundation {
      * @method Foundation#startSession
      * @returns {Promise} - Returns a promise 
      */
-    public startSession(): Promise<ISessionInfo> {
+    public startSession(): Promise<ISession> {
         return this._sessionManager.startSession()
             .then((sessionInfo) => {
                 return this._webSocketManager.connect();
             })
             .then((connected) => {
-                return this._sessionManager.sessionInfo;
+                return this._sessionManager.sessionInfo.session;
             });
     }
 
@@ -251,12 +251,12 @@ export class Foundation {
     }
 
     /**
-     * Method to get current sessionInfo
-     * @method Foundation#sessionInfo
-     * @returns {ISessionInfo} - Returns an IsessionInfo interface
+     * Method to get current session
+     * @method Foundation#session
+     * @returns {ISession} - Returns an Isession interface
      */
-    public get sessionInfo(): ISessionInfo {
-        return this._sessionManager.sessionInfo;
+    public get session(): ISession {
+        return this._sessionManager.sessionInfo.session;
     }
 
 

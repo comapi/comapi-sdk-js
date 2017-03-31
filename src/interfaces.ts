@@ -170,7 +170,6 @@ export interface ISession {
  * 
  */
 export interface ISessionInfo {
-    expiry: string;
     token: string;
     session: ISession;
 }
@@ -197,9 +196,6 @@ export enum Environment {
  */
 export interface ISessionManager {
     sessionInfo: ISessionInfo;
-    expiry: string;
-    isAuthenticated: boolean;
-
     getValidToken(): Promise<string>;
     startSession(): Promise<ISessionInfo>;
     endSession(): Promise<boolean>;

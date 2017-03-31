@@ -25,7 +25,6 @@ describe("REST API 401 retry tests", () => {
     class MockSessionManager implements ISessionManager {
 
         private _sessionInfo: ISessionInfo = {
-            expiry: "",
             session: {
                 createdOn: "",
                 deviceId: "",
@@ -43,8 +42,6 @@ describe("REST API 401 retry tests", () => {
         };
 
         get sessionInfo(): ISessionInfo { return this._sessionInfo; }
-        get expiry(): string { return null; }
-        get isAuthenticated(): boolean { return true; }
         public getValidToken(): Promise<string> { return Promise.resolve(this._sessionInfo.token); }
         public startSession(): Promise<ISessionInfo> { return Promise.resolve(this.sessionInfo); }
         public endSession(): Promise<boolean> { return Promise.resolve(true); }

@@ -26,7 +26,7 @@ export class SessionManager implements ISessionManager {
      * @ignore
      * @classdesc Class that implements all the SessionManager functionality.
      * @parameter {ILogger} logger 
-     * @parameter {IRestClient} restClient 
+     * @parameter {IRestClient} restClient  
      * @parameter {ILocalStorageData} localStorageData 
      */
     constructor(private _logger: ILogger,
@@ -40,6 +40,9 @@ export class SessionManager implements ISessionManager {
             this._deviceId = Utils.uuid();
             _localStorageData.setString("deviceId", this._deviceId);
         }
+
+        // Load in cached session on startup
+        this._getSession();
     }
 
 
@@ -58,20 +61,20 @@ export class SessionManager implements ISessionManager {
      * @returns {string}   
      */
     get expiry(): string {
-        return this._sessionInfo.expiry;
+        return this._sessionInfo.session.expiresOn;
     }
 
     /**
-     * @method SessionManager#isAuthenticated
+     * @method SessionManager#isActive
      */
-    get isAuthenticated(): boolean {
+    private get isActive(): boolean {
 
         let result = false;
         // check we have a token and also that the token hasn't expired ...
         if (this._sessionInfo) {
 
             var now = new Date();
-            var expiry = new Date(this._sessionInfo.expiry);
+            var expiry = new Date(this._sessionInfo.session.expiresOn);
 
             if (now < expiry) {
                 result = true;
@@ -90,7 +93,7 @@ export class SessionManager implements ISessionManager {
      */
     public getValidToken(): Promise<string> {
 
-        return this.isAuthenticated
+        return this.isActive
             ? Promise.resolve(this._sessionInfo.token)
             : this.startSession()
                 .then(sessionInfo => {
@@ -109,7 +112,7 @@ export class SessionManager implements ISessionManager {
 
         return new Promise((resolve, reject) => {
 
-            if (this.isAuthenticated) {
+            if (this.isActive) {
                 self._logger.log("startSession() found an existing session: ");
                 resolve(this._getSession());
             } else {
@@ -245,20 +248,13 @@ export class SessionManager implements ISessionManager {
      */
     private _setSession(sessionInfo: ISessionInfo) {
 
-        var bits = sessionInfo.token.split(".");
-        // var header = JSON.parse(atob(bits[0]));
-        var payload = JSON.parse(atob(bits[1]));
-        // var signature = bits[2];
-
-        var expiry = new Date(payload.exp * 1000);
-        sessionInfo.expiry = expiry.toISOString();
+        var expiry = new Date(sessionInfo.session.expiresOn);
 
         var now = new Date();
 
         if (expiry < now) {
             this._logger.error("Was given an expired token ;-(");
         }
-
 
         this._sessionInfo = sessionInfo;
         this._localStorageData.setObject("session", sessionInfo);

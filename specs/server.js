@@ -96,6 +96,11 @@ app.post('/testServerError', function (req, res, next) {
 
 var profileId = "1375DD09-F19E-4A5B-A14F-6F71B5CF52DF";
 
+Date.prototype.addDays = function (days) {
+    var dat = new Date(this.valueOf());
+    dat.setDate(dat.getDate() + days);
+    return dat;
+}
 
 app.post('/apispaces/:appSpaceId/sessions', function (req, res, next) {
 
@@ -127,7 +132,7 @@ app.post('/apispaces/:appSpaceId/sessions', function (req, res, next) {
                 "sourceIp": "127.0.0.1",
                 "isActive": true,
                 "createdOn": new Date().toISOString(),
-                "expiresOn": new Date().toISOString()
+                "expiresOn": new Date().addDays(1).toISOString()
             }
         };
 

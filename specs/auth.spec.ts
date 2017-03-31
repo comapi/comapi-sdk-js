@@ -104,7 +104,7 @@ describe("Foundation Auth Tests", () => {
     });
 
     /**
-     * 
+     * Clear out any sessions (ignoring errors)
      */
     afterEach(done => {
         foundation.endSession()
@@ -135,10 +135,9 @@ describe("Foundation Auth Tests", () => {
     it("should start a new authenticated session", done => {
 
         foundation.startSession()
-            .then(sessionInfo => {
-                console.log("startSession() resolved with: ", JSON.stringify(sessionInfo, null, 4));
-                expect(sessionInfo.token).toBeDefined();
-                expect(sessionInfo.session).toBeDefined();
+            .then(session => {
+                console.log("startSession() resolved with: ", JSON.stringify(session, null, 4));
+                expect(session).toBeDefined();
                 done();
             }).catch(error => {
                 fail("startSession() failed with:" + JSON.stringify(error, null, 4));
@@ -231,11 +230,9 @@ describe("Foundation Auth Tests", () => {
     it("should start and stop an authenticated session", done => {
 
         foundation.startSession()
-            .then(sessionInfo => {
+            .then(session => {
 
-                expect(sessionInfo.token !== undefined).toBeTruthy();
-                expect(sessionInfo.session !== undefined).toBeTruthy();
-                // expect(sessionInfo.session.profileId !== undefined).toBeTruthy();
+                expect(session).toBeDefined();
 
                 foundation.endSession()
                     .then(() => {

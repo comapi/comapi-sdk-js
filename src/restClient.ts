@@ -232,7 +232,7 @@ export class RestClient implements IRestClient {
                 }
             };
 
-            xhr.send(data ? JSON.stringify(data) : undefined);
+            xhr.send(data ? JSON.stringify(data) : null);
 
             if (this.logger) {
                 this.logger.log("send data", data);

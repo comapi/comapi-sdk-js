@@ -1,10 +1,10 @@
-# Comapi Foundation
+# Comapi Javascript SDK - Foundation
 
 ## Project Structure
 
 ```
 ├───docs    /* Docs folder */
-├───lib     /* 3rd party depndencies */
+├───lib     /* 3rd party dependencies */
 ├───specs   /* tests */
 └───src     /* source code */
 ```

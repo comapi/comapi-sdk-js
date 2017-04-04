@@ -49,7 +49,7 @@ platform.ready().then(() => {
 This snippet shows how to send the registrationId to Comapi.
 The assumption is that you have an initialised sdk and a valid session at this point. Note the Environment import.
 ```javascript
-import { Environment } from "@comapi/foundation";
+import { Environment } from "@comapi/sdk-js-foundation";
 
 // Put this somewhere appropriate in your app (at the end of you initialisation/login flow)
 

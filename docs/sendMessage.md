@@ -10,7 +10,7 @@ The simplest message that can be sent is plain text, so lets start with that ...
 
 ### ES6
 ```javascript
-import { MessageBuilder } from "@comapi/foundation"
+import { MessageBuilder } from "@comapi/sdk-js-foundation"
 
 let message = new MessageBuilder().withText("Hello world");
 

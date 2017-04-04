@@ -10,7 +10,7 @@ To send a message status update, you can use the `MessageStatusBuilder` interfac
 
 ### ES6 implementation of marking a message as `delivered`
 ```javascript
-import { MessageStatusBuilder } from "@comapi/foundation";
+import { MessageStatusBuilder } from "@comapi/sdk-js-foundation";
 
 // Note I am using the version that takes a single messageId in this sample
 let status = new MessageStatusBuilder().deliveredStatusUpdate("C984814D-B714-4DC8-8DFF-33C29082ACEA");

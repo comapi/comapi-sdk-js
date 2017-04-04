@@ -1,0 +1,11 @@
+node_modules
+.DS_Store
+dist/
+build/
+bin/
+jasmine.teamcity.log
+tests/
+.grunt/
+_SpecRunner.html
+JSDoc/
+coverage/

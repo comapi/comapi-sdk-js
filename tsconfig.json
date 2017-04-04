@@ -1,0 +1,23 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "lib": [
+            "es2017",
+            "dom"
+        ],
+        "module": "commonjs",
+        "noImplicitAny": false,
+        "outDir": "tmp",
+        "target": "ES5",
+        "sourceMap": true,
+        "types": [
+            "jasmine"
+        ]
+    },
+    "exclude": [
+        "node_modules",
+        "typings",
+        "build",
+        "dist"
+    ]
+}

@@ -16,7 +16,7 @@ Here is an ES6 sample
 
 ```javascript
 
-import { ConversationBuilder } from "@comapi/foundation";
+import { ConversationBuilder } from "@comapi/sdk-js-foundation";
 
 let conversation = new ConversationBuilder().withName("Support").withDescription("Support related chat").withUsers(["johnSmith", "joeBloggs"]);
 

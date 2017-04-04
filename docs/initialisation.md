@@ -17,7 +17,7 @@ import { AppSettings } from "../settings";
 import { AuthService } from "./auth";
 
 // Comapi class / interface imports
-import { Foundation, ComapiConfig, IAuthChallengeOptions } from "@comapi/foundation"
+import { Foundation, ComapiConfig, IAuthChallengeOptions } from "@comapi/sdk-js-foundation"
 
 export class ComapiService {
 

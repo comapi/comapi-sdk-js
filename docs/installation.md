@@ -11,14 +11,14 @@ If you are using a project that utilises es6 modules i.e angular2, ionic2 etc., 
 ### Install SDK ...
 
 ```shell
-npm install @comapi/foundation --save
+npm install @comapi/sdk-js-foundation --save
 ```
 
 ### Import into your code and access sdk methods ...
 
 ```javascript
 
-import { Foundation } from "@comapi/foundation"
+import { Foundation } from "@comapi/sdk-js-foundation"
 
 class MyClass{
     public displayVersion(){

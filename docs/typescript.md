@@ -10,7 +10,7 @@ Here is a simple example showing how you would go about importing an interface .
 import { 
     Foundation,
     IConversationMessage
-} from "@comapi/foundation"
+} from "@comapi/sdk-js-foundation"
 
 export class MessagesHelper {
 
@@ -42,5 +42,5 @@ export class MessagesHelper {
 }
 ```
 
-If you look in `node_modles/@comapi/foundation/src/interfaces.d.ts`, you will see what interfaces are available.
+If you look in `node_modles/@comapi/sdk-js-foundation/src/interfaces.d.ts`, you will see what interfaces are available.
 

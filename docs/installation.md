@@ -34,16 +34,16 @@ class MyClass{
 ### Install package from bower ...
 
 ```shell
-bower install comapi-foundation
+bower install comapi-sdk-js-foundation
 ```
 
 ### Include the script somewhere ...
 
 ```html
-<script src="bower_components/comapi-foundation/comapiBundle.js"></script>
+<script src="bower_components/comapi-sdk-js-foundation/comapi-foundation.js"></script>
 ```
 
-There is also a minified version `comapiBundle.min.js` available.
+There is also a minified version `comapi-foundation.min.js` available.
 
 For all subsequent classical snippets, I will assume that this script has been included
 

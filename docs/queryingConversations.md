@@ -38,4 +38,3 @@ sdk.foundation.services.appMessaging.getConversation("CA29B56B-30D6-4217-9C99-57
         console.log("getConversation() failed", error);
     })
 ```
-

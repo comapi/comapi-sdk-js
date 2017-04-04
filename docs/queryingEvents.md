@@ -1,8 +1,8 @@
 # Querying events
 
-Conversations messages and their relative statuses are generated from an immutable event store. To build up a conversation, we play through the events and that is projected into an ordered list of messages. These events are available to the client either from the websocket or from a call to `sdk.services.appMessaging.getConversationEvents()`.
+Conversations messages and their relative statuses are generated from an immutable event store. To build up a conversation, we play through the events and that is projected into an ordered list of messages. These events are available to the client either from the web-socket or from a call to `sdk.services.appMessaging.getConversationEvents()`.
 
-The `live` websocket events are deliered to the app in realtime and need to be applied to the local conversation essage store. If the client has any gaps, they can query a range of events using `getConversationEvents()`. The event payload is the same whether it is received from the websocket of from this api method.
+The `live` web-socket events are delivered to the app in realtime and need to be applied to the local conversation message store. If the client has any gaps, they can query a range of events using `getConversationEvents()`. The event payload is the same whether it is received from the web-socket of from this api method.
 
 To query events, we can do the following ....
 
@@ -22,7 +22,7 @@ sdk.services.appMessaging.getConversationEvents("5D21F17C-B2EC-4622-848E-5A2A916
 # Applying events
 
 
-After you have initially loaded up a conversation, it becomes your responsibiity to process the incoming websocket events / query events from `getConversationEvents()` and update the messages accordingly.
+After you have initially loaded up a conversation, it becomes your responsibility to process the incoming web-socket events / query events from `getConversationEvents()` and update the messages accordingly.
 
 There are 3 events that may need processing depending on whether you intend to mark messages as delivered / read.
 
@@ -54,7 +54,7 @@ sdk.on("conversationMessageEvent", function (event) {
         case "conversationMessage.sent":
         // add message to local conversation store 
         // also end a messageStatus update of delivered for this message
-        // You can send anothe update of read when you display the message to the user
+        // You can send another update of read when you display the message to the user
         break;
 
         case "conversationMessage.read":
@@ -69,7 +69,7 @@ sdk.on("conversationMessageEvent", function (event) {
 ```
 
 ## StatusUpdates 
-Status updates are stored against a `statusUpdates` property on a message and is of the following structure. The tatus will either be `delivered` or `read`. if it is read, it implied to also be delivered.
+Status updates are stored against a `statusUpdates` property on a message and is of the following structure. The status will either be `delivered` or `read`. if it is read, it implied to also be delivered.
 ```json
 {
     "alex": {

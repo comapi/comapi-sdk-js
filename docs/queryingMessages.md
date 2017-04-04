@@ -2,7 +2,7 @@
 
 This interface allows you to get messages from the end of the conversation one page at a time. This will allow you to implement the classic pull down to load more interface. 
 
-This method uses a continuation token manage the paging. If you want to enumerate from the end, you dont specify a token. As part of the response, a continuation token is returned along with the messages. This is fed back in the next time we want to query for messages. If the wrong token is specified, the method will return an error and you wi have to go beck to the end of the list of messages. 
+This method uses a continuation token manage the paging. If you want to enumerate from the end, you don't specify a token. As part of the response, a continuation token is returned along with the messages. This is fed back in the next time we want to query for messages. If the wrong token is specified, the method will return an error and you wi have to go beck to the end of the list of messages. 
 
 
 Here is the first call to the api - I have specified a conversationId and a page size of 100 ...
@@ -51,11 +51,11 @@ export interface IGetMessagesResponse {
 }
 ```
 
-The eventId's will be used later when we handle incoming events from the websocket.
+The eventId's will be used later when we handle incoming events from the web-socket.
 
 
 
-The foundation sdk doesn't deal with any kind of conversation persistance - that is up to you manage. 
+The foundation SDK doesn't deal with any kind of conversation persistence - that is up to you manage. 
 You may choose to just query messages from the end of the conversation every time and not bother persisting anything. 
 
 
@@ -63,4 +63,3 @@ You may choose to just query messages from the end of the conversation every tim
 
 Whether you choose to store your messages in some database, or just in-memory you will need to deal with new events that arrive.
 These events will take the form of new messages and messages getting marked as delivered / read. I will deal with this in detail in the [websocketEvents](./websocketEvents.md) section.
-

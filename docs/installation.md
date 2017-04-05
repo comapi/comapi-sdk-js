@@ -40,7 +40,7 @@ bower install comapi-sdk-js-foundation
 ### Include the script somewhere ...
 
 ```html
-<script src="bower_components/comapi-sdk-js-foundation/comapi-foundation.js"></script>
+<script src="bower_components/comapi-sdk-js-foundation/dist/comapi-foundation.js"></script>
 ```
 
 There is also a minified version `comapi-foundation.min.js` available.

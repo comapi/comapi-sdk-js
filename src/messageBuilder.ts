@@ -9,9 +9,13 @@ import {
  */
 export class MessageBuilder implements IConversationMessage {
 
+    public id: string = undefined;
     public metadata: any = {};
     public parts: IMessagePart[] = [];
     public alert: IMessageAlert = undefined;
+    public context: any = undefined;
+    public sentEventid: number = undefined;
+    public statusUpdates: any = undefined;
 
     /**
      * Method to create a simple text based message 

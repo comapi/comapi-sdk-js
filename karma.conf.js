@@ -9,6 +9,8 @@ module.exports = function (config) {
             'lib/es5-promise-polyfill.js',
             "src/**/*.ts",
             "specs/**/*.ts",
+            "chatLayer/**/*.ts",
+            "chatLayerSpecs/**/*.spec.ts",
         ],
 
         preprocessors: {
@@ -30,7 +32,19 @@ module.exports = function (config) {
                 "html": "coverage",
                 "text-summary": "",
                 "teamcity": ""
-            }
+            },/*
+            coverageOptions: {
+                instrumentation: false
+            },
+            compilerOptions: {
+                emitDecoratorMetadata: true,
+                experimentalDecorators: true,
+                jsx: "react",
+                module: "commonjs",
+                sourceMap: false,
+                target: "ES5"
+            }*/
+
         }
     });
 };

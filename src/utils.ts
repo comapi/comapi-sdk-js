@@ -66,6 +66,22 @@ export class Utils {
     }
 
     /**
+     * Method to call some async function on an array of data and you want them called sequentially
+     * @param {any[]} arr 
+     * @param {Function} iteratorFn 
+     * @returns {Promise} - returns a Promise
+     */
+    public static eachSeries(arr: any[], iteratorFn: Function): Promise<any> {
+        return arr.reduce(function (p, item) {
+            return p.then(function () {
+                return iteratorFn(item);
+            });
+        }, Promise.resolve());
+    }
+
+
+
+    /**
      * @class Utils
      * @ignore
      * @classdesc Class that implements a Utils.

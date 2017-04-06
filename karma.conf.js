@@ -8,7 +8,7 @@ module.exports = function (config) {
         files: [
             'lib/es5-promise-polyfill.js',
             "src/**/*.ts",
-            "specs/**/*.ts",
+            // "specs/**/*.ts",
             "chatLayer/**/*.ts",
             "chatLayerSpecs/**/*.spec.ts",
         ],
@@ -32,7 +32,7 @@ module.exports = function (config) {
                 "html": "coverage",
                 "text-summary": "",
                 "teamcity": ""
-            },/*
+            },
             coverageOptions: {
                 instrumentation: false
             },
@@ -43,7 +43,7 @@ module.exports = function (config) {
                 module: "commonjs",
                 sourceMap: false,
                 target: "ES5"
-            }*/
+            }
 
         }
     });

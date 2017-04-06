@@ -1,9 +1,7 @@
-import {
-    IConversationMessage
-} from "../../src/interfaces";
 
 import {
     IChatConversation,
+    IChatMessage,
     IConversationStore,
 } from "../interfaces/chatLayer";
 
@@ -15,9 +13,9 @@ export class IndexedDBConversationStore implements IConversationStore {
 
     private _database: IDBDatabase;
 
-    private _DbNme: string = "ConversationStore";
+    private _DbNme: string = "IConversationStore";
     private _ConversationsStore: string = "IChatConversation";
-    private _MessagesStore: string = "IConversationMessage";
+    private _MessagesStore: string = "IChatMessage";
     private _DbVersion: number = 1;
     private _maxInt: number = 2147483647;
 
@@ -52,7 +50,7 @@ export class IndexedDBConversationStore implements IConversationStore {
                         if (this._isIE) {
                             os.createIndex("conversationId_sentEventid", "conversationId_sentEventid", { unique: true });
                         } else {
-                            os.createIndex("conversation", ["context.conversationId", "sentEventid"], { unique: true });
+                            os.createIndex("conversation", ["conversationId", "sentEventid"], { unique: true });
                         }
 
                     }
@@ -171,7 +169,7 @@ export class IndexedDBConversationStore implements IConversationStore {
      * @param conversationId 
      * @param messageId 
      */
-    public getMessage(conversationId: string, messageId: string): Promise<IConversationMessage> {
+    public getMessage(conversationId: string, messageId: string): Promise<IChatMessage> {
         return new Promise((resolve, reject) => {
             if (this._database) {
                 let transaction: IDBTransaction = this._database.transaction([this._MessagesStore], "readonly");
@@ -181,7 +179,7 @@ export class IndexedDBConversationStore implements IConversationStore {
                 let cursorRequest: IDBRequest = objectStore.get(messageId);
 
                 cursorRequest.onsuccess = (event: any) => {
-                    let message: IConversationMessage = event.target.result;
+                    let message: IChatMessage = event.target.result;
                     if (message) {
                         resolve(message);
                     } else {
@@ -218,8 +216,16 @@ export class IndexedDBConversationStore implements IConversationStore {
      * 
      * @param message 
      */
-    public createMessage(message: IConversationMessage): Promise<boolean> {
-        return this.upsertMessage(message, false);
+    public createMessage(message: IChatMessage): Promise<boolean> {
+
+        return this.getConversation(message.conversationId)
+            .then(c => {
+                if (c !== null) {
+                    return this.upsertMessage(message, false);
+                } else {
+                    return Promise.reject<boolean>({ message: `Conversation ${message.conversationId} not found` });
+                }
+            });
     }
 
     /**
@@ -259,7 +265,7 @@ export class IndexedDBConversationStore implements IConversationStore {
     /**
      * Method for app to use
      */
-    public getMessages(conversationId: string): Promise<IConversationMessage[]> {
+    public getMessages(conversationId: string): Promise<IChatMessage[]> {
 
         return new Promise((resolve, reject) => {
             if (this._database) {
@@ -272,7 +278,7 @@ export class IndexedDBConversationStore implements IConversationStore {
 
                 let keyRange = this.getKeyRange(conversationId);
 
-                let messages: IConversationMessage[] = [];
+                let messages: IChatMessage[] = [];
                 let cursorRequest: IDBRequest = index.openCursor(keyRange, "prev");
 
                 cursorRequest.onsuccess = (event) => {
@@ -316,7 +322,7 @@ export class IndexedDBConversationStore implements IConversationStore {
      * @param message 
      * @param doPut 
      */
-    private upsertMessage(message: IConversationMessage, doPut: boolean): Promise<boolean> {
+    private upsertMessage(message: IChatMessage, doPut: boolean): Promise<boolean> {
 
         return new Promise((resolve, reject) => {
             if (this._database) {
@@ -327,7 +333,7 @@ export class IndexedDBConversationStore implements IConversationStore {
                 if (this._isIE) {
                     // add a "conversationId_sentEventid" property as we are using this for an index
                     /* tslint:disable:no-string-literal */
-                    message["conversationId_sentEventid"] = `${message.context.conversationId}_${message.sentEventid}`;
+                    message["conversationId_sentEventid"] = `${message.conversationId}_${message.sentEventid}`;
                     /* tslint:enable:no-string-literal */
                 }
 

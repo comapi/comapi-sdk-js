@@ -3,7 +3,8 @@ import {
 } from "../chatLayer/src/dbStore";
 
 import {
-    IChatConversation
+    IChatConversation,
+    IChatMessage
 } from "../chatLayer/interfaces/chatLayer";
 
 
@@ -11,21 +12,24 @@ import { ConversationBuilder } from "../src/conversationBuilder";
 import { MessageBuilder } from "../src/messageBuilder";
 import { Utils } from "../src/utils";
 
-import { IConversationMessage } from "../src/interfaces"
-
 /**
  * 
  */
 describe("IndexedDBConversationStore tests", () => {
 
-    function createMessage(conversationId: string, sentEventid: number): IConversationMessage {
+    function createMessage(conversationId: string, sentEventid: number): IChatMessage {
         let message = new MessageBuilder().withText("hello");
-        message.context = { conversationId: conversationId };
-        message.sentEventid = sentEventid;
-        message.id = Utils.uuid();
-        return message;
-    }
 
+        return {
+            id: Utils.uuid(),
+            sentEventid: sentEventid,
+            conversationId: conversationId,
+            parts: message.parts,
+            senderId: "unitTest",
+            sentOn: new Date().toISOString(),
+            statusUpdates: {}
+        };
+    }
     let conversationStore: IndexedDBConversationStore;
 
     beforeEach(done => {
@@ -175,9 +179,7 @@ describe("IndexedDBConversationStore tests", () => {
 
     it("should fail add a message to a conversation that doesn't exist", done => {
         let id: string = "myConversationId";
-        let message = new MessageBuilder().withText("hello");
-
-        message.context = { conversationId: id };
+        let message = createMessage(id, 1);
 
         conversationStore.createMessage(message)
             .catch(error => {

@@ -321,9 +321,11 @@ export interface IConversationDetails {
  * Conversation details interface
  */
 export interface IConversationDetails2 extends IConversationDetails {
-    createdOn: string;
-    updatedOn: string;
-    ETag: string;
+    _createdOn: string;
+    _updatedOn: string;
+    latestSentEventId?: number;
+    participantCount?: number;
+    ETag?: string;
 }
 
 

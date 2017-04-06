@@ -1,9 +1,6 @@
 import {
-    IConversationMessage
-} from "../../src/interfaces";
-
-import {
     IChatConversation,
+    IChatMessage,
     IConversationStore,
 } from "../interfaces/chatLayer";
 
@@ -18,7 +15,7 @@ export class MemoryConversationStore implements IConversationStore {
     // How to store the messages ? Thats up to the integrator ...
     // will create a dictionary keyed off conversationId ...
 
-    private messageStore: { [id: string]: IConversationMessage[]; } = {};
+    private messageStore: { [id: string]: IChatMessage[]; } = {};
 
     /**
      * 
@@ -59,12 +56,9 @@ export class MemoryConversationStore implements IConversationStore {
                 found.description = conversation.description;
                 found.roles = conversation.roles;
                 found.isPublic = conversation.isPublic;
-                found.participants = conversation.participants;
-
                 found.earliestEventId = conversation.earliestEventId;
                 found.latestEventId = conversation.latestEventId;
                 found.continuationToken = conversation.continuationToken;
-
 
                 resolve(true);
             } else {
@@ -98,7 +92,7 @@ export class MemoryConversationStore implements IConversationStore {
      * @param conversationId 
      * @param messageId 
      */
-    public getMessage(conversationId: string, messageId: string): Promise<IConversationMessage> {
+    public getMessage(conversationId: string, messageId: string): Promise<IChatMessage> {
         return new Promise((resolve, reject) => {
             resolve(this._findMessage(conversationId, messageId));
         });
@@ -126,13 +120,13 @@ export class MemoryConversationStore implements IConversationStore {
      * 
      * @param message 
      */
-    public createMessage(message: IConversationMessage): Promise<boolean> {
+    public createMessage(message: IChatMessage): Promise<boolean> {
         return new Promise((resolve, reject) => {
 
             // messages are ordered by sentEventid
             // iterate backwards to see where to insert (will 99% prob be just on the end)
 
-            let conversationMessages: IConversationMessage[] = this.messageStore[message.context.conversationId];
+            let conversationMessages: IChatMessage[] = this.messageStore[message.conversationId];
 
             if (conversationMessages) {
 
@@ -150,7 +144,7 @@ export class MemoryConversationStore implements IConversationStore {
                 resolve(true);
 
             } else {
-                reject({ message: `Conversation ${message.context.conversationId} not found in messageStore` });
+                reject({ message: `Conversation ${message.conversationId} not found in messageStore` });
             }
         });
     }
@@ -165,8 +159,8 @@ export class MemoryConversationStore implements IConversationStore {
     /**
      * Method for app to use
      */
-    public getMessages(conversationId: string): Promise<IConversationMessage[]> {
-        let conversationMessages: IConversationMessage[] = this.messageStore[conversationId];
+    public getMessages(conversationId: string): Promise<IChatMessage[]> {
+        let conversationMessages: IChatMessage[] = this.messageStore[conversationId];
         return Promise.resolve(conversationMessages ? conversationMessages : []);
     }
 
@@ -191,11 +185,11 @@ export class MemoryConversationStore implements IConversationStore {
      * @param conversationId 
      * @param messageId 
      */
-    private _findMessage(conversationId: string, messageId: string): IConversationMessage {
-        let conversationMessages: IConversationMessage[] = this.messageStore[conversationId];
+    private _findMessage(conversationId: string, messageId: string): IChatMessage {
+        let conversationMessages: IChatMessage[] = this.messageStore[conversationId];
 
         if (conversationMessages) {
-            let message: IConversationMessage[] = conversationMessages.filter(x => x.id === messageId);
+            let message: IChatMessage[] = conversationMessages.filter(x => x.id === messageId);
             return message.length === 1 ? message[0] : null;
         }
     }

@@ -1,5 +1,22 @@
 import { IBrowserInfo } from "./interfaces";
 
+
+/**
+ * Method to perform the asnc operation
+ * @param {any} data  the data to operate on
+ * @returns {Promise<any>} returns a promise
+ */
+export type DoUntilOperationFunction = (data: any) => Promise<any>;
+/**
+ * Method to decide whether to continue or not
+ * @param {any} data  the data to look at (will have been returned vi a promise from DoUntilOperationFunction)
+ * @returns {boolean} returns true or false. return false to stop
+ */
+export type DoUntilTestFunction = (data: any) => boolean;
+
+/**
+ * Utility class
+ */
 export class Utils {
 
     /**
@@ -79,7 +96,37 @@ export class Utils {
         }, Promise.resolve());
     }
 
+    // /**
+    //  * @param url 
+    //  * @param redirectCount 
+    //  */
+    // public static doUntil(count?: number): Promise<any> {
+    //     count = count || 0;
 
+    //     console.log(`doUntil(${count})`);
+
+    //     if (count > 10) {
+    //         throw new Error("doUntil called too many times.");
+    //     }
+
+    //     return new Promise(function (resolve) {
+    //         resolve(count);
+    //     })
+    //         .then((count: number) => {
+    //             return count < 5 ? Utils.doUntil(count + 1) : count;
+    //         });
+    // }
+
+    /**
+     * @param url 
+     * @param redirectCount 
+     */
+    public static doUntil(operation: DoUntilOperationFunction, test: DoUntilTestFunction, data?: any): Promise<any> {
+        return operation(data)
+            .then((data: any) => {
+                return test(data) ? Utils.doUntil(operation, test, data) : data;
+            });
+    }
 
     /**
      * @class Utils
@@ -91,3 +138,4 @@ export class Utils {
     }
 
 };
+

@@ -1,6 +1,6 @@
 import { Foundation } from "../../src/foundation";
 import { Utils } from "../../src/utils";
-import { IConversationStore, IChatConversation } from "../interfaces/chatLayer";
+import { IConversationStore, IChatConversation, IChatMessage } from "../interfaces/chatLayer";
 
 import {
     IConversationDetails2,
@@ -8,8 +8,17 @@ import {
     IConversationDeletedEventData,
     IConversationUpdatedEventData,
     IParticipantAddedEventData,
-    IParticipantRemovedEventData
+    IParticipantRemovedEventData,
+    IGetMessagesResponse
 } from "../../src/interfaces";
+
+
+
+interface IConversationSyncInfo {
+    deleteArray: string[];
+    addArray: IChatConversation[]
+}
+
 
 /**
  * High Level Tasks that this interface needs to perform
@@ -38,7 +47,7 @@ export class ComapiChatLogic {
 
     //    private _eventPageSize: number = 100;
 
-    //    private _messagePageSize: number = 100;
+    private _messagePageSize: number = 100;
 
     /**
      * Assume this object is initialised ? 
@@ -60,6 +69,9 @@ export class ComapiChatLogic {
         this._store = store;
     }
 
+
+
+
     /**
      * 
      */
@@ -70,7 +82,8 @@ export class ComapiChatLogic {
 
         let remoteConversations: IConversationDetails2[];
         let localConversations: IChatConversation[];
-        let addArray: IChatConversation[] = [];
+
+        let syncInfo: IConversationSyncInfo;
 
         // 1) get list of conversations from comapi
         return this._foundation.services.appMessaging.getConversations()
@@ -81,39 +94,22 @@ export class ComapiChatLogic {
             })
             .then(conversations => {
                 localConversations = conversations;
-                let deleteArray: string[] = [];
 
-                // make list of local conversations to delete
-                for (let localConv of localConversations) {
-                    // if not in remote array, needs deleting
-                    if (!remoteConversations.find(o => { return o.id === localConv.id; })) {
-                        console.log(`Local conversation ${localConv.id} needs deleting`);
-                        deleteArray.push(localConv.id);
-                    }
-                }
+                syncInfo = this.getConversationSyncInfo(remoteConversations, localConversations);
 
-                // make list of local conversations to add
-                for (let remoteConv of remoteConversations) {
-                    // if not in local array, needs adding
-                    if (!localConversations.find(o => { return o.id === remoteConv.id; })) {
-                        console.log(`Remote conversation ${remoteConv.id} needs adding`);
-                        addArray.push(remoteConv);
-                    }
-                }
-
-                return Utils.eachSeries(deleteArray, (conversationId: string) => {
+                return Utils.eachSeries(syncInfo.deleteArray, (conversationId: string) => {
                     return this._store.deleteConversation(conversationId);
                 });
             })
             .then(() => {
                 // 3) Add new ones
-                return Utils.eachSeries(addArray, (conversation: IChatConversation) => {
+                return Utils.eachSeries(syncInfo.addArray, (conversation: IChatConversation) => {
                     return this._store.createConversation(conversation);
                 });
             })
             .then(() => {
                 // Add the new conversations to the localConversations array ...
-                for (let newConv of addArray) {
+                for (let newConv of syncInfo.addArray) {
                     localConversations.push(newConv);
                 }
 
@@ -136,6 +132,83 @@ export class ComapiChatLogic {
             });
     }
 
+
+    /**
+     * Method to get a page of messages and adapt into IChatMessage entities
+     * @param {IChatConversation} conversation 
+     * @returns {Promise<boolean>}
+     */
+    private getMessages(conversation: IChatConversation): Promise<boolean> {
+
+        let getMessagesReult: IGetMessagesResponse;
+
+        return this._foundation.services.appMessaging.getMessages(conversation.id, this._messagePageSize, conversation.continuationToken)
+            .then(result => {
+                getMessagesReult = result;
+                // update conversation object
+                // add the messages (after adapting IConversationMessage => IChatMessage)
+
+                let messages: IChatMessage[] = getMessagesReult.messages.map(message => {
+                    return {
+                        id: message.id,
+                        conversationId: message.context.conversationId,
+                        senderId: message.context.senderId,
+                        sentOn: message.context.sentOn,
+                        sentEventid: message.sentEventid,
+                        metadata: message.metadata,
+                        parts: message.parts,
+                        statusUpdates: message.statusUpdates
+                    };
+                });
+
+                return Utils.eachSeries(messages, (message: IChatMessage) => {
+                    return this._store.createMessage(message);
+                });
+            })
+            .then(() => {
+                conversation.earliestEventId = getMessagesReult.earliestEventId;
+                conversation.latestEventId = getMessagesReult.latestEventId;
+                conversation.continuationToken = getMessagesReult.continuationToken
+
+                return this._store.updateConversation(conversation);
+            });
+    }
+
+
+    /**
+     * Method to compare what is local and what is remote and determine what cnversations need adding and removing
+     * @param {IConversationDetails2[]} remoteConversations 
+     * @param {IChatConversation[]} localConversations 
+     * @returns {IConversationSyncInfo}
+     */
+    private getConversationSyncInfo(remoteConversations: IConversationDetails2[], localConversations: IChatConversation[]): IConversationSyncInfo {
+        let deleteArray: string[] = [];
+        let addArray: IChatConversation[] = [];
+
+        // make list of local conversations to delete
+        for (let localConv of localConversations) {
+            // if not in remote array, needs deleting
+            if (!remoteConversations.find(o => { return o.id === localConv.id; })) {
+                console.log(`Local conversation ${localConv.id} needs deleting`);
+                deleteArray.push(localConv.id);
+            }
+        }
+
+        // make list of local conversations to add
+        for (let remoteConv of remoteConversations) {
+            // if not in local array, needs adding
+            if (!localConversations.find(o => { return o.id === remoteConv.id; })) {
+                console.log(`Remote conversation ${remoteConv.id} needs adding`);
+                addArray.push(remoteConv);
+            }
+        }
+
+        return {
+            deleteArray: deleteArray,
+            addArray: addArray
+        };
+    }
+
     /**
      * 
      */
@@ -147,30 +220,26 @@ export class ComapiChatLogic {
             return Promise.resolve(false);
         }
 
-
-
         // is this a new conversation (to us)? If so, load a page of messages
-        // if ()
-
+        if (conversation.continuationToken === undefined) {
+            return this.getMessages(conversation);
+        } else {
+            // 
+        }
 
         // otherwise update by playing events onto the store 
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         return Promise.reject<boolean>({ message: "not implemented" });
     }
 
+    private updateConversationWithEvents() {
+
+    }
+
+
+    private playEvent() {
+
+    }
 
     /**
      * 

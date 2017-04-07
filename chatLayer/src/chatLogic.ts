@@ -1,5 +1,5 @@
 import { Foundation } from "../../src/foundation";
-import { Utils } from "../../src/utils";
+import { Utils, DoUntilOperationFunction, DoUntilTestFunction } from "../../src/utils";
 import { IConversationStore, IChatConversation, IChatMessage } from "../interfaces/chatLayer";
 
 import {
@@ -16,7 +16,7 @@ import {
 
 interface IConversationSyncInfo {
     deleteArray: string[];
-    addArray: IChatConversation[]
+    addArray: IChatConversation[];
 }
 
 
@@ -45,9 +45,9 @@ export class ComapiChatLogic {
 
     private _updating: boolean = false;
 
-    //    private _eventPageSize: number = 100;
+    private _eventPageSize: number = 10;
 
-    private _messagePageSize: number = 100;
+    private _messagePageSize: number = 10;
 
     /**
      * Assume this object is initialised ? 
@@ -150,13 +150,13 @@ export class ComapiChatLogic {
 
                 let messages: IChatMessage[] = getMessagesReult.messages.map(message => {
                     return {
-                        id: message.id,
                         conversationId: message.context.conversationId,
-                        senderId: message.context.senderId,
-                        sentOn: message.context.sentOn,
-                        sentEventid: message.sentEventid,
+                        id: message.id,
                         metadata: message.metadata,
                         parts: message.parts,
+                        senderId: message.context.senderId,
+                        sentEventid: message.sentEventid,
+                        sentOn: message.context.sentOn,
                         statusUpdates: message.statusUpdates
                     };
                 });
@@ -168,7 +168,7 @@ export class ComapiChatLogic {
             .then(() => {
                 conversation.earliestEventId = getMessagesReult.earliestEventId;
                 conversation.latestEventId = getMessagesReult.latestEventId;
-                conversation.continuationToken = getMessagesReult.continuationToken
+                conversation.continuationToken = getMessagesReult.continuationToken;
 
                 return this._store.updateConversation(conversation);
             });
@@ -204,8 +204,8 @@ export class ComapiChatLogic {
         }
 
         return {
+            addArray: addArray,
             deleteArray: deleteArray,
-            addArray: addArray
         };
     }
 
@@ -215,7 +215,7 @@ export class ComapiChatLogic {
     private updateConversation(conversation: IChatConversation, latestSentEventId?: number): Promise<boolean> {
         console.warn("updateConversation", conversation, latestSentEventId);
 
-        // no messages yey
+        // no messages yet
         if (!latestSentEventId) {
             return Promise.resolve(false);
         }
@@ -224,58 +224,79 @@ export class ComapiChatLogic {
         if (conversation.continuationToken === undefined) {
             return this.getMessages(conversation);
         } else {
-            // 
+            // get events and apply
+            let self = this;
+            let _events: IConversationMessageEvent[];
+
+            let _getPageOfEventsFunc: DoUntilOperationFunction = function (conv: IChatConversation): Promise<any> {
+                return self._foundation.services.appMessaging.getConversationEvents(conv.id, conv.latestEventId, self._eventPageSize)
+                    .then(events => {
+                        _events = events;
+                        Utils.eachSeries(events, (event: IConversationMessageEvent) => {
+                            return self.applyEvent(event);
+                        }).then((event: IConversationMessageEvent) => {
+                            conv.latestEventId = event.conversationEventId;
+                            return conv;
+                        });
+                    });
+            };
+
+            let _compareFunc: DoUntilTestFunction = function (conv: IChatConversation): boolean {
+                return _events.length === self._eventPageSize;
+            };
+
+            return Utils.doUntil(_getPageOfEventsFunc, _compareFunc, conversation)
+                .then((conv: IChatConversation) => {
+                    return this._store.updateConversation(conv);
+                });
         }
-
-        // otherwise update by playing events onto the store 
-
-        return Promise.reject<boolean>({ message: "not implemented" });
-    }
-
-    private updateConversationWithEvents() {
-
-    }
-
-
-    private playEvent() {
-
     }
 
     /**
-     * 
-     * @param event 
+     * Method to apply an event to the conversation store
+     * @param {IConversationMessageEvent} event - the event to apply
+     * @returns {Promise<boolean>} - returns a boolean resut inside a Promise
+     */
+    private applyEvent(event: IConversationMessageEvent): Promise<boolean> {
+        return Promise.reject<boolean>({ message: "not implemented" });
+    }
+
+
+    /**
+     * Event handler to handle incoming Conversation Message events
+     * @param {IConversationMessageEvent} event 
      */
     private onConversationMessageEvent(event: IConversationMessageEvent) {
         console.warn("onConversationMessageEvent");
     }
 
     /**
-     * 
-     * @param event 
+     * Event handler to handle incoming Conversation Deleted events
+     * @param {IConversationDeletedEventData} event 
      */
     private onConversationDeleted(event: IConversationDeletedEventData) {
         console.warn("onConversationDeleted");
     }
 
     /**
-     * 
-     * @param event 
+     * Event handler to handle incoming Conversation Updated events
+     * @param {IConversationUpdatedEventData} event 
      */
     private onConversationUpdated(event: IConversationUpdatedEventData) {
         console.warn("onConversationUpdated");
     }
 
     /**
-     * 
-     * @param event 
+     * Event handler to handle incoming Participant Added events
+     * @param {IParticipantAddedEventData} event 
      */
     private onParticipantAdded(event: IParticipantAddedEventData) {
         console.warn("onParticipantAdded");
     }
 
     /**
-     * 
-     * @param event 
+     * Event handler to handle incoming Participant Removed events
+     * @param {IParticipantRemovedEventData} event 
      */
     private onParticipantRemoved(event: IParticipantRemovedEventData) {
         console.warn("onParticipantRemoved");

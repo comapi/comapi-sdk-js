@@ -79,14 +79,6 @@ describe("Promise tests", () => {
         })
     });
 
-    // it("should repeat something until some condition is met", done => {
-
-    //     Utils.doUntil().then((val) => {
-    //         expect(val).toBe(5);
-    //         done();
-    //     });
-    // });
-
     it("should generically repeat something until some condition is met", done => {
 
         let operationMethod: DoUntilOperationFunction = function (data: any): Promise<any> {
@@ -110,4 +102,66 @@ describe("Promise tests", () => {
             });
     });
 
+    /**
+     * Speculative tests to see if I can dynamically detect a promise being returned ...
+     */
+    type AsyncEventHandlerFunction = (data: any) => Promise<any>;
+    type EventHandlerFunction = (data: any) => void;
+
+    /**
+     * 
+     */
+    it("should dynamically determine whether a promise has been returned", done => {
+
+        let handler1: (EventHandlerFunction | AsyncEventHandlerFunction) = function (x): any {
+            console.log(`handler1(${x})`);
+        }
+
+        let handler2: (EventHandlerFunction | AsyncEventHandlerFunction) = function (x): Promise<any> {
+            console.log(`handler2(${x})`);
+            return Promise.resolve(x);
+        }
+
+        let result1 = handler1(1);
+        expect(result1 instanceof Promise).toBe(false);
+
+        let result2 = handler2("hello");
+        expect(result2 instanceof Promise).toBe(true);
+
+        (<Promise<any>>result2).then(val => {
+            expect(val).toBe("hello");
+            done();
+        });
+    });
+
+    /**
+     * 
+     */
+    it("should dynamically determine whether a promise has been returned - array option", done => {
+
+        let handler1: (EventHandlerFunction | AsyncEventHandlerFunction) = function (x): any {
+            console.log(`handler1(${x})`);
+        }
+
+        let handler2: (EventHandlerFunction | AsyncEventHandlerFunction) = function (x): Promise<any> {
+            console.log(`handler2(${x})`);
+            return Promise.resolve(x);
+        }
+
+        let handlers: (EventHandlerFunction | AsyncEventHandlerFunction)[] = [];
+
+        handlers.push(handler1);
+        handlers.push(handler2);
+
+        let result1 = handlers[0](1);
+        expect(result1 instanceof Promise).toBe(false);
+
+        let result2 = handlers[1]("hello");
+        expect(result2 instanceof Promise).toBe(true);
+
+        (<Promise<any>>result2).then(val => {
+            expect(val).toBe("hello");
+            done();
+        });
+    });
 });

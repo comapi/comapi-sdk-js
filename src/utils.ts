@@ -96,35 +96,16 @@ export class Utils {
         }, Promise.resolve());
     }
 
-    // /**
-    //  * @param url 
-    //  * @param redirectCount 
-    //  */
-    // public static doUntil(count?: number): Promise<any> {
-    //     count = count || 0;
-
-    //     console.log(`doUntil(${count})`);
-
-    //     if (count > 10) {
-    //         throw new Error("doUntil called too many times.");
-    //     }
-
-    //     return new Promise(function (resolve) {
-    //         resolve(count);
-    //     })
-    //         .then((count: number) => {
-    //             return count < 5 ? Utils.doUntil(count + 1) : count;
-    //         });
-    // }
-
     /**
-     * @param url 
-     * @param redirectCount 
+     * Method to encapsulate repeatdly calling an async method until a condition is met (tyoes defined at top)
+     * @param {DoUntilOperationFunction} operation - the operation to perform 
+     * @param {DoUntilTestFunction} test - the condition that stops the repeats
+     * @param {any} data - the data
      */
     public static doUntil(operation: DoUntilOperationFunction, test: DoUntilTestFunction, data?: any): Promise<any> {
         return operation(data)
-            .then((data: any) => {
-                return test(data) ? Utils.doUntil(operation, test, data) : data;
+            .then((rslt: any) => {
+                return test(rslt) ? Utils.doUntil(operation, test, rslt) : rslt;
             });
     }
 

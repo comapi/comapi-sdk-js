@@ -208,6 +208,7 @@ export interface INetworkManager {
     session: ISession;
     getValidToken(): Promise<string>;
     startSession(): Promise<ISessionInfo>;
+    restartSession(): Promise<ISessionInfo>;
     endSession(): Promise<boolean>;
     ensureSessionAndSocket(): Promise<ISessionInfo>;
 }

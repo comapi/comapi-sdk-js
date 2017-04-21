@@ -38,6 +38,26 @@ export class NetworkManager implements INetworkManager {
             });
     }
 
+
+    /**
+     * Method to restart an expired authenticated session 
+     * @method Foundation#restartSession
+     * @returns {Promise} - Returns a promise 
+     */
+    public restartSession(): Promise<ISessionInfo> {
+
+        return this._webSocketManager.disconnect()
+            .then((succeeded) => {
+                return this._sessionManager.startSession();
+            })
+            .then((sessionInfo) => {
+                return this._webSocketManager.connect();
+            })
+            .then((connected) => {
+                return this._sessionManager.sessionInfo;
+            });
+    }
+
     /**
      * Method to get current session
      * @method Foundation#session
@@ -61,6 +81,10 @@ export class NetworkManager implements INetworkManager {
 
     public getValidToken(): Promise<string> {
         return this._sessionManager.getValidToken();
+    }
+
+    public disconnectSocket(): Promise<boolean> {
+        return this._webSocketManager.disconnect();
     }
 
 

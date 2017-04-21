@@ -44,6 +44,7 @@ describe("REST API 401 retry tests", () => {
         get session(): ISession { return this._sessionInfo.session; }
         public getValidToken(): Promise<string> { return Promise.resolve(this._sessionInfo.token); }
         public startSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
+        public restartSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
         public endSession(): Promise<boolean> { return Promise.resolve(true); }
         public ensureSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
         public ensureSessionAndSocket(): Promise<ISessionInfo> { return Promise.reject<ISessionInfo>({ message: "Not implemented" }); }
@@ -66,12 +67,12 @@ describe("REST API 401 retry tests", () => {
      */
     it("should handle retry 401's", done => {
 
-        spyOn(networkManager, "startSession").and.callThrough();
+        spyOn(networkManager, "restartSession").and.callThrough();
 
         restClient.post("http://localhost:6969/testUnauthorized", headers, data)
             .then(result => {
 
-                expect(networkManager.startSession).toHaveBeenCalled();
+                expect(networkManager.restartSession).toHaveBeenCalled();
                 expect(result.statusCode).toBe(204);
 
                 done();

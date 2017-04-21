@@ -1,4 +1,4 @@
-import { ISessionManager, ISessionInfo } from "../src/interfaces";
+import { INetworkManager, ISessionInfo, ISession } from "../src/interfaces";
 import { RestClient } from "../src/restClient";
 import { Logger } from "../src/logger";
 
@@ -22,7 +22,7 @@ describe("REST API 401 retry tests", () => {
     /**
      * Mock MockSessionmanager - we just need getValidAuthHeader
      */
-    class MockSessionManager implements ISessionManager {
+    class MockNetworkManager implements INetworkManager {
 
         private _sessionInfo: ISessionInfo = {
             session: {
@@ -41,19 +41,20 @@ describe("REST API 401 retry tests", () => {
             token: "1.2.3",
         };
 
-        get sessionInfo(): ISessionInfo { return this._sessionInfo; }
+        get session(): ISession { return this._sessionInfo.session; }
         public getValidToken(): Promise<string> { return Promise.resolve(this._sessionInfo.token); }
-        public startSession(): Promise<ISessionInfo> { return Promise.resolve(this.sessionInfo); }
+        public startSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
         public endSession(): Promise<boolean> { return Promise.resolve(true); }
-        public ensureSession(): Promise<ISessionInfo> { return Promise.resolve(this.sessionInfo); }
+        public ensureSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
+        public ensureSessionAndSocket(): Promise<ISessionInfo> { return Promise.reject<ISessionInfo>({ message: "Not implemented" }); }
     }
 
-    let sessionManager: MockSessionManager;
+    let networkManager: MockNetworkManager;
 
     beforeEach(done => {
         let logger = new Logger();
-        sessionManager = new MockSessionManager();
-        restClient = new RestClient(logger, sessionManager);
+        networkManager = new MockNetworkManager();
+        restClient = new RestClient(logger, networkManager);
         done();
     });
 
@@ -65,12 +66,12 @@ describe("REST API 401 retry tests", () => {
      */
     it("should handle retry 401's", done => {
 
-        spyOn(sessionManager, "startSession").and.callThrough();
+        spyOn(networkManager, "startSession").and.callThrough();
 
         restClient.post("http://localhost:6969/testUnauthorized", headers, data)
             .then(result => {
 
-                expect(sessionManager.startSession).toHaveBeenCalled();
+                expect(networkManager.startSession).toHaveBeenCalled();
                 expect(result.statusCode).toBe(204);
 
                 done();

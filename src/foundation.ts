@@ -43,7 +43,7 @@ import { Profile } from "./profile";
 import { Services } from "./services";
 import { Device } from "./device";
 import { Channels } from "./channels";
-import { SessionAndSocketResolver } from "./resolver";
+import { NetworkManager } from "./networkManager";
 
 /*
  * Exports to be added to COMAPI namespace
@@ -105,7 +105,11 @@ export class Foundation implements IFoundation {
 
             let sessionManager: ISessionManager = new SessionManager(logger, restClient, localStorageData, comapiConfig);
 
-            let authenticatedRestClient: IRestClient = new AuthenticatedRestClient(logger, sessionManager);
+            let webSocketManager: IWebSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager);
+
+            let networkManager = new NetworkManager(sessionManager, webSocketManager);
+
+            let authenticatedRestClient: IRestClient = new AuthenticatedRestClient(logger, networkManager);
 
             let deviceManager: IDeviceManager = new DeviceManager(logger, authenticatedRestClient, localStorageData, comapiConfig);
 
@@ -117,18 +121,16 @@ export class Foundation implements IFoundation {
 
             let messageManager: IMessageManager = new MessageManager(logger, authenticatedRestClient, localStorageData, comapiConfig, sessionManager, conversationManager);
 
-            let webSocketManager: IWebSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager);
 
             let foundation = new Foundation(eventManager,
                 logger,
                 localStorageData,
-                sessionManager,
+                networkManager,
                 deviceManager,
                 facebookManager,
                 conversationManager,
                 profileManager,
                 messageManager,
-                webSocketManager,
                 comapiConfig);
 
             return foundation;
@@ -175,28 +177,25 @@ export class Foundation implements IFoundation {
     constructor(private _eventManager: IEventManager,
         private _logger: ILogger,
         /*private*/ _localStorageData: ILocalStorageData,
-        private _sessionManager: ISessionManager,
+        private _networkManager: NetworkManager,
         /*private*/ _deviceManager: IDeviceManager,
         /*private*/ _facebookManager: IFacebookManager,
         /*private*/ _conversationManager: IConversationManager,
         /*private*/ _profileManager: IProfileManager,
         /*private*/ _messageManager: IMessageManager,
-        private _webSocketManager: IWebSocketManager,
-        private _comapiConfig: IComapiConfig) {
-
-        let resolver = new SessionAndSocketResolver(_sessionManager, _webSocketManager);
+        /*private*/ _comapiConfig: IComapiConfig) {
 
         let messagePager = new MessagePager(_logger, _localStorageData, _messageManager);
 
-        let appMessaging = new AppMessaging(resolver, _conversationManager, _messageManager, messagePager);
+        let appMessaging = new AppMessaging(this._networkManager, _conversationManager, _messageManager, messagePager);
 
-        let profile = new Profile(resolver, _localStorageData, _profileManager);
+        let profile = new Profile(this._networkManager, _localStorageData, _profileManager);
 
         this._services = new Services(appMessaging, profile);
 
-        this._device = new Device(resolver, _deviceManager);
+        this._device = new Device(this._networkManager, _deviceManager);
 
-        this._channels = new Channels(resolver, _facebookManager);
+        this._channels = new Channels(this._networkManager, _facebookManager);
 
     }
 
@@ -206,12 +205,9 @@ export class Foundation implements IFoundation {
      * @returns {Promise} - Returns a promise 
      */
     public startSession(): Promise<ISession> {
-        return this._sessionManager.startSession()
-            .then((sessionInfo) => {
-                return this._webSocketManager.connect();
-            })
-            .then((connected) => {
-                return this._sessionManager.sessionInfo.session;
+        return this._networkManager.startSession()
+            .then(sessionInfo => {
+                return sessionInfo.session;
             });
     }
 
@@ -221,10 +217,7 @@ export class Foundation implements IFoundation {
      * @returns {Promise} - Returns a promise
      */
     public endSession(): Promise<boolean> {
-        return this._webSocketManager.disconnect()
-            .then(() => {
-                return this._sessionManager.endSession();
-            });
+        return this._networkManager.endSession();
     }
 
     /**
@@ -260,10 +253,8 @@ export class Foundation implements IFoundation {
      * @returns {ISession} - Returns an ISession interface
      */
     public get session(): ISession {
-        return this._sessionManager.sessionInfo ? this._sessionManager.sessionInfo.session : null;
+        return this._networkManager.session;
     }
-
-
 
     /**
      * Subscribes the caller to a comapi event.

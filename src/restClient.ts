@@ -1,4 +1,4 @@
-import { ISessionManager, ILogger, IRestClient, IRestClientResult } from "./interfaces";
+import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./interfaces";
 
 export class RestClient implements IRestClient {
 
@@ -17,9 +17,9 @@ export class RestClient implements IRestClient {
      * @ignore
      * @classdesc Class that implements a RestClient.
      * @param {ILogger} [logger] - the logger 
-     * @param {ISessionManager} [sessionManager] - the session sessionManager 
+     * @param {INetworkManager} [networkManager] - the network Manager 
      */
-    constructor(protected logger?: ILogger, protected sessionManager?: ISessionManager) { }
+    constructor(protected logger?: ILogger, protected networkManager?: INetworkManager) { }
 
 
 
@@ -267,9 +267,9 @@ export class RestClient implements IRestClient {
             return self._makeRequest(method, url, headers, data)
                 .catch(function (result) {
                     // TODO: refactor max retry count into some config ...
-                    if (i < 3 && result.statusCode === 401 && self.sessionManager) {
+                    if (i < 3 && result.statusCode === 401 && self.networkManager) {
 
-                        return self.sessionManager.startSession()
+                        return self.networkManager.startSession()
                             .then(sessionInfo => {
                                 headers.authorization = `Bearer ${sessionInfo.token}`;
                                 return recurse(++i);

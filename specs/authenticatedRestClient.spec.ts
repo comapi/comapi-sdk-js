@@ -3,6 +3,8 @@ import { Logger } from "../src/logger";
 import { Config } from "./config";
 import { AuthenticatedRestClient } from "../src/authenticatedRestClient";
 import { SessionManager } from "../src/sessionManager";
+import { WebSocketManager } from "../src/webSocketManager";
+import { NetworkManager } from "../src/networkManager";
 import { EventManager } from "../src/eventManager";
 import { LocalStorageData } from "../src/localStorageData";
 import { RestClient } from "../src/restClient";
@@ -49,14 +51,20 @@ describe("AUTHENTICATED REST API TESTS", () => {
      */
     beforeEach(done => {
 
-
-        var eventmanager = new EventManager();
+        let localStorageData = new LocalStorageData();
+        var eventManager = new EventManager();
         var data = new LocalStorageData();
-        var logger = new Logger(eventmanager, data);
+        var logger = new Logger(eventManager, data);
         var restClient = new RestClient(logger);
 
         sessionManager = new SessionManager(logger, restClient, data, comapiConfig);
-        authenticatedRestClient = new AuthenticatedRestClient(logger, sessionManager);
+
+        let webSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager);
+
+        let networkManager = new NetworkManager(sessionManager, webSocketManager);
+
+
+        authenticatedRestClient = new AuthenticatedRestClient(logger, networkManager);
 
         sessionManager.startSession()
             .then(sessionInfo => {

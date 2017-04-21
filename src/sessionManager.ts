@@ -6,7 +6,7 @@ import {
     ILocalStorageData,
     IComapiConfig,
     IRestClient,
-    ISessionStartRsponse,
+    ISessionStartResponse
 } from "./interfaces";
 
 import { Utils } from "./utils";
@@ -28,6 +28,7 @@ export class SessionManager implements ISessionManager {
      * @parameter {ILogger} logger 
      * @parameter {IRestClient} restClient  
      * @parameter {ILocalStorageData} localStorageData 
+     * @parameter {IComapiConfig} comapiConfig 
      */
     constructor(private _logger: ILogger,
         private _restClient: IRestClient,
@@ -130,11 +131,9 @@ export class SessionManager implements ISessionManager {
                         if (jwt) {
                             self._createAuthenticatedSession(jwt, sessionStartResponse.authenticationId, {})
                                 .then(function (sessionInfo) {
-
                                     self._setSession(sessionInfo);
                                     // pass back to client
                                     resolve(sessionInfo);
-
                                 }).catch(function (error) {
                                     reject(error);
                                 });
@@ -197,7 +196,7 @@ export class SessionManager implements ISessionManager {
 
         return this._restClient.post(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/sessions`, {}, data)
             .then(function (result) {
-                return Promise.resolve(result.response);
+                return Promise.resolve(<ISessionInfo>result.response);
             });
     }
 
@@ -205,10 +204,10 @@ export class SessionManager implements ISessionManager {
      * Internal function to start an authenticated session
      * @returns {Promise} - Returns a promise
      */
-    private _startAuth(): Promise<ISessionStartRsponse> {
+    private _startAuth(): Promise<ISessionStartResponse> {
         return this._restClient.get(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/sessions/start`)
             .then(result => {
-                return Promise.resolve(result.response);
+                return Promise.resolve(<ISessionStartResponse>result.response);
             });
     }
 

@@ -280,11 +280,6 @@ describe("webSocket Manager tests", () => {
 
         });
 
-        eventManager.subscribeToLocalEvent("WebsocketClosed", data => {
-            expect(seenEvent).toBeTruthy();
-            done();
-        });
-
         webSocketManager.connect()
             .then(function () {
                 webSocketManager.send({

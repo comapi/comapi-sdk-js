@@ -83,11 +83,6 @@ export class NetworkManager implements INetworkManager {
         return this._sessionManager.getValidToken();
     }
 
-    public disconnectSocket(): Promise<boolean> {
-        return this._webSocketManager.disconnect();
-    }
-
-
     /**
      * Ensure we have an active session and the websocket has been started
      * Socket may have disconected and be reconnecting. We just want to know that it was started

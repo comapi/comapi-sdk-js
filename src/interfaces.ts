@@ -578,3 +578,63 @@ export interface IGetMessagesResponse {
     latestEventId?: number;
     messages: IConversationMessage[];
 }
+
+
+export interface IAppMessaging {
+    createConversation(conversationDetails: IConversationDetails): Promise<IConversationDetails2>;
+    updateConversation(conversationDetails: IConversationDetails, eTag?: string): Promise<IConversationDetails2>;
+    getConversation(conversationId: string): Promise<IConversationDetails2>;
+    deleteConversation(conversationId: string): Promise<boolean>;
+    addParticipantsToConversation(conversationId: string, participants: IConversationParticipant[]): Promise<boolean>;
+    deleteParticipantsFromConversation(conversationId: string, participants: string[]): Promise<boolean>;
+    getParticipantsInConversation(conversationId: string): Promise<IConversationParticipant[]>;
+    getConversations(scope?: ConversationScope, profileId?: string): Promise<IConversationDetails2[]>;
+    getConversationEvents(conversationId: string, from: number, limit: number): Promise<IConversationMessageEvent[]>;
+    sendMessageToConversation(conversationId: string, message: IConversationMessage): Promise<ISendMessageResult>;
+    sendMessageStatusUpdates(conversationId: string, statuses: IMessageStatus[]): Promise<any>;
+    getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse>;
+    sendIsTyping(conversationId: string): Promise<boolean>;
+
+
+}
+
+export interface IProfile {
+    getProfile(profileId: string): Promise<any>;
+    queryProfiles(query?: string): Promise<any>;
+    updateProfile(profileId: string, profile: any, eTag?: string): Promise<any>;
+    getMyProfile(useEtag?: boolean): Promise<any>;
+    updateMyProfile(profile: any, useEtag?: boolean): Promise<any>;
+}
+
+export interface IServices {
+    appMessaging: IAppMessaging;
+    profile: IProfile;
+}
+
+export interface IDevice {
+    setFCMPushDetails(packageName: string, registrationId: string): Promise<boolean>;
+    setAPNSPushDetails(bundleId: string, environment: Environment, token: string): Promise<boolean>;
+    removePushDetails(): Promise<boolean>;
+}
+
+export interface IChannels {
+    createFbOptInState(data?: any): Promise<any>;
+}
+
+
+/**
+ * Foundation interface definition
+ * static methods missing as cant define them in TS ;-(
+ */
+export interface IFoundation {
+    services: IServices;
+    device: IDevice;
+    channels: IChannels;
+    session: ISession;
+
+    startSession(): Promise<ISession>;
+    endSession(): Promise<boolean>;
+    on(eventType: string, handler: Function): void;
+    off(eventType: string, handler?: Function): void;
+    getLogs(): Promise<string>;
+}

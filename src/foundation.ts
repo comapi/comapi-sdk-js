@@ -12,7 +12,11 @@ import {
     IMessageManager,
     IComapiConfig,
     IWebSocketManager,
-    LogPersistences
+    LogPersistences,
+    IServices,
+    IDevice,
+    IChannels,
+    IFoundation
 } from "./interfaces";
 
 import { EventManager } from "./eventManager";
@@ -46,7 +50,7 @@ import { SessionAndSocketResolver } from "./resolver";
  */
 export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder }
 
-export class Foundation {
+export class Foundation implements IFoundation {
 
     /**
      * Singleton Foundation instance
@@ -58,21 +62,21 @@ export class Foundation {
      * @private
      * @type {Services}
      */
-    private _services: Services;
+    private _services: IServices;
 
     /**
      * @name Foundation#_device
      * @private
      * @type {Device}     
      */
-    private _device: Device;
+    private _device: IDevice;
 
     /**
      * @name Foundation#_channels
      * @private
      * @type {Channels}     
      */
-    private _channels: Channels;
+    private _channels: IChannels;
 
     /**
      * Factory method to create a singleton instance of Foundation
@@ -228,7 +232,7 @@ export class Foundation {
      * @method Foundation#services
      * @returns {Services} - Returns Services
      */
-    public get services(): Services {
+    public get services(): IServices {
         return this._services;
     }
 
@@ -237,7 +241,7 @@ export class Foundation {
      * @method Foundation#device
      * @returns {Device} - Returns Device
      */
-    public get device(): Device {
+    public get device(): IDevice {
         return this._device;
     }
 
@@ -246,7 +250,7 @@ export class Foundation {
      * @method Foundation#channels
      * @returns {Channels} - Returns Channels
      */
-    public get channels(): Channels {
+    public get channels(): IChannels {
         return this._channels;
     }
 

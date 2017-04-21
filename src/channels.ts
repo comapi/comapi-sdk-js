@@ -1,10 +1,11 @@
 import {
     IFacebookManager,
+    IChannels
 } from "./interfaces";
 
 import { SessionAndSocketResolver } from "./resolver";
 
-export class Channels {
+export class Channels implements IChannels {
 
     /**          
      * Channels class constructor.

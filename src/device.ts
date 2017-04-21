@@ -1,11 +1,12 @@
 import {
     IDeviceManager,
     Environment,
+    IDevice
 } from "./interfaces";
 
 import { SessionAndSocketResolver } from "./resolver";
 
-export class Device {
+export class Device implements IDevice {
 
     /**        
      * Device class constructor.

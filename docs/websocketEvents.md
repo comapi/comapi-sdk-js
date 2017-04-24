@@ -25,6 +25,7 @@ sdk.off("profileUpdated");
 | participantAdded | [IParticipantAddedEventData](#iparticipantaddedeventdata) | Sent when a participant is added to a conversation. When a conversation is created, this event will also fire with the owner's profileId.
 | participantRemoved | [IParticipantRemovedEventData](#iparticipantremovedeventdata) |  Sent when a participant is removed to a conversation. App needs to check whether the participant is the current user and locally remove the conversation from the UI.
 | participantTyping | [IParticipantTypingEventData](#iparticipanttypingeventdata) | Sent when a participant is typing in a conversation
+| participantTypingOff | [IParticipantTypingOffEventData](#iparticipanttypingoffeventdata) | Sent when a participant has stopped typing in a conversation
 | profileUpdated | [IProfileUpdatedEvent](#iprofileupdatedevent) | Sent when a user's profile is updated  
 | conversationMessageEvent | [IConversationMessageEvent](#iconversationmessageevent) | This event is sent for all conversation message related activity. It encapsulates the `sent`, `delivered` and `read` events. It is defined like this so you can handle web-socket conversation message events and events requested from  `sdk.services.appMessaging.getConversationEvents()` seamlessly.
 
@@ -92,6 +93,16 @@ export interface IParticipantTypingEventData {
     timestamp: string;
 }
 ```
+## IParticipantTypingOffEventData
+```javascript
+export interface IParticipantTypingOffEventData {
+    conversationId: string;
+    createdBy: string;
+    profileId: string;
+    timestamp: string;
+}
+```
+
 ## IProfileUpdatedEvent
 ```javascript
 export interface IProfileUpdatedEvent {

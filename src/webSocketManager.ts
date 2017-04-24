@@ -5,6 +5,7 @@ import {
     IParticipantAddedEventData,
     IParticipantRemovedEventData,
     IParticipantTypingEventData,
+    IParticipantTypingOffEventData,
     IConversationMessageEvent,
     IProfileUpdatedEvent,
     IWebSocketManager,
@@ -353,6 +354,20 @@ export class WebSocketManager implements IWebSocketManager {
                     };
 
                     this._eventManager.publishLocalEvent("participantTyping", participantTypingEventData);
+                }
+                break;
+
+
+            case "conversation.participantTypingOff":
+                {
+                    let participantTypingOffEventData: IParticipantTypingOffEventData = {
+                        conversationId: event.payload.conversationId,
+                        createdBy: event.context.createdBy,
+                        profileId: event.payload.profileId,
+                        timestamp: event.publishedOn,
+                    };
+
+                    this._eventManager.publishLocalEvent("participantTypingOff", participantTypingOffEventData);
                 }
                 break;
 

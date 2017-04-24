@@ -573,6 +573,15 @@ export interface IParticipantTypingEventData {
     timestamp: string;
 }
 
+/**
+ * 
+ */
+export interface IParticipantTypingOffEventData {
+    conversationId: string;
+    createdBy: string;
+    profileId: string;
+    timestamp: string;
+}
 
 /**
  * 

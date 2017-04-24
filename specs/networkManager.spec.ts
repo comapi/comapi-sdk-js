@@ -26,20 +26,20 @@ describe("networkManager tests", () => {
     class MockSessionmanager implements ISessionManager {
 
         private _sessionInfo: ISessionInfo = {
-            token: "1.2.3",
             session: {
-                id: "A78B9D3A-B9B4-4612-BE8A-4221A198DD62",
-                profileId: "unitTestUser",
+                createdOn: new Date().toISOString(),
                 deviceId: "2ED8EA5F-19B8-45AA-9CD1-32C517B1553B",
+                expiresOn: new Date().toISOString(),
+                id: "A78B9D3A-B9B4-4612-BE8A-4221A198DD62",
+                isActive: true,
                 platform: "Web",
                 platformVersion: "1.2.3",
+                profileId: "unitTestUser",
                 sdkType: "SDK",
                 sdkVersion: "1.2.3",
                 sourceIp: "127.0.0.1",
-                isActive: true,
-                createdOn: new Date().toISOString(),
-                expiresOn: new Date().toISOString()
-            }
+            },
+            token: "1.2.3",
         };
 
         get sessionInfo(): ISessionInfo { return this._sessionInfo; }
@@ -54,7 +54,7 @@ describe("networkManager tests", () => {
         public disconnect(): Promise<boolean> { return Promise.resolve(true); };
         public isConnected(): boolean { return false; };
         public hasSocket(): boolean { return false; };
-        public send(data: any): void { };
+        public send(data: any): void { console.log("send"); };
         public generateInterval(k: number): number { return 1000; };
     }
 

@@ -13,9 +13,11 @@ import {
 
 export class ConversationManager implements IConversationManager {
 
-    //  This obkect is an in-memory dictionary of last sent timestamps (conversationId: timestamp) ...
+    //  This object is an in-memory dictionary of last sent timestamps (conversationId: timestamp) ...
     //  "FA93AA1B-DEA5-4182-BE67-3DEAF4021040": "2017-02-28T14:48:21.634Z"
     private isTypingInfo: any = {};
+    // same for typing off 
+    private isTypingOffInfo: any = {};
 
     /**
      * ConversationManager class constructor.
@@ -185,7 +187,7 @@ export class ConversationManager implements IConversationManager {
     }
 
     /**
-     * Function to get participantss in a conversation
+     * Function to send an is-typing event
      * @method ConversationManager#sendIsTyping 
      * @param {string} conversationId
      * @returns {Promise} 
@@ -193,8 +195,6 @@ export class ConversationManager implements IConversationManager {
     public sendIsTyping(conversationId: string): Promise<boolean> {
 
         // we only want to call this once every n seconds (10?)
-        // so store a store a  
-
         if (this.isTypingInfo[conversationId]) {
 
             var lastSentTime = new Date(this.isTypingInfo[conversationId]);
@@ -203,7 +203,7 @@ export class ConversationManager implements IConversationManager {
 
             var diff = (now.getTime() - lastSentTime.getTime()) / 1000;
 
-            if (diff < 5) {
+            if (diff < (this._comapiConfig.isTypingTimeout || 10)) {
                 return Promise.resolve(false);
             }
         }
@@ -216,4 +216,37 @@ export class ConversationManager implements IConversationManager {
                 return Promise.resolve(true);
             });
     }
+
+    /**
+     * Function to send an is-typing off event
+     * @method ConversationManager#sendIsTyping 
+     * @param {string} conversationId
+     * @returns {Promise} 
+     */
+    public sendIsTypingOff(conversationId: string): Promise<boolean> {
+        // we only want to call this once every n seconds (10?)
+        if (this.isTypingOffInfo[conversationId]) {
+
+            var lastSentTime = new Date(this.isTypingOffInfo[conversationId]);
+
+            var now = new Date();
+
+            var diff = (now.getTime() - lastSentTime.getTime()) / 1000;
+
+            if (diff < (this._comapiConfig.isTypingOffTimeout || 10)) {
+                return Promise.resolve(false);
+            }
+        }
+
+        let url: string = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/typing`;
+
+        return this._restClient.delete(url, {})
+            .then(result => {
+                this.isTypingOffInfo[conversationId] = new Date().toISOString();
+                return Promise.resolve(true);
+            });
+    }
+
+
+
 }

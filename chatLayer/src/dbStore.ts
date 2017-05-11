@@ -41,16 +41,16 @@ export class IndexedDBConversationStore implements IConversationStore {
 
                     /**
                      * Create Messages Store
-                     * Indexed by conversationId and sentEventid
+                     * Indexed by conversationId and sentEventId
                      */
                     if (!thisDB.objectStoreNames.contains(this._MessagesStore)) {
                         let os = thisDB.createObjectStore(this._MessagesStore, { keyPath: "id" });
 
                         // IE doesn't support compound indexes so caoncatenate the two fields ...
                         if (this._isIE) {
-                            os.createIndex("conversationId_sentEventid", "conversationId_sentEventid", { unique: true });
+                            os.createIndex("conversationId_sentEventId", "conversationId_sentEventId", { unique: true });
                         } else {
-                            os.createIndex("conversation", ["conversationId", "sentEventid"], { unique: true });
+                            os.createIndex("conversation", ["conversationId", "sentEventId"], { unique: true });
                         }
 
                     }
@@ -203,12 +203,23 @@ export class IndexedDBConversationStore implements IConversationStore {
      * @param messageId 
      * @param statusUdates 
      */
-    public updateStatuses(conversationId: string, messageId: string, statusUdates: any): Promise<boolean> {
+    public updateMessageStatus(conversationId: string, messageId: string, profileId: string, status: string, timestamp: string): Promise<boolean> {
 
         return this.getMessage(conversationId, messageId)
             .then(message => {
-                message.statusUpdates = statusUdates;
-                return this.upsertMessage(message, true);
+
+                // if we get delivered and read out of order, dont overwrite "read" with delivered 
+                if (message.statusUpdates[profileId] &&
+                    message.statusUpdates[profileId].status === "read") {
+                    Promise.resolve(false);
+
+                } else {
+                    message.statusUpdates[profileId] = {
+                        status,
+                        on: timestamp
+                    };
+                    return this.upsertMessage(message, true);
+                }
             });
     }
 
@@ -274,7 +285,7 @@ export class IndexedDBConversationStore implements IConversationStore {
 
                 let objectStore: IDBObjectStore = transaction.objectStore(this._MessagesStore);
 
-                let index = objectStore.index(this._isIE ? "conversationId_sentEventid" : "conversation");
+                let index = objectStore.index(this._isIE ? "conversationId_sentEventId" : "conversation");
 
                 let keyRange = this.getKeyRange(conversationId);
 
@@ -331,9 +342,9 @@ export class IndexedDBConversationStore implements IConversationStore {
                 let store: IDBObjectStore = transaction.objectStore(this._MessagesStore);
 
                 if (this._isIE) {
-                    // add a "conversationId_sentEventid" property as we are using this for an index
+                    // add a "conversationId_sentEventId" property as we are using this for an index
                     /* tslint:disable:no-string-literal */
-                    message["conversationId_sentEventid"] = `${message.conversationId}_${message.sentEventid}`;
+                    message["conversationId_sentEventId"] = `${message.conversationId}_${message.sentEventId}`;
                     /* tslint:enable:no-string-literal */
                 }
 
@@ -384,7 +395,7 @@ export class IndexedDBConversationStore implements IConversationStore {
 
                 let objectStore = transaction.objectStore(this._MessagesStore);
 
-                let index = objectStore.index(this._isIE ? "conversationId_sentEventid" : "conversation");
+                let index = objectStore.index(this._isIE ? "conversationId_sentEventId" : "conversation");
 
                 let keyRange = this.getKeyRange(conversationId);
 

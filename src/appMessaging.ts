@@ -21,9 +21,9 @@ export class AppMessaging {
      * AppMessaging class constructor.
      * @class  AppMessaging
      * @classdesc Class that implements AppMessaging
-     * @parameter {INetworkManager} networkManager 
-     * @parameter {IConversationManager} conversationManager 
-     * @parameter {IMessageManager} messageManager 
+     * @param {INetworkManager} networkManager 
+     * @param {IConversationManager} conversationManager 
+     * @param {IMessageManager} messageManager 
      */
     constructor(private _networkManager: INetworkManager, private _conversationManager: IConversationManager, private _messageManager: IMessageManager, private _messagePager: MessagePager) { }
 
@@ -76,7 +76,8 @@ export class AppMessaging {
     public deleteConversation(conversationId: string): Promise<boolean> {
         return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
-                return this._conversationManager.deleteConversation(conversationId);
+                this._messagePager.resetConversation(conversationId);
+                return this._conversationManager.deleteConversation(conversationId)
             });
     }
 
@@ -215,6 +216,21 @@ export class AppMessaging {
                 return this._conversationManager.sendIsTyping(conversationId);
             });
     }
+
+    /**
+     * Function to send typing off event to a conversation
+     * @method AppMessaging#sendIsTypingOff 
+     * @param {string} conversationId - the conversation Id 
+     * @returns {Promise} 
+     */
+    public sendIsTypingOff(conversationId: string): Promise<boolean> {
+        return this._networkManager.ensureSessionAndSocket()
+            .then((sessionInfo) => {
+                return this._conversationManager.sendIsTypingOff(conversationId);
+            });
+    }
+
+
 
 
 }

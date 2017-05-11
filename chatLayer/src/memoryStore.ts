@@ -102,14 +102,25 @@ export class MemoryConversationStore implements IConversationStore {
      * 
      * @param message 
      */
-    public updateStatuses(conversationId: string, messageId: string, statusUdates: any): Promise<boolean> {
+    public updateMessageStatus(conversationId: string, messageId: string, profileId: string, status: string, timestamp: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
 
             let message = this._findMessage(conversationId, messageId);
 
             if (message) {
-                message.statusUpdates = statusUdates;
-                resolve(true);
+                // if we get delivered and read out of order, dont overwrite "read" with delivered 
+                if (message.statusUpdates[profileId] &&
+                    message.statusUpdates[profileId].status === "read") {
+                    resolve(false);
+
+                } else {
+                    message.statusUpdates[profileId] = {
+                        status,
+                        on: timestamp
+                    };
+                    resolve(true);
+                }
+
             } else {
                 reject({ message: `Message ${messageId} not found in conversation ${conversationId}` });
             }
@@ -123,7 +134,7 @@ export class MemoryConversationStore implements IConversationStore {
     public createMessage(message: IChatMessage): Promise<boolean> {
         return new Promise((resolve, reject) => {
 
-            // messages are ordered by sentEventid
+            // messages are ordered by sentEventId
             // iterate backwards to see where to insert (will 99% prob be just on the end)
 
             let conversationMessages: IChatMessage[] = this.messageStore[message.conversationId];
@@ -134,7 +145,7 @@ export class MemoryConversationStore implements IConversationStore {
                 for (let i = conversationMessages.length - 1; i >= 0; i--) {
                     let _message = conversationMessages[i];
 
-                    if (_message.sentEventid < message.sentEventid) {
+                    if (_message.sentEventId < message.sentEventId) {
                         position = i + 1;
                         break;
                     }

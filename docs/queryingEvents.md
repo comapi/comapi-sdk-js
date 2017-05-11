@@ -27,7 +27,7 @@ After you have initially loaded up a conversation, it becomes your responsibilit
 There are 3 events that may need processing depending on whether you intend to mark messages as delivered / read.
 
 ## conversationMessage.sent
-This event signifies that a new message has been posted to the conversation. If this message wasn't sent by you, you should send a status update marking this message as delivered. You will also want to add this message to your local message store. You can identify the position to insert this message by looking at the sentEventid property on the messages in your message store and the conversationEventId property on the sent event. Messages should be ordered based on this sequence.
+This event signifies that a new message has been posted to the conversation. If this message wasn't sent by you, you should send a status update marking this message as delivered. You will also want to add this message to your local message store. You can identify the position to insert this message by looking at the sentEventId property on the messages in your message store and the conversationEventId property on the sent event. Messages should be ordered based on this sequence.
 
 ## conversationMessage.read
 This event signifies that a someone has marked a message as `read`.

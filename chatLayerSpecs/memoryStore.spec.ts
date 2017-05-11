@@ -16,12 +16,12 @@ import { Utils } from "../src/utils";
  */
 describe("MemoryConversationStore tests", () => {
 
-    function createMessage(conversationId: string, sentEventid: number): IChatMessage {
+    function createMessage(conversationId: string, sentEventId: number): IChatMessage {
         let message = new MessageBuilder().withText("hello");
 
         return {
             id: Utils.uuid(),
-            sentEventid: sentEventid,
+            sentEventId: sentEventId,
             conversationId: conversationId,
             parts: message.parts,
             senderId: "unitTest",
@@ -203,9 +203,9 @@ describe("MemoryConversationStore tests", () => {
                     })
                     .then(messages => {
                         expect(messages.length).toBe(3);
-                        expect(messages[0].sentEventid).toBe(1);
-                        expect(messages[1].sentEventid).toBe(2);
-                        expect(messages[2].sentEventid).toBe(3);
+                        expect(messages[0].sentEventId).toBe(1);
+                        expect(messages[1].sentEventId).toBe(2);
+                        expect(messages[2].sentEventId).toBe(3);
                         done();
                     })
             });
@@ -236,7 +236,7 @@ describe("MemoryConversationStore tests", () => {
                         return memoryConversationStore.getMessage(conversation.id, message2.id);
                     })
                     .then(mesage => {
-                        expect(mesage.sentEventid).toBe(2);
+                        expect(mesage.sentEventId).toBe(2);
                         done();
                     });
             });
@@ -279,7 +279,7 @@ describe("MemoryConversationStore tests", () => {
                 return memoryConversationStore.createMessage(message1);
             })
             .then(succeeded => {
-                return memoryConversationStore.updateStatuses(id, message1.id, statusUpdate);
+                return memoryConversationStore.updateMessageStatus(id, message1.id, "alex", "read", "2016-10-19T11:52:29.704Z");
             })
             .then(succeeded => {
                 expect(succeeded).toBeTruthy();
@@ -297,17 +297,10 @@ describe("MemoryConversationStore tests", () => {
 
         let conversation = new ConversationBuilder().withName("Test Conversation #1").withId(id);
 
-        let statusUpdate = {
-            "alex": {
-                "status": "read",
-                "on": "2016-10-19T11:52:29.704Z"
-            }
-        };
-
         memoryConversationStore.createConversation(conversation)
             .then(succeeded => {
                 expect(succeeded).toBeTruthy();
-                return memoryConversationStore.updateStatuses(id, "???", statusUpdate);
+                return memoryConversationStore.updateMessageStatus(id, "???", "alex", "read", "2016-10-19T11:52:29.704Z");
             })
             .catch(error => {
                 expect(error.message).toBeDefined();

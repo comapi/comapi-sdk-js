@@ -55,7 +55,7 @@ export class Foundation implements IFoundation {
     /**
      * Singleton Foundation instance
      */
-    private static _foundtion: Foundation;
+    private static _foundation: Foundation;
 
     /**
      * @name Foundation#_services
@@ -84,56 +84,37 @@ export class Foundation implements IFoundation {
      * @param {IComapiConfig} comapiConfig - the app config (use `ComapiConfig` to create)
      * @returns {Promise} - returns promise
      */
+    public static initialiseShared(comapiConfig: IComapiConfig): Promise<Foundation> {
+        return Foundation._initialise(comapiConfig, true);
+    }
+
+    /**
+     * Factory method to create an instance of Foundation
+     * @method Foundation#initialise
+     * @param {IComapiConfig} comapiConfig - the app config (use `ComapiConfig` to create)
+     * @returns {Promise} - returns promise
+     */
     public static initialise(comapiConfig: IComapiConfig): Promise<Foundation> {
+        return Foundation._initialise(comapiConfig, false);
+    }
 
-        if (Foundation._foundtion) {
-            return Promise.resolve(Foundation._foundtion);
-        }
+    /**
+     * Property to get the SDK version
+     * @method Foundation#version
+     */
+    public static get version(): string {
+        return "_SDK_VERSION_";
+    }
 
-        function _initialise(indexedDBLogger?: IndexedDBLogger): Foundation {
-            let eventManager: IEventManager = new EventManager();
+    /**
+     * Private initialisation method
+     * @param comapiConfig 
+     * @param indexedDBLogger 
+     */
+    private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
 
-            let localStorageData: ILocalStorageData = new LocalStorageData();
-
-            let logger: ILogger = new Logger(eventManager, comapiConfig.logPersistence === LogPersistences.LocalStorage ? localStorageData : undefined, indexedDBLogger);
-
-            if (comapiConfig.logLevel) {
-                logger.logLevel = comapiConfig.logLevel;
-            }
-
-            let restClient: IRestClient = new RestClient(logger);
-
-            let sessionManager: ISessionManager = new SessionManager(logger, restClient, localStorageData, comapiConfig);
-
-            let webSocketManager: IWebSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager);
-
-            let networkManager = new NetworkManager(sessionManager, webSocketManager);
-
-            let authenticatedRestClient: IRestClient = new AuthenticatedRestClient(logger, networkManager);
-
-            let deviceManager: IDeviceManager = new DeviceManager(logger, authenticatedRestClient, localStorageData, comapiConfig);
-
-            let facebookManager: IFacebookManager = new FacebookManager(authenticatedRestClient, comapiConfig);
-
-            let conversationManager: IConversationManager = new ConversationManager(logger, authenticatedRestClient, localStorageData, comapiConfig, sessionManager);
-
-            let profileManager: IProfileManager = new ProfileManager(logger, authenticatedRestClient, localStorageData, comapiConfig, sessionManager);
-
-            let messageManager: IMessageManager = new MessageManager(logger, authenticatedRestClient, localStorageData, comapiConfig, sessionManager, conversationManager);
-
-
-            let foundation = new Foundation(eventManager,
-                logger,
-                localStorageData,
-                networkManager,
-                deviceManager,
-                facebookManager,
-                conversationManager,
-                profileManager,
-                messageManager,
-                comapiConfig);
-
-            return foundation;
+        if (doSingleton && Foundation._foundation) {
+            return Promise.resolve(Foundation._foundation);
         }
 
         if (comapiConfig.logPersistence &&
@@ -151,23 +132,62 @@ export class Foundation implements IFoundation {
                     return indexedDBLogger.purge(purgeDate);
                 })
                 .then(function () {
-                    Foundation._foundtion = _initialise(indexedDBLogger);
-                    return Promise.resolve(Foundation._foundtion);
+                    let foundation: Foundation = foundationFactory(comapiConfig, indexedDBLogger);
+                    if (doSingleton) { Foundation._foundation = foundation; }
+                    return Promise.resolve(foundation);
                 });
         } else {
-            Foundation._foundtion = _initialise();
-            return Promise.resolve(Foundation._foundtion);
+            let foundation: Foundation = foundationFactory(comapiConfig);
+            if (doSingleton) { Foundation._foundation = foundation; }
+            return Promise.resolve(foundation);
+        }
+
+        function foundationFactory(config: IComapiConfig, indexedDBLogger?: IndexedDBLogger) {
+            let eventManager: IEventManager = new EventManager();
+
+            let localStorageData: ILocalStorageData = new LocalStorageData();
+
+            let logger: ILogger = new Logger(eventManager, config.logPersistence === LogPersistences.LocalStorage ? localStorageData : undefined, indexedDBLogger);
+
+            if (config.logLevel) {
+                logger.logLevel = config.logLevel;
+            }
+
+            let restClient: IRestClient = new RestClient(logger);
+
+            let sessionManager: ISessionManager = new SessionManager(logger, restClient, localStorageData, config);
+
+            let webSocketManager: IWebSocketManager = new WebSocketManager(logger, localStorageData, config, sessionManager, eventManager);
+
+            let networkManager = new NetworkManager(sessionManager, webSocketManager);
+
+            let authenticatedRestClient: IRestClient = new AuthenticatedRestClient(logger, networkManager);
+
+            let deviceManager: IDeviceManager = new DeviceManager(logger, authenticatedRestClient, localStorageData, config);
+
+            let facebookManager: IFacebookManager = new FacebookManager(authenticatedRestClient, config);
+
+            let conversationManager: IConversationManager = new ConversationManager(logger, authenticatedRestClient, localStorageData, config, sessionManager);
+
+            let profileManager: IProfileManager = new ProfileManager(logger, authenticatedRestClient, localStorageData, config, sessionManager);
+
+            let messageManager: IMessageManager = new MessageManager(logger, authenticatedRestClient, localStorageData, config, sessionManager, conversationManager);
+
+
+            let foundation = new Foundation(eventManager,
+                logger,
+                localStorageData,
+                networkManager,
+                deviceManager,
+                facebookManager,
+                conversationManager,
+                profileManager,
+                messageManager,
+                config);
+
+            return foundation;
         }
     }
-
-    /**
-     * Property to get the SDK version
-     * @method Foundation#version
-     */
-    public static get version(): string {
-        return "_SDK_VERSION_";
-    }
-
 
     /**
      * Foundation class constructor.

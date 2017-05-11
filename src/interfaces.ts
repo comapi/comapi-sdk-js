@@ -258,6 +258,8 @@ export interface IComapiConfig {
     webSocketBase?: string;
     logLevel?: LogLevels;
     logPersistence?: LogPersistences;
+    isTypingTimeout?: number;
+    isTypingOffTimeout?: number;
 };
 
 /**
@@ -291,6 +293,7 @@ export interface IConversationManager {
     getParticipantsInConversation(conversationId: string): Promise<IConversationParticipant[]>;
     getConversations(scope?: ConversationScope, profileId?: string): Promise<IConversationDetails2[]>;
     sendIsTyping(conversationId: string): Promise<boolean>;
+    sendIsTypingOff(conversationId: string): Promise<boolean>;
 }
 
 /**
@@ -351,7 +354,7 @@ export interface ISendMessageResult {
  */
 export interface IConversationMessage {
     id?: string;
-    sentEventid?: number;
+    sentEventId?: number;
     metadata?: any;
     context?: any;
     /**
@@ -616,8 +619,7 @@ export interface IAppMessaging {
     sendMessageStatusUpdates(conversationId: string, statuses: IMessageStatus[]): Promise<any>;
     getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse>;
     sendIsTyping(conversationId: string): Promise<boolean>;
-
-
+    sendIsTypingOff(conversationId: string): Promise<boolean>;
 }
 
 export interface IProfile {

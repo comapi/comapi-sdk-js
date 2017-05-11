@@ -27,11 +27,15 @@ export interface IChatMessage {
     conversationId: string;
     senderId: string;
     sentOn: string;
-    sentEventid: number;
+    sentEventId: number;
     metadata?: any;
     parts: IMessagePart[];
-    statusUpdates: any;
+    // TODO: Decode on status updates structure ...
+    // keep as-is or project onto an array ???
+    statusUpdates?: any;
 }
+
+
 
 
 
@@ -51,7 +55,7 @@ export interface IConversationStore {
     // sdk calls this to see whether it needs to update / add the new message 
     getMessage(conversationId: string, messageId: string): Promise<IChatMessage>;
     // read / delivered info has been added, hand back to client to store ...
-    updateStatuses(conversationId: string, messageId: string, statusUdates: any): Promise<boolean>;
+    updateMessageStatus(conversationId: string, messageId: string, profileId: string, status: string, timestamp: string): Promise<boolean>;
     // new message added 
     createMessage(message: IChatMessage): Promise<boolean>;
 

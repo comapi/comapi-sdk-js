@@ -17,12 +17,12 @@ import { Utils } from "../src/utils";
  */
 describe("IndexedDBConversationStore tests", () => {
 
-    function createMessage(conversationId: string, sentEventid: number): IChatMessage {
+    function createMessage(conversationId: string, sentEventId: number): IChatMessage {
         let message = new MessageBuilder().withText("hello");
 
         return {
             id: Utils.uuid(),
-            sentEventid: sentEventid,
+            sentEventId: sentEventId,
             conversationId: conversationId,
             parts: message.parts,
             senderId: "unitTest",
@@ -214,9 +214,9 @@ describe("IndexedDBConversationStore tests", () => {
                     })
                     .then(messages => {
                         expect(messages.length).toBe(3);
-                        expect(messages[0].sentEventid).toBe(1);
-                        expect(messages[1].sentEventid).toBe(2);
-                        expect(messages[2].sentEventid).toBe(3);
+                        expect(messages[0].sentEventId).toBe(1);
+                        expect(messages[1].sentEventId).toBe(2);
+                        expect(messages[2].sentEventId).toBe(3);
                         done();
                     })
             });
@@ -247,7 +247,7 @@ describe("IndexedDBConversationStore tests", () => {
                         return conversationStore.getMessage(conversation.id, message2.id);
                     })
                     .then(mesage => {
-                        expect(mesage.sentEventid).toBe(2);
+                        expect(mesage.sentEventId).toBe(2);
                         done();
                     });
             });
@@ -290,7 +290,7 @@ describe("IndexedDBConversationStore tests", () => {
                 return conversationStore.createMessage(message1);
             })
             .then(succeeded => {
-                return conversationStore.updateStatuses(id, message1.id, statusUpdate);
+                return conversationStore.updateMessageStatus(id, message1.id, "alex", "read", "2016-10-19T11:52:29.704Z");
             })
             .then(succeeded => {
                 expect(succeeded).toBeTruthy();
@@ -308,17 +308,10 @@ describe("IndexedDBConversationStore tests", () => {
 
         let conversation = new ConversationBuilder().withName("Test Conversation #1").withId(id);
 
-        let statusUpdate = {
-            "alex": {
-                "status": "read",
-                "on": "2016-10-19T11:52:29.704Z"
-            }
-        };
-
         conversationStore.createConversation(conversation)
             .then(succeeded => {
                 expect(succeeded).toBeTruthy();
-                return conversationStore.updateStatuses(id, "???", statusUpdate);
+                return conversationStore.updateMessageStatus(id, "???", "alex", "read", "2016-10-19T11:52:29.704Z");
             })
             .catch(error => {
                 expect(error.message).toBeDefined();

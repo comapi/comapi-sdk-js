@@ -14,7 +14,7 @@ export class MessageBuilder implements IConversationMessage {
     public parts: IMessagePart[] = [];
     public alert: IMessageAlert = undefined;
     public context: any = undefined;
-    public sentEventid: number = undefined;
+    public sentEventId: number = undefined;
     public statusUpdates: any = undefined;
 
     /**

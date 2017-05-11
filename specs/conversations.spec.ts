@@ -15,10 +15,11 @@ describe("Conversations tests", () => {
     var comapiConfig: IComapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
+        isTypingOffTimeout: 1,
+        isTypingTimeout: 1,
         logRetentionHours: 1,
         urlBase: Config.getUrlBase(),
         webSocketBase: Config.getWebSocketBase(),
-
     };
 
     /**
@@ -354,7 +355,35 @@ describe("Conversations tests", () => {
                             expect(sent3).toBeTruthy();
                             done();
                         });
-                }, 6000);
+                }, 1500);
+            })
+            .catch(error => {
+                fail(error);
+            });
+    });
+
+    /**
+     * Typing off indicators should only actually get send every x seconds ...
+     */
+    it("should send typing Off idicators correctly", done => {
+        console.log("Creating a conversation ...", conversationDetails);
+        foundation.services.appMessaging.createConversation(conversationDetails)
+            .then(result => {
+                return foundation.services.appMessaging.sendIsTypingOff(conversationDetails.id);
+            })
+            .then(sent1 => {
+                expect(sent1).toBeTruthy();
+                return foundation.services.appMessaging.sendIsTypingOff(conversationDetails.id);
+            })
+            .then(sent2 => {
+                expect(sent2).toBeFalsy();
+                setTimeout(() => {
+                    return foundation.services.appMessaging.sendIsTypingOff(conversationDetails.id)
+                        .then(sent3 => {
+                            expect(sent3).toBeTruthy();
+                            done();
+                        });
+                }, 1500);
             })
             .catch(error => {
                 fail(error);

@@ -32,7 +32,7 @@ export class MessagePager {
      * @parameter {IMessageManager} _messageManager 
      */
     constructor(private _logger: ILogger, private _localStorage: ILocalStorageData, private _messageManager: IMessageManager) {
-        this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
+        this._orphanedEevnts = this._localStorage.getObject("orphanedEevnts") || {};
     }
 
     /**
@@ -315,8 +315,8 @@ export class MessagePager {
     /**
      * Method to reset any cached info abut a conversation
      */
-    private resetConversation(conversationId: string) {
-        this._orphanedEevnts[conversationId] = undefined;
+    public resetConversation(conversationId: string) {
+        this._orphanedEevnts[conversationId] = {};
         this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
     }
 

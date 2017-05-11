@@ -97,6 +97,9 @@ describe("Foundation Auth Tests", () => {
 
     beforeEach(done => {
 
+        // just in case we don't adopt some session from another test ...
+        localStorage.removeItem("comapi.session");
+
         Foundation.initialise(comapiConfig).then(result => {
             foundation = result;
             done();

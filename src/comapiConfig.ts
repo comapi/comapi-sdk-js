@@ -15,6 +15,8 @@ export class ComapiConfig implements IComapiConfig {
     public webSocketBase: string = "wss://api.comapi.com";
     public logLevel: LogLevels = LogLevels.Error;
     public logPersistence: LogPersistences = LogPersistences.LocalStorage;
+    public isTypingTimeout: number = 10;
+    public isTypingOffTimeout: number = 10;
 
     /**
      * ComapiConfig class constructor.

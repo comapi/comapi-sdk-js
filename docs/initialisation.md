@@ -1,12 +1,12 @@
 # SDK Initialisation
 
-To initialise the sdk, you will need a few pre-requisites ...
+To initialise the SDK, you will need a few pre-requisites ...
 
 1) A configured API space
 
 2) An authentication provider that can generate a jwt that matches the auth scheme configured for your Api Space.
 
-3) The generated JWT `must` include the provided nonce as a claim in th generated jwt 
+3) The generated JWT `must` include the provided nonce as a claim in the generated jwt 
 
 
 ## ES6
@@ -89,18 +89,18 @@ COMAPI.Foundation.initialise(comapiConfig)
         console.log("Foundation interface created", sdk);
     })
     .catch(function (error) {
-        $log.error("paragonService: failed to get a fundation", error);
+        $log.error("paragonService: failed to initialise", error);
     });
 
 ```
 
 ## Advanced options
 
-The above examples initialised the SDK with mimimal configuration. You can customise the sdk behaviour with the following optional settings
+The above examples initialised the SDK with minimal configuration. You can customise the sdk behaviour with the following optional settings
 
 ### logRetentionTime
-When the sdk uses indexedDB to persist logs, they are purged on sdk initialisation.
-this value reprasents the number of hours to keep logs for - the default value is 24
+When the SDK uses indexedDB to persist logs, they are purged on SDK initialisation.
+this value represents the number of hours to keep logs for - the default value is 24
 
 ### logLevel
 This parameter controls what level of logging to perform.
@@ -116,7 +116,7 @@ export enum LogLevels {
 The default setting is to only log errors.
 
 ### logPersistence
-This parameter ontrols whether and where to persist log data.
+This parameter controls whether and where to persist log data.
 The historic data is available via a call to `Foundation.getLogs()`
 ```javascript
 export enum LogPersistences {
@@ -126,7 +126,7 @@ export enum LogPersistences {
 };
 ```
 The default setting is to use local storage.
-IndexedDB is more performant but may require a ployfill.
+IndexedDB is more performant but may require a poly-fill.
 
 # Authentication
 
@@ -212,7 +212,7 @@ function authChallenge (options, answerAuthenticationChallenge) {
 
 # Sessions
 
-To call onto ant of the comapi services, a valid session is required. This is what the authChallenge is for. Whenever COMAPI needs a session and it doesnt's have a curently active one, it will run through the auth flow as part of session creation.
+To call onto any of the Comapi services, a valid session is required. This is what the authChallenge is for. Whenever Comapi needs a session and it doesn't have a currently active one, it will run through the auth flow as part of session creation.
 
 You can explicitly start a session or the SDK will create one on the fly the first time you call a method that requires one
 
@@ -224,8 +224,8 @@ Foundation.initialise(comapiConfig)
         console.log("sdk initialised", sdk);        
         return sdk.startSession();
     })
-    .then(session => {
-        console.log("session started", session);
+    .then(sessionInfo => {
+        console.log("session started", sessionInfo);
     })
     .catch(error => {
         console.error("Something went wrong", error);

@@ -1,9 +1,8 @@
 import {
     ILocalStorageData,
     IProfileManager,
+    INetworkManager
 } from "./interfaces";
-
-import { SessionAndSocketResolver } from "./resolver";
 
 export class Profile {
 
@@ -11,11 +10,11 @@ export class Profile {
      * Profile class constructor.
      * @class Profile
      * @classdesc Class that implements Profile.
-     * @parameter {SessionAndSocketResolver} resolver 
+     * @parameter {INetworkManager} _networkManager 
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IProfileManager} profileManager 
      */
-    constructor(private _sessionAndSocketResolver: SessionAndSocketResolver, private _localStorage: ILocalStorageData, private _profileManager: IProfileManager) { }
+    constructor(private _networkManager: INetworkManager, private _localStorage: ILocalStorageData, private _profileManager: IProfileManager) { }
 
     /**
      * Get a profile
@@ -25,7 +24,7 @@ export class Profile {
      */
     public getProfile(profileId: string): Promise<any> {
 
-        return this._sessionAndSocketResolver.ensureSessionAndSocket()
+        return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
                 return this._profileManager.getProfile(profileId);
             });
@@ -38,7 +37,7 @@ export class Profile {
      * @returns {Promise} 
      */
     public queryProfiles(query?: string): Promise<any> {
-        return this._sessionAndSocketResolver.ensureSessionAndSocket()
+        return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
                 return this._profileManager.queryProfiles(query);
             });
@@ -53,7 +52,7 @@ export class Profile {
      * @returns {Promise} 
      */
     public updateProfile(profileId: string, profile: any, eTag?: string): Promise<any> {
-        return this._sessionAndSocketResolver.ensureSessionAndSocket()
+        return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
                 return this._profileManager.updateProfile(profileId, profile, eTag);
             });
@@ -66,7 +65,7 @@ export class Profile {
      * @returns {Promise} - returns a Promise  
      */
     public getMyProfile(useEtag: boolean = true): Promise<any> {
-        return this._sessionAndSocketResolver.ensureSessionAndSocket()
+        return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
                 return this._profileManager.getProfile(sessionInfo.session.profileId)
                     .then(result => {
@@ -86,7 +85,7 @@ export class Profile {
      * @returns {Promise} - returns a Promise  
      */
     public updateMyProfile(profile: any, useEtag: boolean = true): Promise<any> {
-        return this._sessionAndSocketResolver.ensureSessionAndSocket()
+        return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
                 return this._profileManager.updateProfile(sessionInfo.session.profileId,
                     profile,

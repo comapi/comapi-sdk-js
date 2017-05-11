@@ -1,19 +1,19 @@
 import {
     IFacebookManager,
+    IChannels,
+    INetworkManager
 } from "./interfaces";
 
-import { SessionAndSocketResolver } from "./resolver";
-
-export class Channels {
+export class Channels implements IChannels {
 
     /**          
      * Channels class constructor.
      * @class Channels
      * @classdesc Class that implements Channels interface
-     * @parameter {SessionAndSocketResolver} resolver 
+     * @parameter {NetworkManager} networkManager 
      * @parameter {IFacebookManager} facebookManager 
      */
-    constructor(private _sessionAndSocketResolver: SessionAndSocketResolver, private _facebookManager: IFacebookManager) { }
+    constructor(private _networkManager: INetworkManager, private _facebookManager: IFacebookManager) { }
 
     /**
      * Method to create opt in state for facebook messenger
@@ -21,7 +21,7 @@ export class Channels {
      * @param {any} [data] - the data to post
      */
     public createFbOptInState(data?: any): Promise<any> {
-        return this._sessionAndSocketResolver.ensureSessionAndSocket()
+        return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
                 return this._facebookManager.createSendToMessengerState(data);
             });

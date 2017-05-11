@@ -1,5 +1,22 @@
 import { IBrowserInfo } from "./interfaces";
 
+
+/**
+ * Method to perform the asnc operation
+ * @param {any} data  the data to operate on
+ * @returns {Promise<any>} returns a promise
+ */
+export type DoUntilOperationFunction = (data: any) => Promise<any>;
+/**
+ * Method to decide whether to continue or not
+ * @param {any} data  the data to look at (will have been returned vi a promise from DoUntilOperationFunction)
+ * @returns {boolean} returns true or false. return false to stop
+ */
+export type DoUntilTestFunction = (data: any) => boolean;
+
+/**
+ * Utility class
+ */
 export class Utils {
 
     /**
@@ -66,6 +83,33 @@ export class Utils {
     }
 
     /**
+     * Method to call some async function on an array of data and you want them called sequentially
+     * @param {any[]} arr 
+     * @param {Function} iteratorFn 
+     * @returns {Promise} - returns a Promise
+     */
+    public static eachSeries(arr: any[], iteratorFn: Function): Promise<any> {
+        return arr.reduce(function (p, item) {
+            return p.then(function () {
+                return iteratorFn(item);
+            });
+        }, Promise.resolve());
+    }
+
+    /**
+     * Method to encapsulate repeatdly calling an async method until a condition is met (tyoes defined at top)
+     * @param {DoUntilOperationFunction} operation - the operation to perform 
+     * @param {DoUntilTestFunction} test - the condition that stops the repeats
+     * @param {any} data - the data
+     */
+    public static doUntil(operation: DoUntilOperationFunction, test: DoUntilTestFunction, data?: any): Promise<any> {
+        return operation(data)
+            .then((rslt: any) => {
+                return test(rslt) ? Utils.doUntil(operation, test, rslt) : rslt;
+            });
+    }
+
+    /**
      * @class Utils
      * @ignore
      * @classdesc Class that implements a Utils.
@@ -75,3 +119,4 @@ export class Utils {
     }
 
 };
+

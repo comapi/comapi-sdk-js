@@ -1,15 +1,15 @@
 # Creating a conversation
 
 The first thing you probably want to do is create a conversation and add some participants.
-I will assume you have an initialised sdk at this point.
+I will assume you have an initialised SDK at this point.
 
 To create a conversation, you should use the `ConversationBuilder` class in conjunction with the `createConversation()` method.
 
 A unique ConversationId is required to create a conversation. This is up to the integrator to provide. 
-The ConversationBuilder interface will automatically create a guid for this when it is instanciated.
-You can override this behaviour and specify your own id using the `withId("myCOnversationId")` method.
+The ConversationBuilder interface will automatically create a guid for this when it is instantiated.
+You can override this behaviour and specify your own id using the `withId("myConversationId")` method.
 
-Note that the methods on this interface cen be chained together. See the sdk docs for a complete list of options.
+Note that the methods on this interface can be chained together. See the SDK docs for a complete list of options.
 
 ## ES6 
 Here is an ES6 sample
@@ -117,7 +117,7 @@ sdk.services.appMessaging.getParticipantsInConversation(conversationInfo.id)
 
 # Deleting a conversation
 
-To delete a conversation, you simpley use the `deleteConversation()` method.
+To delete a conversation, you simply use the `deleteConversation()` method.
 
 ```javascript
 sdk.services.appMessaging.deleteConversation(conversationInfo.id)
@@ -131,13 +131,13 @@ sdk.services.appMessaging.deleteConversation(conversationInfo.id)
 
 # Conversation related events
 
-All of these methods will generate events which can be handled in your app. There is a specific [events](./websocketEvents.md) section where I will cover this in more detail particulaly in terms of event payloads. Events are especially useful when there is more than one user of your app, so all devices / users get notified of any conversation related changes.
+All of these methods will generate events which can be handled in your app. There is a specific [events](./websocketEvents.md) section where I will cover this in more detail particularly in terms of event payloads. Events are especially useful when there is more than one user of your app, so all devices / users get notified of any conversation related changes.
 
 | Event        | Details  |
 | ------------- | -----:|
 | conversationDeleted | The conversation has been deleted |
 | conversationUndeleted | The conversation has been un-deleted |
 | conversationUpdated |  The conversation has been updated (name / description changed) |
-| participantAdded | A participant has been added to a conversaton |
-| participantRemoved |  A participant has been removed from a conversaton |
+| participantAdded | A participant has been added to a conversation |
+| participantRemoved |  A participant has been removed from a conversation |
 | participantTyping |  A participant is `typing` in a conversation |

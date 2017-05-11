@@ -63,3 +63,18 @@ export interface IConversationStore {
     // TODO: Participants need syncing too
 
 }
+
+
+export interface IOrphanedEventInfo {
+    conversationId: string;
+    continuationToken: number;
+}
+
+export interface IOrphanedEventManager {
+
+    clearAll();
+    clear(conversationId: string);
+
+    getInfo(conversationId: string)
+
+}

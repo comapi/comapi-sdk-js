@@ -48,8 +48,8 @@ export class LocalStorageData implements ILocalStorageData {
      */
     public getObject(key: string): Object {
 
-        var obj = null;
-        var raw = this.getString(key);
+        let obj = null;
+        let raw = this.getString(key);
         try {
             obj = JSON.parse(raw);
         } catch (e) {
@@ -67,9 +67,9 @@ export class LocalStorageData implements ILocalStorageData {
      * @returns {boolean} - returns boolean value representing success
      */
     public setObject(key: string, data: Object): boolean {
-        var succeeded = true;
+        let succeeded = true;
         try {
-            var stringified = JSON.stringify(data);
+            let stringified = JSON.stringify(data);
             this.setString(key, stringified);
         } catch (e) {
             console.log("caught exception in LocalStorageData.set(" + key + "): " + e);

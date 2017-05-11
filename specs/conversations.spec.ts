@@ -7,12 +7,12 @@ import { IComapiConfig, IConversationDetails, IConversationParticipant, Conversa
  */
 describe("Conversations tests", () => {
 
-    var foundation: Foundation;
+    let foundation: Foundation;
 
     /**
      * 
      */
-    var comapiConfig: IComapiConfig = {
+    let comapiConfig: IComapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
         isTypingOffTimeout: 1,
@@ -25,7 +25,7 @@ describe("Conversations tests", () => {
     /**
      * 
      */
-    var conversationDetails: IConversationDetails = {
+    let conversationDetails: IConversationDetails = {
         id: undefined,
         isPublic: false,
         name: "My Test Conversation",
@@ -49,7 +49,7 @@ describe("Conversations tests", () => {
     /**
      * 
      */
-    var members: IConversationParticipant[] = [
+    let members: IConversationParticipant[] = [
         {
             id: "member1",
             role: "member",
@@ -78,7 +78,7 @@ describe("Conversations tests", () => {
             });
 
     });
-    var originalTimeout;
+    let originalTimeout;
 
     beforeEach(done => {
 
@@ -155,7 +155,7 @@ describe("Conversations tests", () => {
                 expect(result.id).toBe(conversationDetails.id);
                 expect(result.ETag).toBeDefined();
 
-                var copy = JSON.parse(JSON.stringify(conversationDetails));
+                let copy = JSON.parse(JSON.stringify(conversationDetails));
 
                 copy.name = "My Updated Test Conversation";
 
@@ -189,7 +189,7 @@ describe("Conversations tests", () => {
                 expect(result.id).toBe(conversationDetails.id);
                 expect(result.ETag).toBeDefined();
 
-                var copy = JSON.parse(JSON.stringify(conversationDetails));
+                let copy = JSON.parse(JSON.stringify(conversationDetails));
 
                 copy.name = "My Updated Test Conversation";
 

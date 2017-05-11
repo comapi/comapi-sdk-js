@@ -74,7 +74,7 @@ export class RestClient implements IRestClient {
      * @param  {any} headers
      */
     private addHeaders(request: XMLHttpRequest, headers: any) {
-        for (var prop in headers) {
+        for (let prop in headers) {
             if (headers.hasOwnProperty(prop)) {
                 request.setRequestHeader(prop, headers[prop]);
             }
@@ -85,21 +85,21 @@ export class RestClient implements IRestClient {
      * 
      */
     private getResponseHeaders(xhr: XMLHttpRequest): any {
-        var headers = {};
+        let headers = {};
 
-        var headerStr = xhr.getAllResponseHeaders();
+        let headerStr = xhr.getAllResponseHeaders();
 
         if (headerStr) {
-            var headerPairs = headerStr.split("\u000d\u000a");
+            let headerPairs = headerStr.split("\u000d\u000a");
 
-            for (var i = 0; i < headerPairs.length; i++) {
-                var headerPair = headerPairs[i];
+            for (let i = 0; i < headerPairs.length; i++) {
+                let headerPair = headerPairs[i];
                 // Can't use split() here because it does the wrong thing
                 // if the header value has the string ": " in it.
-                var index = headerPair.indexOf("\u003a\u0020");
+                let index = headerPair.indexOf("\u003a\u0020");
                 if (index > 0) {
-                    var key = headerPair.substring(0, index);
-                    var val = headerPair.substring(index + 2);
+                    let key = headerPair.substring(0, index);
+                    let val = headerPair.substring(index + 2);
                     headers[key] = val;
                 }
             }
@@ -112,7 +112,7 @@ export class RestClient implements IRestClient {
      * 
      */
     private createCORSRequest(method, url): XMLHttpRequest {
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         if ("withCredentials" in xhr) {
 
             // Check if the XMLHttpRequest object has a "withCredentials" property.
@@ -149,7 +149,7 @@ export class RestClient implements IRestClient {
                 this.logger.log(`${method}'ing ${url}  ...`);
             }
 
-            var xhr = this.createCORSRequest(method, url);
+            let xhr = this.createCORSRequest(method, url);
 
             if (this.logger) {
                 this.logger.log("Created XMLHttpRequest ...");
@@ -171,7 +171,7 @@ export class RestClient implements IRestClient {
 
                 let succeeded: boolean = xhr.status >= 200 && xhr.status < 300;
 
-                var result: IRestClientResult = {
+                let result: IRestClientResult = {
                     headers: this.getResponseHeaders(xhr),
                     response: undefined,
                     statusCode: xhr.status,
@@ -211,7 +211,7 @@ export class RestClient implements IRestClient {
                     this.logger.error(`${method}'ing to ${url} failed`);
                 }
 
-                var result: IRestClientResult = {
+                let result: IRestClientResult = {
                     headers: this.getResponseHeaders(xhr),
                     response: xhr.responseText,
                     statusCode: xhr.status,
@@ -249,7 +249,7 @@ export class RestClient implements IRestClient {
      * @returns {Promise} - returns a promise
      */
     private makeRequest(method: string, url: string, headers?: any, data?: any): Promise<IRestClientResult> {
-        var self = this;
+        let self = this;
 
         headers = headers || {};
 

@@ -27,9 +27,9 @@ import { LocalStorageData } from "../src/localStorageData";
  */
 describe("webSocket Manager tests", () => {
 
-    var defaultWebSocketBase = Config.getWebSocketBase();
-    var eventManager: IEventManager;
-    var webSocketManager: WebSocketManager;
+    let defaultWebSocketBase = Config.getWebSocketBase();
+    let eventManager: IEventManager;
+    let webSocketManager: WebSocketManager;
     /**
      * Mock MockSessionmanager - we just need getValidAuthHeader
      */
@@ -49,7 +49,7 @@ describe("webSocket Manager tests", () => {
     /**
      * 
      */
-    var comapiConfig: IComapiConfig = {
+    let comapiConfig: IComapiConfig = {
         // just a random guid - we won't create an app space ...
         apiSpaceId: "7CACC97C-FC36-4744-BF1E-BA71801E4BEA",
         authChallenge: Config.authChallenge,
@@ -65,9 +65,9 @@ describe("webSocket Manager tests", () => {
 
         eventManager = new EventManager();
 
-        var data = new LocalStorageData();
-        var logger = new Logger(eventManager, data);
-        var sessionManager = new MockSessionmanager();
+        let data = new LocalStorageData();
+        let logger = new Logger(eventManager, data);
+        let sessionManager = new MockSessionmanager();
 
         webSocketManager = new WebSocketManager(logger, data, comapiConfig, sessionManager, eventManager);
         console.log("created new websocket for test");
@@ -90,13 +90,13 @@ describe("webSocket Manager tests", () => {
 
         webSocketManager.connect()
             .then(() => {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeTruthy();
                 return webSocketManager.disconnect();
             })
             .then(() => {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeFalsy();
                 done();
@@ -116,7 +116,7 @@ describe("webSocket Manager tests", () => {
 
             webSocketManager.disconnect()
                 .then(() => {
-                    var isConnected = webSocketManager.isConnected();
+                    let isConnected = webSocketManager.isConnected();
                     console.log("isConnected = " + isConnected);
                     expect(isConnected).toBeFalsy();
                     done();
@@ -125,7 +125,7 @@ describe("webSocket Manager tests", () => {
 
         webSocketManager.connect()
             .then(() => {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeTruthy();
             });
@@ -149,7 +149,7 @@ describe("webSocket Manager tests", () => {
                 expect(event.message).toBe("echo");
                 webSocketManager.disconnect()
                     .then(function () {
-                        var isConnected = webSocketManager.isConnected();
+                        let isConnected = webSocketManager.isConnected();
                         console.log("isConnected = " + isConnected);
                         expect(isConnected).toBeFalsy();
                         done();
@@ -159,7 +159,7 @@ describe("webSocket Manager tests", () => {
 
         webSocketManager.connect()
             .then(function () {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeTruthy();
             });
@@ -195,7 +195,7 @@ describe("webSocket Manager tests", () => {
                 done();
             })
             .catch(function () {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeFalsy();
                 done();

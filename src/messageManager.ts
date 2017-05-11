@@ -47,7 +47,7 @@ export class MessageManager implements IMessageManager {
      */
     public getConversationEvents(conversationId: string, from: number, limit: number): Promise<IConversationMessageEvent[]> {
 
-        var url: string = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/events`;
+        let url: string = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/events`;
 
         url += "?from=" + from;
         url += "&limit=" + limit;
@@ -123,7 +123,7 @@ export class MessageManager implements IMessageManager {
      * @returns {Promise} 
      */
     public sendMessageStatusUpdates(conversationId: string, statuses: IMessageStatus[]): Promise<any> {
-        var headers = {
+        let headers = {
             "Content-Type": "application/json",
         };
 

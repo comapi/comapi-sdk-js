@@ -35,9 +35,9 @@ export class Utils {
      * @returns {string} - returns a uuid
      */
     public static uuid(): string {
-        var d = new Date().getTime();
-        var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-            var r = (d + Math.random() * 16) % 16 | 0;
+        let d = new Date().getTime();
+        let uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            let r = (d + Math.random() * 16) % 16 | 0;
             d = Math.floor(d / 16);
             return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
         });
@@ -51,7 +51,7 @@ export class Utils {
      * @returns {IBrowserInfo} - returns an IBrowserInfo interface
      */
     public static getBrowserInfo(userAgent?: string): IBrowserInfo {
-        var ua = userAgent !== undefined ? userAgent : navigator.userAgent,
+        let ua = userAgent !== undefined ? userAgent : navigator.userAgent,
             tem,
             M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
         if (/trident/i.test(M[1])) {

@@ -22,7 +22,7 @@ export class ApiSpaceManager implements IApiSpaceManager {
      * 
      */
     public createApiSpace(token: string, name: string): Promise<IApiSpaceInfo> {
-        var headers = {
+        let headers = {
             "Content-Type": "application/json",
             "authorization": "Bearer " + token
         };

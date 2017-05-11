@@ -193,7 +193,7 @@ export class Logger implements ILogger {
 
                 } else if (this._localStorageData) {
                     // fall back to using local storage
-                    var log = this._localStorageData.getString(this._localStorageKey);
+                    let log = this._localStorageData.getString(this._localStorageKey);
 
                     if (log !== null) {
                         log += formattedMessage;

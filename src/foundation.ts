@@ -125,9 +125,9 @@ export class Foundation implements IFoundation {
             return indexedDBLogger.openDatabase()
                 .then(function () {
 
-                    var retentionHours = comapiConfig.logRetentionHours === undefined ? 24 : comapiConfig.logRetentionHours;
+                    let retentionHours = comapiConfig.logRetentionHours === undefined ? 24 : comapiConfig.logRetentionHours;
 
-                    var purgeDate = new Date((new Date()).valueOf() - 1000 * 60 * 60 * retentionHours);
+                    let purgeDate = new Date((new Date()).valueOf() - 1000 * 60 * 60 * retentionHours);
 
                     return indexedDBLogger.purge(purgeDate);
                 })

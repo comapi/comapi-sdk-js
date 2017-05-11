@@ -4,9 +4,9 @@ import { LocalStorageData } from "../src/localStorageData";
  * 
  */
 describe("localStorage tests", () => {
-  var ls;
+  let ls;
 
-  var data = {
+  let data = {
     key1: "val1",
     key2: "val2",
     key3: "val3"
@@ -20,7 +20,7 @@ describe("localStorage tests", () => {
 
     ls.setObject("testKey", data);
 
-    var result = ls.getObject("testKey");
+    let result = ls.getObject("testKey");
 
     expect(result.key1).toEqual(data.key1);
     expect(result.key2).toEqual(data.key2);
@@ -33,7 +33,7 @@ describe("localStorage tests", () => {
   it("should delete a value", () => {
 
     ls.remove("testKey");
-    var result = ls.getObject("testKey");
+    let result = ls.getObject("testKey");
 
     expect(result).toEqual(null);
 
@@ -41,14 +41,14 @@ describe("localStorage tests", () => {
 
   it("should fail gracefully when cant set", () => {
 
-    var obj: any = {};
+    let obj: any = {};
     obj.a = { b: obj };
 
-    var succeeded = ls.setObject("testKey2", obj);
+    let succeeded = ls.setObject("testKey2", obj);
 
     expect(succeeded).toEqual(false);
 
-    var result = ls.getObject("testKey2");
+    let result = ls.getObject("testKey2");
 
     expect(result).toEqual(null);
 
@@ -62,7 +62,7 @@ describe("localStorage tests", () => {
     // this test just to get code coverage ...
     ls.setString("testKey3", "[broken");
 
-    var result = ls.getObject("testKey3");
+    let result = ls.getObject("testKey3");
 
     expect(result).toEqual(null);
 

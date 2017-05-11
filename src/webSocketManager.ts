@@ -240,14 +240,14 @@ export class WebSocketManager implements IWebSocketManager {
      * @returns {Promise} 
      */
     public generateInterval(k: number): number {
-        var maxInterval = (Math.pow(2, k) - 1) * 1000;
+        let maxInterval = (Math.pow(2, k) - 1) * 1000;
 
         if (maxInterval > 30 * 1000) {
             maxInterval = 30 * 1000; // If the generated interval is more than 30 seconds, truncate it down to 30 seconds.
         }
 
         // generate the interval to a random number between 0 and the maxInterval determined from above
-        var interval = Math.random() * maxInterval;
+        let interval = Math.random() * maxInterval;
         this._logger.log(`generateInterval() => ${interval}`);
         return interval;
     }

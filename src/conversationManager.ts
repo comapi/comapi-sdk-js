@@ -133,7 +133,7 @@ export class ConversationManager implements IConversationManager {
     public deleteParticipantsFromConversation(conversationId: string, participants: string[]): Promise<boolean> {
         let query = "";
 
-        for (var i = 0; i < participants.length; i++) {
+        for (let i = 0; i < participants.length; i++) {
             query += (i === 0 ? "?id=" + participants[i] : "&id=" + participants[i]);
         }
 
@@ -197,11 +197,11 @@ export class ConversationManager implements IConversationManager {
         // we only want to call this once every n seconds (10?)
         if (this.isTypingInfo[conversationId]) {
 
-            var lastSentTime = new Date(this.isTypingInfo[conversationId]);
+            let lastSentTime = new Date(this.isTypingInfo[conversationId]);
 
-            var now = new Date();
+            let now = new Date();
 
-            var diff = (now.getTime() - lastSentTime.getTime()) / 1000;
+            let diff = (now.getTime() - lastSentTime.getTime()) / 1000;
 
             if (diff < (this._comapiConfig.isTypingTimeout || 10)) {
                 return Promise.resolve(false);
@@ -227,11 +227,11 @@ export class ConversationManager implements IConversationManager {
         // we only want to call this once every n seconds (10?)
         if (this.isTypingOffInfo[conversationId]) {
 
-            var lastSentTime = new Date(this.isTypingOffInfo[conversationId]);
+            let lastSentTime = new Date(this.isTypingOffInfo[conversationId]);
 
-            var now = new Date();
+            let now = new Date();
 
-            var diff = (now.getTime() - lastSentTime.getTime()) / 1000;
+            let diff = (now.getTime() - lastSentTime.getTime()) / 1000;
 
             if (diff < (this._comapiConfig.isTypingOffTimeout || 10)) {
                 return Promise.resolve(false);

@@ -107,7 +107,7 @@ describe("Messaging tests", () => {
          */
         let message = new MessageBuilder().withText("hello world");
 
-        var messageId: string;
+        let messageId: string;
 
         // higher level method that takes just the chammel dets and message parts
         foundation.services.appMessaging.sendMessageToConversation(channelDetails.id, message)
@@ -161,7 +161,7 @@ describe("Messaging tests", () => {
         // note this one just returns a part
         let message = new MessageBuilder().withText("hello world");
 
-        var messageId: string;
+        let messageId: string;
 
         foundation.services.appMessaging.sendMessageToConversation(channelDetails.id, message)
             .then((result: ISendMessageResult) => {

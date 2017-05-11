@@ -70,6 +70,8 @@ export interface IOrphanedEventInfo {
     continuationToken: number;
 }
 
+// the events can be just stored as :IConversationMessageEvent
+
 export interface IOrphanedEventManager {
 
     clearAll();

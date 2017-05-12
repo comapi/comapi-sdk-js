@@ -1,6 +1,7 @@
 import {
     IConversationRoles,
-    IMessagePart
+    IMessagePart,
+    IConversationMessageEvent
 } from "../../src/interfaces";
 
 
@@ -58,16 +59,14 @@ export interface IConversationStore {
     updateMessageStatus(conversationId: string, messageId: string, profileId: string, status: string, timestamp: string): Promise<boolean>;
     // new message added 
     createMessage(message: IChatMessage): Promise<boolean>;
-
-
     // TODO: Participants need syncing too
-
 }
 
 
 export interface IOrphanedEventInfo {
     conversationId: string;
     continuationToken: number;
+    // May add some more properties ...
 }
 
 // the events can be just stored as :IConversationMessageEvent
@@ -76,7 +75,9 @@ export interface IOrphanedEventManager {
 
     clearAll();
     clear(conversationId: string);
+    getInfo(conversationId: string): Promise<IOrphanedEventInfo>;
+    setInfo(info: IOrphanedEventInfo): Promise<boolean>;
 
-    getInfo(conversationId: string)
-
+    addOrphanedEvent(event: IConversationMessageEvent): Promise<boolean>;
+    getOrphanedEvents(conversationId: string): Promise<IConversationMessageEvent>;
 }

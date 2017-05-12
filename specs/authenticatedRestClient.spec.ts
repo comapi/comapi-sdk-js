@@ -3,6 +3,8 @@ import { Logger } from "../src/logger";
 import { Config } from "./config";
 import { AuthenticatedRestClient } from "../src/authenticatedRestClient";
 import { SessionManager } from "../src/sessionManager";
+import { WebSocketManager } from "../src/webSocketManager";
+import { NetworkManager } from "../src/networkManager";
 import { EventManager } from "../src/eventManager";
 import { LocalStorageData } from "../src/localStorageData";
 import { RestClient } from "../src/restClient";
@@ -16,7 +18,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
      * Helper for testing all the permeutations of prettyDate filter 
      */
     function dateAdd(date, interval, units) {
-        var ret = new Date(date); // don't change original date
+        let ret = new Date(date); // don't change original date
         switch (interval.toLowerCase()) {
             case "year": ret.setFullYear(ret.getFullYear() + units); break;
             case "quarter": ret.setMonth(ret.getMonth() + 3 * units); break;
@@ -34,7 +36,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
     /**
      * 
      */
-    var comapiConfig: IComapiConfig = {
+    let comapiConfig: IComapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
         logRetentionHours: 1,
@@ -49,14 +51,20 @@ describe("AUTHENTICATED REST API TESTS", () => {
      */
     beforeEach(done => {
 
-
-        var eventmanager = new EventManager();
-        var data = new LocalStorageData();
-        var logger = new Logger(eventmanager, data);
-        var restClient = new RestClient(logger);
+        let localStorageData = new LocalStorageData();
+        let eventManager = new EventManager();
+        let data = new LocalStorageData();
+        let logger = new Logger(eventManager, data);
+        let restClient = new RestClient(logger);
 
         sessionManager = new SessionManager(logger, restClient, data, comapiConfig);
-        authenticatedRestClient = new AuthenticatedRestClient(logger, sessionManager);
+
+        let webSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager);
+
+        let networkManager = new NetworkManager(sessionManager, webSocketManager);
+
+
+        authenticatedRestClient = new AuthenticatedRestClient(logger, networkManager);
 
         sessionManager.startSession()
             .then(sessionInfo => {
@@ -73,7 +81,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
      */
     it("should get a new token on the fly if needed", done => {
 
-        var expired = dateAdd(new Date(), "hour", -1).toISOString();
+        let expired = dateAdd(new Date(), "hour", -1).toISOString();
         sessionManager.sessionInfo.session.expiresOn = expired;
 
         // just call the refresh method as it validates the auth token

@@ -36,16 +36,16 @@ export class IndexedDBLogger {
         return new Promise((resolve, reject) => {
             if (this.idbSupported) {
 
-                var self = this;
+                let self = this;
 
-                var openRequest = indexedDB.open(this._name, this._version);
+                let openRequest = indexedDB.open(this._name, this._version);
 
                 openRequest.onupgradeneeded = function (e: any) {
                     console.log("Upgrading database...");
-                    var thisDB = e.target.result;
+                    let thisDB = e.target.result;
 
                     if (!thisDB.objectStoreNames.contains(self._store)) {
-                        var os = thisDB.createObjectStore(self._store, { autoIncrement: true });
+                        let os = thisDB.createObjectStore(self._store, { autoIncrement: true });
                         os.createIndex("created", "created", { unique: false });
                     }
                 };
@@ -74,13 +74,13 @@ export class IndexedDBLogger {
     public purge(when: Date): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (this._database) {
-                var transaction = this._database.transaction([this._store], "readwrite");
-                var objectStore = transaction.objectStore(this._store);
-                var index = objectStore.index("created");
+                let transaction = this._database.transaction([this._store], "readwrite");
+                let objectStore = transaction.objectStore(this._store);
+                let index = objectStore.index("created");
                 // we want all keys less than this date
-                var keyRangeValue = IDBKeyRange.upperBound(when.valueOf());
+                let keyRangeValue = IDBKeyRange.upperBound(when.valueOf());
                 index.openCursor(keyRangeValue).onsuccess = function (event) {
-                    var cursor = event.target.result;
+                    let cursor = event.target.result;
                     if (cursor) {
                         objectStore["delete"](cursor.primaryKey);
                         cursor["continue"]();
@@ -104,8 +104,8 @@ export class IndexedDBLogger {
      */
     public deleteDatabase(): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            var req = indexedDB.deleteDatabase(this._name);
-            var self = this;
+            let req = indexedDB.deleteDatabase(this._name);
+            let self = this;
 
             req.onsuccess = function () {
                 console.log("Deleted database " + self._name + " successfully");
@@ -132,17 +132,17 @@ export class IndexedDBLogger {
             if (this._database) {
 
                 // open a read/write db transaction, ready for clearing the data
-                var transaction = this._database.transaction([this._store], "readwrite");
+                let transaction = this._database.transaction([this._store], "readwrite");
 
                 transaction.onerror = function (event) {
                     console.error("Transaction not opened due to error: " + transaction.error);
                 };
 
                 // create an object store on the transaction
-                var objectStore = transaction.objectStore(this._store);
+                let objectStore = transaction.objectStore(this._store);
 
                 // clear all the data out of the object store
-                var objectStoreRequest = objectStore.clear();
+                let objectStoreRequest = objectStore.clear();
 
                 objectStoreRequest.onsuccess = function (event) {
                     resolve(true);
@@ -169,23 +169,23 @@ export class IndexedDBLogger {
         return new Promise((resolve, reject) => {
             if (this._database) {
 
-                var transaction = this._database.transaction([this._store], "readonly");
+                let transaction = this._database.transaction([this._store], "readonly");
 
-                var objectStore = transaction.objectStore(this._store);
+                let objectStore = transaction.objectStore(this._store);
 
-                var cursorRequest = objectStore.openCursor();
+                let cursorRequest = objectStore.openCursor();
 
-                var numRetrieved = 0;
-                var data = [];
+                let numRetrieved = 0;
+                let data = [];
 
                 cursorRequest.onsuccess = function (event) {
-                    var cursor = event.target.result;
+                    let cursor = event.target.result;
 
                     numRetrieved++;
 
                     if (cursor) {
 
-                        var record = cursor.value;
+                        let record = cursor.value;
 
                         if (getIndexes === true) {
                             record.key = cursor.key;
@@ -223,9 +223,9 @@ export class IndexedDBLogger {
         return new Promise((resolve, reject) => {
             if (this._database) {
 
-                var transaction = this._database.transaction([this._store], "readonly");
-                var objectStore = transaction.objectStore(this._store);
-                var count = objectStore.count();
+                let transaction = this._database.transaction([this._store], "readonly");
+                let objectStore = transaction.objectStore(this._store);
+                let count = objectStore.count();
 
                 count.onerror = function (e: any) {
                     reject({ message: "Failed to get count: " + e.target.error.name });
@@ -261,11 +261,11 @@ export class IndexedDBLogger {
         return new Promise((resolve, reject) => {
             if (this._database) {
 
-                var transaction = this._database.transaction([this._store], "readwrite");
-                var store = transaction.objectStore(this._store);
+                let transaction = this._database.transaction([this._store], "readwrite");
+                let store = transaction.objectStore(this._store);
 
                 // Perform the add
-                var request = store.add(entity);
+                let request = store.add(entity);
 
                 request.onerror = function (e) {
                     console.error("Error", e.target.error.name);

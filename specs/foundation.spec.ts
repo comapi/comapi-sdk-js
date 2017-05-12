@@ -4,9 +4,9 @@ import { Config } from "./config";
 
 describe("Foundation tests", () => {
 
-    var foundation: Foundation;
+    let foundation: Foundation;
 
-    var comapiConfig = {
+    let comapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
         logRetentionHours: 1,

@@ -7,24 +7,25 @@ import { IComapiConfig, IConversationDetails, IConversationParticipant, Conversa
  */
 describe("Conversations tests", () => {
 
-    var foundation: Foundation;
+    let foundation: Foundation;
 
     /**
      * 
      */
-    var comapiConfig: IComapiConfig = {
+    let comapiConfig: IComapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
+        isTypingOffTimeout: 1,
+        isTypingTimeout: 1,
         logRetentionHours: 1,
         urlBase: Config.getUrlBase(),
         webSocketBase: Config.getWebSocketBase(),
-
     };
 
     /**
      * 
      */
-    var conversationDetails: IConversationDetails = {
+    let conversationDetails: IConversationDetails = {
         id: undefined,
         isPublic: false,
         name: "My Test Conversation",
@@ -48,7 +49,7 @@ describe("Conversations tests", () => {
     /**
      * 
      */
-    var members: IConversationParticipant[] = [
+    let members: IConversationParticipant[] = [
         {
             id: "member1",
             role: "member",
@@ -77,7 +78,7 @@ describe("Conversations tests", () => {
             });
 
     });
-    var originalTimeout;
+    let originalTimeout;
 
     beforeEach(done => {
 
@@ -154,7 +155,7 @@ describe("Conversations tests", () => {
                 expect(result.id).toBe(conversationDetails.id);
                 expect(result.ETag).toBeDefined();
 
-                var copy = JSON.parse(JSON.stringify(conversationDetails));
+                let copy = JSON.parse(JSON.stringify(conversationDetails));
 
                 copy.name = "My Updated Test Conversation";
 
@@ -188,7 +189,7 @@ describe("Conversations tests", () => {
                 expect(result.id).toBe(conversationDetails.id);
                 expect(result.ETag).toBeDefined();
 
-                var copy = JSON.parse(JSON.stringify(conversationDetails));
+                let copy = JSON.parse(JSON.stringify(conversationDetails));
 
                 copy.name = "My Updated Test Conversation";
 
@@ -354,7 +355,35 @@ describe("Conversations tests", () => {
                             expect(sent3).toBeTruthy();
                             done();
                         });
-                }, 6000);
+                }, 1500);
+            })
+            .catch(error => {
+                fail(error);
+            });
+    });
+
+    /**
+     * Typing off indicators should only actually get send every x seconds ...
+     */
+    it("should send typing Off idicators correctly", done => {
+        console.log("Creating a conversation ...", conversationDetails);
+        foundation.services.appMessaging.createConversation(conversationDetails)
+            .then(result => {
+                return foundation.services.appMessaging.sendIsTypingOff(conversationDetails.id);
+            })
+            .then(sent1 => {
+                expect(sent1).toBeTruthy();
+                return foundation.services.appMessaging.sendIsTypingOff(conversationDetails.id);
+            })
+            .then(sent2 => {
+                expect(sent2).toBeFalsy();
+                setTimeout(() => {
+                    return foundation.services.appMessaging.sendIsTypingOff(conversationDetails.id)
+                        .then(sent3 => {
+                            expect(sent3).toBeTruthy();
+                            done();
+                        });
+                }, 1500);
             })
             .catch(error => {
                 fail(error);

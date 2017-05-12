@@ -4,9 +4,9 @@ import { EventManager } from "../src/eventManager";
  * 
  */
 describe("Event tests ...", () => {
-    var eventManager: EventManager;
+    let eventManager: EventManager;
 
-    var data = {
+    let data = {
         key1: "val1",
         key2: "val2",
         key3: "val3"

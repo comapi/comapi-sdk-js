@@ -623,6 +623,10 @@ app.post('/apispaces/:appSpaceId/conversations/:conversationId/typing', function
     res.sendStatus(204);
 });
 
+app.delete('/apispaces/:appSpaceId/conversations/:conversationId/typing', function (req, res, next) {
+    res.sendStatus(204);
+});
+
 app.post('/apispaces/:appSpaceId/conversations/:conversationId/messages/statusUpdates', function (req, res, next) {
 
     var conversationId = req.params.conversationId;

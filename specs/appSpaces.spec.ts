@@ -6,11 +6,11 @@ import { Config } from "./config";
 
 describe("App Space tests", () => {
 
-    var appSpaceManager: IApiSpaceManager;
+    let appSpaceManager: IApiSpaceManager;
 
     beforeEach(done => {
-        var logger: ILogger = new Logger();
-        var restClient: IRestClient = new RestClient(logger);
+        let logger: ILogger = new Logger();
+        let restClient: IRestClient = new RestClient(logger);
         appSpaceManager = new ApiSpaceManager(restClient, Config.getUrlBase());
 
         // TODO: WHY DO I NEED THIS TIMEOUT ? CHROME LOCKS IF IT ISNT THERE!!!
@@ -26,12 +26,12 @@ describe("App Space tests", () => {
             .then(token => {
                 console.log("getToken() : ", token);
                 expect(token).toBeDefined();
-                var bits = token.split(".");
+                let bits = token.split(".");
                 expect(bits.length).toBe(3);
-                // var header = JSON.parse(atob(bits[0]));
-                var payload = JSON.parse(atob(bits[1]));
+                // let header = JSON.parse(atob(bits[0]));
+                let payload = JSON.parse(atob(bits[1]));
                 expect(payload.exp).toBeDefined();
-                // var signature = bits[2];
+                // let signature = bits[2];
                 done();
             })
             .catch(error => {
@@ -63,7 +63,7 @@ describe("App Space tests", () => {
 
     it("Should update app space AUTH settings", done => {
 
-        var _token: string;
+        let _token: string;
 
         appSpaceManager.getToken("1969", "stevan.lepojevic")
             .then(token => {
@@ -74,7 +74,7 @@ describe("App Space tests", () => {
             .then(appSpace => {
                 console.log("createAppSpace() : ", appSpace);
 
-                var authInfo: IApiSpaceAuthInfo = {
+                let authInfo: IApiSpaceAuthInfo = {
                     audience: "*",
                     idClaim: "sub",
                     issuer: "https://sitf.co.uk",

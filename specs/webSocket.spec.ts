@@ -10,7 +10,9 @@ import {
     IConversationMessageEvent,
     IProfileUpdatedEvent,
     IMessageStatusUpdatePayload,
-    IMessageSentPayload
+    IMessageSentPayload,
+    IParticipantTypingEventData,
+    IParticipantTypingOffEventData
 } from "../src/interfaces";
 
 import { Config } from "./config";
@@ -25,9 +27,9 @@ import { LocalStorageData } from "../src/localStorageData";
  */
 describe("webSocket Manager tests", () => {
 
-    var defaultWebSocketBase = Config.getWebSocketBase();
-    var eventManager: IEventManager;
-    var webSocketManager: WebSocketManager;
+    let defaultWebSocketBase = Config.getWebSocketBase();
+    let eventManager: IEventManager;
+    let webSocketManager: WebSocketManager;
     /**
      * Mock MockSessionmanager - we just need getValidAuthHeader
      */
@@ -47,7 +49,7 @@ describe("webSocket Manager tests", () => {
     /**
      * 
      */
-    var comapiConfig: IComapiConfig = {
+    let comapiConfig: IComapiConfig = {
         // just a random guid - we won't create an app space ...
         apiSpaceId: "7CACC97C-FC36-4744-BF1E-BA71801E4BEA",
         authChallenge: Config.authChallenge,
@@ -63,9 +65,9 @@ describe("webSocket Manager tests", () => {
 
         eventManager = new EventManager();
 
-        var data = new LocalStorageData();
-        var logger = new Logger(eventManager, data);
-        var sessionManager = new MockSessionmanager();
+        let data = new LocalStorageData();
+        let logger = new Logger(eventManager, data);
+        let sessionManager = new MockSessionmanager();
 
         webSocketManager = new WebSocketManager(logger, data, comapiConfig, sessionManager, eventManager);
         console.log("created new websocket for test");
@@ -88,13 +90,13 @@ describe("webSocket Manager tests", () => {
 
         webSocketManager.connect()
             .then(() => {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeTruthy();
                 return webSocketManager.disconnect();
             })
             .then(() => {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeFalsy();
                 done();
@@ -114,7 +116,7 @@ describe("webSocket Manager tests", () => {
 
             webSocketManager.disconnect()
                 .then(() => {
-                    var isConnected = webSocketManager.isConnected();
+                    let isConnected = webSocketManager.isConnected();
                     console.log("isConnected = " + isConnected);
                     expect(isConnected).toBeFalsy();
                     done();
@@ -123,7 +125,7 @@ describe("webSocket Manager tests", () => {
 
         webSocketManager.connect()
             .then(() => {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeTruthy();
             });
@@ -147,7 +149,7 @@ describe("webSocket Manager tests", () => {
                 expect(event.message).toBe("echo");
                 webSocketManager.disconnect()
                     .then(function () {
-                        var isConnected = webSocketManager.isConnected();
+                        let isConnected = webSocketManager.isConnected();
                         console.log("isConnected = " + isConnected);
                         expect(isConnected).toBeFalsy();
                         done();
@@ -157,7 +159,7 @@ describe("webSocket Manager tests", () => {
 
         webSocketManager.connect()
             .then(function () {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeTruthy();
             });
@@ -193,7 +195,7 @@ describe("webSocket Manager tests", () => {
                 done();
             })
             .catch(function () {
-                var isConnected = webSocketManager.isConnected();
+                let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeFalsy();
                 done();
@@ -278,11 +280,6 @@ describe("webSocket Manager tests", () => {
                     done();
                 });
 
-        });
-
-        eventManager.subscribeToLocalEvent("WebsocketClosed", data => {
-            expect(seenEvent).toBeTruthy();
-            done();
         });
 
         webSocketManager.connect()
@@ -401,6 +398,88 @@ describe("webSocket Manager tests", () => {
                     },
                     "conversationId": "cf201df2-ffde-40ca-b975-23f01b97ecde",
                     "publishedOn": "2016-10-18T11:35:11.206Z"
+                });
+            });
+    });
+
+    it("should map conversation.participantTyping", done => {
+
+        let seenEvent = false;
+
+        // wire up an event handler - the "socket service" will send some data on conection         
+        eventManager.subscribeToLocalEvent("participantTyping", (event: IParticipantTypingEventData) => {
+            seenEvent = true;
+
+            expect(event.conversationId).toBe("anon_1p4l0t3.M0rsy");
+            expect(event.createdBy).toBe("access:9a7d437f-6e79-4d8e-bf4d-d511d2dc84a6");
+            expect(event.profileId).toBe("M0rsy");
+            expect(event.timestamp).toBe("2017-04-24T07:31:41.226Z");
+
+            webSocketManager.disconnect()
+                .then(function () {
+                    expect(seenEvent).toBeTruthy();
+                    done();
+
+                });
+        });
+
+        webSocketManager.connect()
+            .then(function () {
+                webSocketManager.send({
+                    "eventId": "1009a317-b948-4171-81d5-36107ddb1411",
+                    "payload": {
+                        "conversationId": "anon_1p4l0t3.M0rsy",
+                        "profileId": "M0rsy"
+                    },
+                    "context": {
+                        "createdBy": "access:9a7d437f-6e79-4d8e-bf4d-d511d2dc84a6",
+                        "createdOn": "2017-04-24T07:31:41.226Z"
+                    },
+                    "accountId": 39694,
+                    "apiSpaceId": "53364198-3f3f-4723-ab8f-70680c1113b1",
+                    "name": "conversation.participantTyping",
+                    "publishedOn": "2017-04-24T07:31:41.226Z"
+                });
+            });
+
+    });
+
+    it("should map conversation.participantTypingOff", done => {
+        let seenEvent = false;
+
+        // wire up an event handler - the "socket service" will send some data on conection         
+        eventManager.subscribeToLocalEvent("participantTypingOff", (event: IParticipantTypingOffEventData) => {
+            seenEvent = true;
+
+            expect(event.conversationId).toBe("anon_1p4l0t3.M0rsy");
+            expect(event.createdBy).toBe("access:9a7d437f-6e79-4d8e-bf4d-d511d2dc84a6");
+            expect(event.profileId).toBe("M0rsy");
+            expect(event.timestamp).toBe("2017-04-24T07:31:41.752Z");
+
+            webSocketManager.disconnect()
+                .then(function () {
+                    expect(seenEvent).toBeTruthy();
+                    done();
+
+                });
+        });
+
+        webSocketManager.connect()
+            .then(function () {
+                webSocketManager.send({
+                    "eventId": "be3399de-f3c3-44d6-9766-bc12b81dab4a",
+                    "payload": {
+                        "conversationId": "anon_1p4l0t3.M0rsy",
+                        "profileId": "M0rsy"
+                    },
+                    "context": {
+                        "createdBy": "access:9a7d437f-6e79-4d8e-bf4d-d511d2dc84a6",
+                        "createdOn": "2017-04-24T07:31:41.752Z"
+                    },
+                    "accountId": 39694,
+                    "apiSpaceId": "53364198-3f3f-4723-ab8f-70680c1113b1",
+                    "name": "conversation.participantTypingOff",
+                    "publishedOn": "2017-04-24T07:31:41.752Z"
                 });
             });
     });

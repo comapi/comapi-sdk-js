@@ -8,8 +8,8 @@ describe("Utils userAgent tests", () => {
 
     it("should handle chrome user agent strings", done => {
 
-        var userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.110 Safari/537.36";
-        var browserInfo = Utils.getBrowserInfo(userAgent);
+        let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.110 Safari/537.36";
+        let browserInfo = Utils.getBrowserInfo(userAgent);
 
         expect(browserInfo.name).toBe("Chrome");
         expect(browserInfo.version).toBe("49");
@@ -19,8 +19,8 @@ describe("Utils userAgent tests", () => {
 
     it("should handle firefox user agent strings", done => {
 
-        var userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:42.0) Gecko/20100101 Firefox/42.0";
-        var browserInfo = Utils.getBrowserInfo(userAgent);
+        let userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:42.0) Gecko/20100101 Firefox/42.0";
+        let browserInfo = Utils.getBrowserInfo(userAgent);
 
         expect(browserInfo.name).toBe("Firefox");
         expect(browserInfo.version).toBe("42");
@@ -30,8 +30,8 @@ describe("Utils userAgent tests", () => {
 
     it("should handle safari user agent strings", done => {
 
-        var userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/601.5.17 (KHTML, like Gecko) Version/9.1 Safari/601.5.17";
-        var browserInfo = Utils.getBrowserInfo(userAgent);
+        let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/601.5.17 (KHTML, like Gecko) Version/9.1 Safari/601.5.17";
+        let browserInfo = Utils.getBrowserInfo(userAgent);
 
         expect(browserInfo.name).toBe("Safari");
         expect(browserInfo.version).toBe("9");
@@ -41,9 +41,9 @@ describe("Utils userAgent tests", () => {
 
     it("should handle I.E. user agent strings", done => {
 
-        var userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729;" +
+        let userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729;" +
             " .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.3; .NET4.0C; .NET4.0E; Zune 4.7; rv:11.0) like Gecko";
-        var browserInfo = Utils.getBrowserInfo(userAgent);
+        let browserInfo = Utils.getBrowserInfo(userAgent);
 
         expect(browserInfo.name).toBe("IE");
         expect(browserInfo.version).toBe("11");
@@ -54,8 +54,8 @@ describe("Utils userAgent tests", () => {
 
     it("should handle opera user agent strings", done => {
 
-        var userAgent = "Opera/9.80 (X11; Linux i686; Ubuntu/14.10) Presto/2.12.388 Version/12.16";
-        var browserInfo = Utils.getBrowserInfo(userAgent);
+        let userAgent = "Opera/9.80 (X11; Linux i686; Ubuntu/14.10) Presto/2.12.388 Version/12.16";
+        let browserInfo = Utils.getBrowserInfo(userAgent);
 
         expect(browserInfo.name).toBe("Opera");
         expect(browserInfo.version).toBe("12");
@@ -70,9 +70,9 @@ describe("Utils userAgent tests", () => {
  * 
  */
 describe("Foundation Auth Tests", () => {
-    var foundation: Foundation;
+    let foundation: Foundation;
 
-    var comapiConfig = {
+    let comapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
         logRetentionHours: 1,
@@ -96,6 +96,9 @@ describe("Foundation Auth Tests", () => {
 
 
     beforeEach(done => {
+
+        // just in case we don't adopt some session from another test ...
+        localStorage.removeItem("comapi.session");
 
         Foundation.initialise(comapiConfig).then(result => {
             foundation = result;

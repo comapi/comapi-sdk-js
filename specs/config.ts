@@ -14,7 +14,7 @@ export class Config {
      */
     public static getUrlBase() {
 
-        var urBase: string = localStorage.getItem("urlBase");
+        let urBase: string = localStorage.getItem("urlBase");
         return urBase ? urBase : "http://localhost:6969";
     }
 
@@ -25,7 +25,7 @@ export class Config {
      */
     public static getWebSocketBase() {
 
-        var webSocketBase: string = localStorage.getItem("getWebSocketBase");
+        let webSocketBase: string = localStorage.getItem("getWebSocketBase");
         return webSocketBase ? webSocketBase : "ws://localhost:4080";
     }
 
@@ -33,9 +33,9 @@ export class Config {
      * 
      */
     public static uuid(): string {
-        var d = new Date().getTime();
-        var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-            var r = (d + Math.random() * 16) % 16 | 0;
+        let d = new Date().getTime();
+        let uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            let r = (d + Math.random() * 16) % 16 | 0;
             d = Math.floor(d / 16);
             return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
         });
@@ -48,7 +48,7 @@ export class Config {
     public static authChallenge(options: IAuthChallengeOptions, answerAuthenticationChallenge: Function) {
         "use strict";
 
-        var restClient: IRestClient = new RestClient();
+        let restClient: IRestClient = new RestClient();
 
         console.log("calling authenticate ...");
 
@@ -74,12 +74,12 @@ export class Config {
      */
     public static createAppSpace(): Promise<any> {
 
-        var appSpaceId: string;
+        let appSpaceId: string;
 
-        var _token: string;
-        var restClient = new RestClient();
+        let _token: string;
+        let restClient = new RestClient();
 
-        var appSpaceManager: IApiSpaceManager = new ApiSpaceManager(restClient, this.getUrlBase());
+        let appSpaceManager: IApiSpaceManager = new ApiSpaceManager(restClient, this.getUrlBase());
 
         return appSpaceManager.getToken("1969", "stevan.lepojevic")
             .then(token => {
@@ -92,7 +92,7 @@ export class Config {
 
                 appSpaceId = appSpace.id;
 
-                var authInfo: IApiSpaceAuthInfo = {
+                let authInfo: IApiSpaceAuthInfo = {
                     audience: "*",
                     idClaim: "sub",
                     issuer: "https://sitf.co.uk",

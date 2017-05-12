@@ -2,7 +2,7 @@
 
 This library was written in typescript, hence all entities that the SDK deals with have an associated interface.
 
-Assuming you installed the sdk via npm, you can access all of the relevant interfaces as required.
+Assuming you installed the SDK via npm, you can access all of the relevant interfaces as required.
 
 Here is a simple example showing how you would go about importing an interface ... 
 
@@ -25,7 +25,7 @@ export class MessagesHelper {
 
         // if the message was sent by this person then skip ...
         if (message.context.from.id !== profileId) {
-            // are there status updates and is ther eone for this user
+            // are there status updates and is there one for this user
             if (message.statusUpdates && message.statusUpdates[profileId]) {
                 // is it read ?
                 if (message.statusUpdates[profileId].status === "read") {
@@ -42,5 +42,4 @@ export class MessagesHelper {
 }
 ```
 
-If you look in `node_modles/@comapi/sdk-js-foundation/src/interfaces.d.ts`, you will see what interfaces are available.
-
+If you look in `node_modles/@comapi/foundation/src/interfaces.d.ts`, you will see what interfaces are available.

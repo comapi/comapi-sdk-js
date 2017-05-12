@@ -1,4 +1,4 @@
-import { ISessionManager, ILogger, IRestClient, IRestClientResult } from "./interfaces";
+import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./interfaces";
 import { RestClient } from "./restClient";
 
 
@@ -10,10 +10,10 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
      * @ignore
      * @classdesc Class that implements an Authenticated RestClient.
      * @param {ILogger} logger - the logger 
-     * @param {ISessionManager} sessionManager - the Session Manager 
+     * @param {INetworkManager} networkManager - the Network Manager 
      */
-    constructor(logger: ILogger, sessionManager: ISessionManager) {
-        super(logger, sessionManager);
+    constructor(logger: ILogger, networkManager: INetworkManager) {
+        super(logger, networkManager);
     }
 
     /**
@@ -25,7 +25,7 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
      */
     public get(url: string, headers?: any): Promise<IRestClientResult> {
         headers = headers || {};
-        return this.sessionManager.getValidToken()
+        return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
                 return super.get(url, headers);
@@ -41,7 +41,7 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
      * @returns {Promise} - returns a promise
      */
     public post(url: string, headers: any, data: any): Promise<IRestClientResult> {
-        return this.sessionManager.getValidToken()
+        return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
                 return super.post(url, headers, data);
@@ -57,7 +57,7 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
      * @returns {Promise} - returns a promise
      */
     public put(url: string, headers: any, data: any): Promise<IRestClientResult> {
-        return this.sessionManager.getValidToken()
+        return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
                 return super.put(url, headers, data);
@@ -72,7 +72,7 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
      * @returns {Promise} - returns a promise
      */
     public delete(url: string, headers: any): Promise<IRestClientResult> {
-        return this.sessionManager.getValidToken()
+        return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
                 return super.delete(url, headers);

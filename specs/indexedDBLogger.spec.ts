@@ -7,10 +7,10 @@ import { IndexedDBLogger } from "../src/indexedDBLogger";
 describe("Indexed DB DELETE DATABASE", () => {
 
 
-    var myIndexedDBLogger;
+    let myIndexedDBLogger;
 
     beforeEach(done => {
-        var name = ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
+        let name = ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
         myIndexedDBLogger = new IndexedDBLogger(name);
         done();
     });
@@ -34,10 +34,10 @@ describe("Indexed DB DELETE DATABASE", () => {
  * 
  */
 describe("Indexed DB end to end test", () => {
-    var myIndexedDBLogger;
+    let myIndexedDBLogger;
 
     beforeEach(done => {
-        var name = ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
+        let name = ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
         myIndexedDBLogger = new IndexedDBLogger(name);
         done();
     });
@@ -55,11 +55,11 @@ describe("Indexed DB end to end test", () => {
          */
         function addRecords() {
 
-            var promises: Promise<any>[] = [];
+            let promises: Promise<any>[] = [];
 
-            for (var i = 0; i < 5; i++) {
+            for (let i = 0; i < 5; i++) {
 
-                var record: ILogEvent = {
+                let record: ILogEvent = {
                     created: new Date().valueOf(),
                     data: i,
                     logLevel: LogLevels.Debug,
@@ -83,7 +83,7 @@ describe("Indexed DB end to end test", () => {
 
                     expect(data.length).toBe(5);
 
-                    for (var i = 0; i < 5; i++) {
+                    for (let i = 0; i < 5; i++) {
 
                         let o: ILogEvent = data[i] as ILogEvent;
 

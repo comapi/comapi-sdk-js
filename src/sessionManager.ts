@@ -74,8 +74,8 @@ export class SessionManager implements ISessionManager {
         // check we have a token and also that the token hasn't expired ...
         if (this._sessionInfo) {
 
-            var now = new Date();
-            var expiry = new Date(this._sessionInfo.session.expiresOn);
+            let now = new Date();
+            let expiry = new Date(this._sessionInfo.session.expiresOn);
 
             if (now < expiry) {
                 result = true;
@@ -109,7 +109,7 @@ export class SessionManager implements ISessionManager {
      * @returns {Promise} - Returns a promise 
      */
     public startSession(): Promise<ISessionInfo> {
-        var self = this;
+        let self = this;
 
         return new Promise((resolve, reject) => {
 
@@ -121,7 +121,7 @@ export class SessionManager implements ISessionManager {
                 // call comapi service startAuth                
                 this._startAuth().then(sessionStartResponse => {
 
-                    var authChallengeOptions: IAuthChallengeOptions = {
+                    let authChallengeOptions: IAuthChallengeOptions = {
                         nonce: sessionStartResponse.nonce
                     };
 
@@ -217,7 +217,7 @@ export class SessionManager implements ISessionManager {
      */
     private _endAuth(): Promise<boolean> {
 
-        var headers = {
+        let headers = {
             "Content-Type": "application/json",
             "authorization": this.getAuthHeader(),
         };
@@ -234,7 +234,7 @@ export class SessionManager implements ISessionManager {
      * @returns {ISessionInfo} - returns session info if available 
      */
     private _getSession(): ISessionInfo {
-        var sessionInfo: ISessionInfo = this._localStorageData.getObject("session") as ISessionInfo;
+        let sessionInfo: ISessionInfo = this._localStorageData.getObject("session") as ISessionInfo;
         if (sessionInfo) {
             this._sessionInfo = sessionInfo;
         }
@@ -247,9 +247,9 @@ export class SessionManager implements ISessionManager {
      */
     private _setSession(sessionInfo: ISessionInfo) {
 
-        var expiry = new Date(sessionInfo.session.expiresOn);
+        let expiry = new Date(sessionInfo.session.expiresOn);
 
-        var now = new Date();
+        let now = new Date();
 
         if (expiry < now) {
             this._logger.error("Was given an expired token ;-(");

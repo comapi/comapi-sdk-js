@@ -92,7 +92,7 @@ export class MessagePager {
 
                     if (result.orphanedEvents.length) {
 
-                        var mapped = [];
+                        let mapped = [];
                         for (let event of result.orphanedEvents) {
                             mapped.push(this.mapOrphanedEvent(event));
                         }
@@ -147,7 +147,7 @@ export class MessagePager {
 
         if (messageIds.length > 0) {
 
-            var statusUpdate: IMessageStatus = {
+            let statusUpdate: IMessageStatus = {
                 messageIds: messageIds,
                 status: "delivered",
                 timestamp: new Date().toISOString()
@@ -158,6 +158,14 @@ export class MessagePager {
             // TODO: status update response id currently "OK" ROFL ...
             return Promise.resolve("OK");
         }
+    }
+
+    /**
+     * Method to reset any cached info abut a conversation
+     */
+    public resetConversation(conversationId: string) {
+        this._orphanedEevnts[conversationId] = {};
+        this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
     }
 
     /**
@@ -188,8 +196,8 @@ export class MessagePager {
     private applyOrphanedEvents(messages: IConversationMessage[], orphanedEventContainer: IOrphanedEventContainer) {
         this._logger.log(`==> applyOrphanedEvents: ${JSON.stringify(orphanedEventContainer.orphanedEvents)}`);
 
-        for (var i = orphanedEventContainer.orphanedEvents.length - 1; i >= 0; i--) {
-            var event = orphanedEventContainer.orphanedEvents[i];
+        for (let i = orphanedEventContainer.orphanedEvents.length - 1; i >= 0; i--) {
+            let event = orphanedEventContainer.orphanedEvents[i];
             if (this.playEvent(event, messages)) {
                 this._logger.log(`succesfuly played event ${event.conversationEventId}`);
                 orphanedEventContainer.orphanedEvents.splice(i, 1);
@@ -241,7 +249,7 @@ export class MessagePager {
                     if (message) {
                         // apply status update - read overwrites delivered
 
-                        var updateForProfileId = message.statusUpdates[event.payload.profileId];
+                        let updateForProfileId = message.statusUpdates[event.payload.profileId];
                         if (updateForProfileId && updateForProfileId.status === "read") {
                             this._logger.log("Message already marked as read, not marking as delivered");
                         } else {
@@ -311,14 +319,4 @@ export class MessagePager {
 
         return mapped;
     }
-
-    /**
-     * Method to reset any cached info abut a conversation
-     */
-    public resetConversation(conversationId: string) {
-        this._orphanedEevnts[conversationId] = {};
-        this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
-    }
-
-
 }

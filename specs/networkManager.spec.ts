@@ -70,7 +70,7 @@ describe("networkManager tests", () => {
      * 
      */
     it("should GET the active session", done => {
-        var session = networkManager.session;
+        let session = networkManager.session;
         expect(session.id).toBe("A78B9D3A-B9B4-4612-BE8A-4221A198DD62");
         done();
     });

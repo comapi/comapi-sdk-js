@@ -18,7 +18,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
      * Helper for testing all the permeutations of prettyDate filter 
      */
     function dateAdd(date, interval, units) {
-        var ret = new Date(date); // don't change original date
+        let ret = new Date(date); // don't change original date
         switch (interval.toLowerCase()) {
             case "year": ret.setFullYear(ret.getFullYear() + units); break;
             case "quarter": ret.setMonth(ret.getMonth() + 3 * units); break;
@@ -36,7 +36,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
     /**
      * 
      */
-    var comapiConfig: IComapiConfig = {
+    let comapiConfig: IComapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
         logRetentionHours: 1,
@@ -52,10 +52,10 @@ describe("AUTHENTICATED REST API TESTS", () => {
     beforeEach(done => {
 
         let localStorageData = new LocalStorageData();
-        var eventManager = new EventManager();
-        var data = new LocalStorageData();
-        var logger = new Logger(eventManager, data);
-        var restClient = new RestClient(logger);
+        let eventManager = new EventManager();
+        let data = new LocalStorageData();
+        let logger = new Logger(eventManager, data);
+        let restClient = new RestClient(logger);
 
         sessionManager = new SessionManager(logger, restClient, data, comapiConfig);
 
@@ -81,7 +81,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
      */
     it("should get a new token on the fly if needed", done => {
 
-        var expired = dateAdd(new Date(), "hour", -1).toISOString();
+        let expired = dateAdd(new Date(), "hour", -1).toISOString();
         sessionManager.sessionInfo.session.expiresOn = expired;
 
         // just call the refresh method as it validates the auth token

@@ -8,8 +8,8 @@ import { LogLevels } from "../src/interfaces";
 
 describe("Local Storage basic log logging tests", () => {
 
-    var logger;
-    var data;
+    let logger;
+    let data;
 
     beforeEach(function (done) {
         data = new LocalStorageData();
@@ -56,9 +56,9 @@ describe("Local Storage basic log logging tests", () => {
  */
 describe("IndexedDBLogger basic logging tests", () => {
 
-    var logger;
-    var data;
-    var myIndexedDBLogger;
+    let logger;
+    let data;
+    let myIndexedDBLogger;
 
     beforeEach(done => {
 
@@ -126,9 +126,9 @@ describe("IndexedDBLogger basic logging tests", () => {
  */
 describe("IndexedDBLogger purge test", () => {
 
-    var myIndexedDBLogger;
-    var logger;
-    var data;
+    let myIndexedDBLogger;
+    let logger;
+    let data;
 
     beforeEach(done => {
 
@@ -156,7 +156,7 @@ describe("IndexedDBLogger purge test", () => {
         logger.log("This is a log message").then(() => {
 
             setTimeout(() => {
-                var now = new Date();
+                let now = new Date();
 
                 myIndexedDBLogger.purge(now)
                     .then(() => {
@@ -182,8 +182,8 @@ describe("IndexedDBLogger purge test", () => {
  * 
  */
 describe("event related log tests", () => {
-    var logger;
-    var eventManager;
+    let logger;
+    let eventManager;
 
     beforeEach(done => {
         eventManager = new EventManager();

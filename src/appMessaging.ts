@@ -77,7 +77,7 @@ export class AppMessaging {
         return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
                 this._messagePager.resetConversation(conversationId);
-                return this._conversationManager.deleteConversation(conversationId)
+                return this._conversationManager.deleteConversation(conversationId);
             });
     }
 

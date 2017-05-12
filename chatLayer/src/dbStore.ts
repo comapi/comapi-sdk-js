@@ -473,14 +473,14 @@ export class IndexedDBConversationStore implements IConversationStore {
             if (this._database) {
 
                 // open a read/write db transaction, ready for clearing the data
-                var transaction = this._database.transaction([_objectStoreName], "readwrite");
+                let transaction = this._database.transaction([_objectStoreName], "readwrite");
 
                 transaction.onerror = function (event) {
                     console.error("Transaction not opened due to error: " + transaction.error);
                 };
 
-                var objectStore = transaction.objectStore(_objectStoreName);
-                var objectStoreRequest = objectStore.clear();
+                let objectStore = transaction.objectStore(_objectStoreName);
+                let objectStoreRequest = objectStore.clear();
 
                 objectStoreRequest.onsuccess = function (event) {
                     resolve(true);

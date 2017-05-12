@@ -203,12 +203,12 @@ export class ComapiChatLogic {
             if (!localConversations.find(o => { return o.id === remoteConv.id; })) {
                 console.log(`Remote conversation ${remoteConv.id} needs adding`);
                 addArray.push({
-                    id: remoteConv.id,
-                    name: remoteConv.name,
                     description: remoteConv.description,
-                    roles: remoteConv.roles,
+                    id: remoteConv.id,
                     isPublic: remoteConv.isPublic,
                     latestEventId: remoteConv.latestSentEventId,
+                    name: remoteConv.name,
+                    roles: remoteConv.roles,
                 });
             }
         }

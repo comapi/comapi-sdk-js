@@ -73,7 +73,7 @@ export class MemoryConversationStore implements IConversationStore {
     public deleteConversation(conversationId: string): Promise<boolean> {
 
         return new Promise((resolve, reject) => {
-            var index = this._indexOfConversation(conversationId);
+            let index = this._indexOfConversation(conversationId);
             if (index >= 0) {
                 this.conversations.splice(index, 1);
 

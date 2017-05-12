@@ -125,7 +125,7 @@ describe("Messaging tests", () => {
             }]
         };
 
-        var messageId: string;
+        let messageId: string;
 
         foundation.services.appMessaging.sendMessageToConversation(channelDetails.id, message)
             .then((result: ISendMessageResult) => {
@@ -133,7 +133,7 @@ describe("Messaging tests", () => {
                 expect(result.id).toBeDefined();
                 messageId = result.id;
 
-                var statusUpdate: IMessageStatus = {
+                let statusUpdate: IMessageStatus = {
                     messageIds: [messageId],
                     status: "delivered",
                     timestamp: new Date().toISOString()

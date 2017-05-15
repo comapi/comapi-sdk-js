@@ -646,6 +646,22 @@ export interface IChannels {
 }
 
 
+// the events can be just stored as :IConversationMessageEvent
+
+export interface IOrphanedEventManager {
+
+    clearAll(): Promise<boolean>;
+    clear(conversationId: string): Promise<boolean>;
+    getContinuationToken(conversationId: string): Promise<number>;
+    setContinuationToken(conversationId: string, continuationToken: number): Promise<boolean>;
+
+    addOrphanedEvent(event: IConversationMessageEvent): Promise<boolean>;
+    removeOrphanedEvent(event: IConversationMessageEvent): Promise<boolean>;
+    getOrphanedEvents(conversationId: string): Promise<IConversationMessageEvent[]>;
+}
+
+
+
 /**
  * Foundation interface definition
  * static methods missing as cant define them in TS ;-(
@@ -662,3 +678,6 @@ export interface IFoundation {
     off(eventType: string, handler?: Function): void;
     getLogs(): Promise<string>;
 }
+
+
+

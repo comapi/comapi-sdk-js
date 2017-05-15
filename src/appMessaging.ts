@@ -76,8 +76,10 @@ export class AppMessaging {
     public deleteConversation(conversationId: string): Promise<boolean> {
         return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
-                this._messagePager.resetConversation(conversationId);
                 return this._conversationManager.deleteConversation(conversationId);
+            })
+            .then((deleted) => {
+                return this._messagePager.resetConversation(conversationId);
             });
     }
 

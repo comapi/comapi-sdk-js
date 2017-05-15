@@ -14,6 +14,11 @@ import { Logger } from "../src/logger";
 
 describe("Message Pager tests", () => {
 
+    beforeEach(() => {
+        localStorage.removeItem("comapi.orphanedEevnts");
+    });
+
+
     interface IResponseHandler {
         (count: number): IConversationMessagesResult;
     };

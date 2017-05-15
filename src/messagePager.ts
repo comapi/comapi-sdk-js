@@ -5,22 +5,19 @@ import {
     IConversationMessage,
     IMessageManager,
     IMessageStatus,
-    IGetMessagesResponse
+    IGetMessagesResponse,
+    IOrphanedEventManager,
+    IConversationMessageEvent,
+    IConversationMessagesResult
 } from "./interfaces";
 
-/**
- * 
- */
-interface IOrphanedEventContainer {
-    continuationToken: number;
-    orphanedEvents: any[];
-};
+import { LocalStorageOrphanedEventManager } from "./orphanedEventStore";
+
+import { Utils } from "./utils";
 
 export class MessagePager {
 
-    private _orphanedEevnts = {
-        // IOrphanedEventContainer will be keyed off a conversationId property
-    };
+    private _orphanedEventManager: IOrphanedEventManager;
 
     /**        
      * MessagePager class constructor.
@@ -32,8 +29,11 @@ export class MessagePager {
      * @parameter {IMessageManager} _messageManager 
      */
     constructor(private _logger: ILogger, private _localStorage: ILocalStorageData, private _messageManager: IMessageManager) {
-        this._orphanedEevnts = this._localStorage.getObject("orphanedEevnts") || {};
+
+        // TODO: DI this in 
+        this._orphanedEventManager = new LocalStorageOrphanedEventManager(_localStorage);
     }
+
 
     /**
      * Get a page of messages, internally deal with orphaned events etc ...
@@ -45,70 +45,85 @@ export class MessagePager {
      */
     public getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse> {
 
-        let orphanedEventContainer: IOrphanedEventContainer;
-
-        // validate state ...
-        if (continuationToken !== undefined) {
-
-            if (continuationToken <= 0) {
-                return Promise.reject<IGetMessagesResponse>({ message: `All messages from conversation ${conversationId} have been loaded` });
-            }
-
-            orphanedEventContainer = this._orphanedEevnts[conversationId];
-
-            if (orphanedEventContainer) {
-                if (orphanedEventContainer.continuationToken !== continuationToken) {
-                    // get rid of our cached events as they are now useless
-                    delete this._orphanedEevnts[conversationId];
-                    return Promise.reject<IGetMessagesResponse>({ message: `Invalid continuation token: ${continuationToken} for ${conversationId}, you nust start from the end` });
-                }
-            } else {
-                return Promise.reject<IGetMessagesResponse>({ message: `Invalid continuation token: ${continuationToken} for ${conversationId}, you nust start from the end` });
-            }
-        } else {
-            this.resetConversation(conversationId);
+        if (continuationToken <= 0) {
+            return Promise.reject<IGetMessagesResponse>({ message: `All messages from conversation ${conversationId} have been loaded` });
         }
 
-        // get the messages ...
-        return this._messageManager.getConversationMessages(conversationId, pageSize, continuationToken)
+        let _continuationToken: number = null;
+        let _conversationMessagesResult: IConversationMessagesResult;
+
+        // 1) get info & Validate
+        return this._orphanedEventManager.getContinuationToken(conversationId)
+            .then((token) => {
+                _continuationToken = token;
+
+                if (continuationToken !== undefined) {
+                    // check the continuationToken is correct
+                    if (_continuationToken !== continuationToken) {
+                        // get rid of our cached events as they are now useless
+                        // return this._orphanedEventManager.clear(conversationId)
+                        // .then(() => {
+                        return Promise.reject<boolean>({ message: `Invalid continuation token: ${continuationToken} for ${conversationId}, you nust start from the end` });
+                        // });
+                    } else {
+                        return Promise.resolve(true);
+                    }
+
+                } else {
+                    // reset the store as they want to go from the beginning 
+                    return this._orphanedEventManager.clear(conversationId);
+                }
+            })
+            .then(() => {
+                return this._messageManager.getConversationMessages(conversationId, pageSize, continuationToken);
+            })
             .then(result => {
-                this._logger.log(`getConversationMessages(${conversationId}, ${pageSize}, ${continuationToken}) returned`, result);
+                _conversationMessagesResult = result;
 
                 if (result.messages === undefined) {
                     this._logger.log("No messages in this channel yet");
-                    return Promise.resolve({ messages: [] });
+                    return Promise.resolve<IGetMessagesResponse>({ messages: [] });
                 } else {
 
-                    // The next continuatioToken will be (result.earliestEventId - 1) 
-                    if (!orphanedEventContainer) {
-                        orphanedEventContainer = {
-                            continuationToken: result.earliestEventId - 1,
-                            orphanedEvents: []
-                        };
-                        this._orphanedEevnts[conversationId] = orphanedEventContainer;
-                    } else {
-                        orphanedEventContainer.continuationToken = result.earliestEventId - 1;
-                    }
-
-                    if (result.orphanedEvents.length) {
-
-                        let mapped = [];
-                        for (let event of result.orphanedEvents) {
-                            mapped.push(this.mapOrphanedEvent(event));
-                        }
-                        // could merge these after playing through our cache ...
-                        this.mergeOrphanedEvents(orphanedEventContainer, mapped);
-                    }
-
-                    this.applyOrphanedEvents(result.messages, orphanedEventContainer);
-
-                    return Promise.resolve({
-                        continuationToken: orphanedEventContainer.continuationToken,
-                        earliestEventId: result.earliestEventId,
-                        latestEventId: result.latestEventId,
-                        messages: result.messages,
-                    });
+                    // merge any events we got from the call to getConversationMessages with whats in the store
+                    return this.getOrphanedEvents(conversationId, _conversationMessagesResult.orphanedEvents)
+                        .then(orphanedEvents => {
+                            return this.applyOrphanedEvents(_conversationMessagesResult.messages, orphanedEvents);
+                        })
+                        .then(() => {
+                            // update continuation token for this conv 
+                            _continuationToken = _conversationMessagesResult.earliestEventId - 1;
+                            return this._orphanedEventManager.setContinuationToken(conversationId, _continuationToken);
+                        })
+                        .then(() => {
+                            return Promise.resolve<IGetMessagesResponse>({
+                                continuationToken: _continuationToken,
+                                earliestEventId: _conversationMessagesResult.earliestEventId,
+                                latestEventId: _conversationMessagesResult.latestEventId,
+                                messages: _conversationMessagesResult.messages,
+                            });
+                        });
                 }
+            });
+    }
+
+    /**
+     * Method to append a new batch of orphaned events to the store and then return them all ..
+     * @param {string} conversationId
+     * @param {any[]} orphanedEvents
+     * @returns {Promise<IConversationMessageEvent[]>}
+     */
+    public getOrphanedEvents(conversationId: string, orphanedEvents: any[]): Promise<IConversationMessageEvent[]> {
+
+        let mapped: IConversationMessageEvent[] = orphanedEvents.map(e => { return this.mapOrphanedEvent(e); });
+
+        // add them into the store 
+        return Utils.eachSeries(mapped, (event: IConversationMessageEvent) => {
+            return this._orphanedEventManager.addOrphanedEvent(event);
+        })
+            .then(done => {
+                // get the store 
+                return this._orphanedEventManager.getOrphanedEvents(conversationId);
             });
     }
 
@@ -163,52 +178,24 @@ export class MessagePager {
     /**
      * Method to reset any cached info abut a conversation
      */
-    public resetConversation(conversationId: string) {
-        this._orphanedEevnts[conversationId] = {};
-        this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
-    }
-
-    /**
-     * 
-     */
-    private mergeOrphanedEvents(orphanedEventContainer: IOrphanedEventContainer, orphanedEvets: any[]) {
-        orphanedEventContainer.orphanedEvents = orphanedEventContainer.orphanedEvents.concat(orphanedEvets);
-
-        orphanedEventContainer.orphanedEvents = orphanedEventContainer.orphanedEvents.sort((e1, e2) => {
-            if (e1.conversationEventId > e2.conversationEventId) {
-                return 1;
-            } else if (e1.conversationEventId < e2.conversationEventId) {
-                return -1;
-            } else {
-                return 0;
-            }
-        });
-
-        // this._paragonSDK.setObject("orphanedEevnts", this._orphanedEevnts);
-
-        this._logger.log(`mergedOrphanedEvents: ${JSON.stringify(orphanedEventContainer.orphanedEvents)}`);
+    public resetConversation(conversationId: string): Promise<boolean> {
+        return this._orphanedEventManager.clear(conversationId);
     }
 
     /**
      * Orphaned events must be applied in ascending order, so if we want to loop backwards through these they need to be sorted
      * by id descending
      */
-    private applyOrphanedEvents(messages: IConversationMessage[], orphanedEventContainer: IOrphanedEventContainer) {
-        this._logger.log(`==> applyOrphanedEvents: ${JSON.stringify(orphanedEventContainer.orphanedEvents)}`);
-
-        for (let i = orphanedEventContainer.orphanedEvents.length - 1; i >= 0; i--) {
-            let event = orphanedEventContainer.orphanedEvents[i];
+    private applyOrphanedEvents(messages: IConversationMessage[], orphanedEvents: IConversationMessageEvent[]): Promise<boolean> {
+        return Utils.eachSeries(orphanedEvents, (event: IConversationMessageEvent) => {
             if (this.playEvent(event, messages)) {
                 this._logger.log(`succesfuly played event ${event.conversationEventId}`);
-                orphanedEventContainer.orphanedEvents.splice(i, 1);
+                return this._orphanedEventManager.removeOrphanedEvent(event);
             } else {
                 this._logger.warn(`failed to play event ${event.conversationEventId}`, event);
+                return Promise.resolve(false);
             }
-        }
-
-        this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
-
-        this._logger.log(`<== applyOrphanedEvents: ${JSON.stringify(orphanedEventContainer.orphanedEvents)}`);
+        });
     }
 
     /**
@@ -307,7 +294,7 @@ export class MessagePager {
             }
         }
      */
-    private mapOrphanedEvent(event: any): any {
+    private mapOrphanedEvent(event: any): IConversationMessageEvent {
 
         let mapped: any = {};
 

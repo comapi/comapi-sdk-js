@@ -11,13 +11,12 @@ import {
     IConversationMessagesResult
 } from "./interfaces";
 
-import { LocalStorageOrphanedEventManager } from "./orphanedEventStore";
+// import { IndexedDBOrphanedEventManager } from "./indexedDBOrphanedEventManager";
+// import { LocalStorageOrphanedEventManager } from "./LocalStorageOrphanedEventManager";
 
 import { Utils } from "./utils";
 
 export class MessagePager {
-
-    private _orphanedEventManager: IOrphanedEventManager;
 
     /**        
      * MessagePager class constructor.
@@ -28,10 +27,7 @@ export class MessagePager {
      * @parameter {ILocalStorageData} _localStorage 
      * @parameter {IMessageManager} _messageManager 
      */
-    constructor(private _logger: ILogger, private _localStorage: ILocalStorageData, private _messageManager: IMessageManager) {
-
-        // TODO: DI this in 
-        this._orphanedEventManager = new LocalStorageOrphanedEventManager(_localStorage);
+    constructor(private _logger: ILogger, private _localStorage: ILocalStorageData, private _messageManager: IMessageManager, private _orphanedEventManager: IOrphanedEventManager) {
     }
 
 

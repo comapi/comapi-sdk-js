@@ -5,17 +5,34 @@ import {
     IConversationMessagesResult,
     IMessageStatus,
     IConversationMessageEvent,
+    IOrphanedEventManager
 } from "../src/interfaces";
 
 import { MessagePager } from "../src/messagePager";
 import { LocalStorageData } from "../src/localStorageData";
 import { Logger } from "../src/logger";
+import { LocalStorageOrphanedEventManager } from "../src/localStorageOrphanedEventManager";
 
 
 describe("Message Pager tests", () => {
 
+    let messagePager: MessagePager;
+    let orphanedEventNamager: IOrphanedEventManager;
+    let messageManager: MockMessageManager;
+
     beforeEach(() => {
-        localStorage.removeItem("comapi.orphanedEevnts");
+        let localStorageData = new LocalStorageData();
+        orphanedEventNamager = new LocalStorageOrphanedEventManager(localStorageData);
+        messageManager = new MockMessageManager();
+        messagePager = new MessagePager(new Logger(), localStorageData, messageManager, orphanedEventNamager);
+    });
+
+    afterEach(done => {
+
+        orphanedEventNamager.clearAll()
+            .then(deleted => {
+                done();
+            });
     });
 
 
@@ -35,6 +52,10 @@ describe("Message Pager tests", () => {
          * _responseHandler will return test specific responses ...
          */
         constructor(private _responseHandler?: IResponseHandler) { }
+
+        set responseHandler(responseHandler: IResponseHandler) {
+            this._responseHandler = responseHandler;
+        }
 
         public sendMessageToConversation(conversationId: string, message: IConversationMessage): Promise<ISendMessageResult> {
             return Promise.reject<ISendMessageResult>({ message: "not implemented" });
@@ -58,8 +79,6 @@ describe("Message Pager tests", () => {
      */
     it("should fail correttly and reset orphaned event cache with an invalid continuation token", done => {
 
-        let messagePager: MessagePager = new MessagePager(new Logger(), new LocalStorageData(), new MockMessageManager());
-
         messagePager.getMessages("3F404B9B-1651-4D8D-A0D1-D7C2A0BDD5F4", 100, 13434324)
             .then(result => {
                 fail("Should not resolve");
@@ -73,9 +92,7 @@ describe("Message Pager tests", () => {
     /**
      * Pass in an invalid continuation token
      */
-    it("should fail correttly when end is hit", done => {
-
-        let messagePager: MessagePager = new MessagePager(new Logger(), new LocalStorageData(), new MockMessageManager());
+    it("should fail correctly when end is hit", done => {
 
         messagePager.getMessages("3F404B9B-1651-4D8D-A0D1-D7C2A0BDD5F4", 100, 0)
             .then(result => {
@@ -155,7 +172,7 @@ describe("Message Pager tests", () => {
 
         }
 
-        let messagePager: MessagePager = new MessagePager(new Logger(), new LocalStorageData(), new MockMessageManager(responseHandler));
+        messageManager.responseHandler = responseHandler;
 
         messagePager.getMessages("3F404B9B-1651-4D8D-A0D1-D7C2A0BDD5F4", 2)
             .then(result1 => {
@@ -218,7 +235,7 @@ describe("Message Pager tests", () => {
             };
         }
 
-        let messagePager: MessagePager = new MessagePager(new Logger(), new LocalStorageData(), new MockMessageManager(responseHandler));
+        messageManager.responseHandler = responseHandler;
 
         messagePager.getMessages("3F404B9B-1651-4D8D-A0D1-D7C2A0BDD5F4", 10)
             .then(result => {
@@ -305,7 +322,7 @@ describe("Message Pager tests", () => {
                                         "profileId": "alex",
                                         "timestamp": "2016-11-08T12:48:53.088Z"
                                     },
-                                    "eventId": "8605dbd1-6a10-4405-8966-1eb7dfaefea4",
+                                    "eventId": "EAE3B00C-777A-48FA-A0E3-97DDC1ADE52E",
                                     "profileId": "alex"
                                 }
                             },
@@ -334,7 +351,7 @@ describe("Message Pager tests", () => {
 
         }
 
-        let messagePager: MessagePager = new MessagePager(new Logger(), new LocalStorageData(), new MockMessageManager(responseHandler));
+        messageManager.responseHandler = responseHandler;
 
         messagePager.getMessages("3F404B9B-1651-4D8D-A0D1-D7C2A0BDD5F4", 2)
             .then(result1 => {

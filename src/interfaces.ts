@@ -338,10 +338,10 @@ export interface IConversationDetails {
  */
 export interface IConversationDetails2 extends IConversationDetails {
     _createdOn: string;
+    _etag?: string;
     _updatedOn: string;
     latestSentEventId?: number;
     participantCount?: number;
-    ETag?: string;
 }
 
 

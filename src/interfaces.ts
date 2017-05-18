@@ -330,7 +330,6 @@ export interface IConversationDetails {
     description?: string;
     roles: IConversationRoles;
     isPublic: boolean;
-    participants?: IConversationParticipant[];
 }
 
 /**
@@ -341,6 +340,7 @@ export interface IConversationDetails2 extends IConversationDetails {
     _etag?: string;
     _updatedOn: string;
     latestSentEventId?: number;
+    // this comes back when user calls getConversations()
     participantCount?: number;
 }
 
@@ -543,6 +543,7 @@ export interface IConversationUpdatedEventData {
     roles: IConversationRoles;
     isPublic: boolean;
     timestamp: string;
+    eTag: string;
 }
 
 /**

@@ -9,9 +9,14 @@ import {
 } from "../src/interfaces";
 import { IComapiChatConfig, IConversationStore, IChatConversation, IChatMessage } from "../chatLayer/interfaces/chatLayer";
 
+import {
+    MemoryConversationStore
+} from "../chatLayer/src/memoryStore";
+
+
 
 /**
- * THe most basic initialisation
+ * This test emulates a new device 
  */
 describe("Chat Logic tests", () => {
 
@@ -38,7 +43,15 @@ describe("Chat Logic tests", () => {
             throw new Error("Method not implemented.");
         }
         getConversations(scope?: ConversationScope, profileId?: string): Promise<IConversationDetails2[]> {
-            return Promise.resolve([]);
+            return Promise.resolve([
+                {
+                    id: "F2695C92-6FCA-4464-ABF1-C16EDB06B2F3",
+                    latestSentEventId: 0,
+                },
+                {
+                    id: "9FBC01DE-03C2-43C2-8722-8FAE729BB769",
+                }
+            ]);
         }
         getConversationEvents(conversationId: string, from: number, limit: number): Promise<IConversationMessageEvent[]> {
             throw new Error("Method not implemented.");
@@ -50,7 +63,31 @@ describe("Chat Logic tests", () => {
             throw new Error("Method not implemented.");
         }
         getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse> {
-            throw new Error("Method not implemented.");
+
+            switch (conversationId) {
+                case "F2695C92-6FCA-4464-ABF1-C16EDB06B2F3":
+                    return Promise.resolve({
+                        continuationToken: -1,
+                        earliestEventId: 0,
+                        latestEventId: 0,
+                        messages: [{
+                            id: "2EDB545D-B4A1-44DF-A5D2-5F67379F3986",
+                            sentEventId: 0,
+                            metadata: {},
+                            context: {
+                                conversationId: "F2695C92-6FCA-4464-ABF1-C16EDB06B2F3",
+                            },
+                            parts: [{
+                                data: "hello",
+                                type: "text/plain"
+                            }],
+                        }]
+                    });
+
+                default:
+                    throw new Error("Method not implemented.");
+
+            }
         }
         sendIsTyping(conversationId: string): Promise<boolean> {
             throw new Error("Method not implemented.");
@@ -99,40 +136,6 @@ describe("Chat Logic tests", () => {
         }
     };
 
-    class MockStore implements IConversationStore {
-        getConversations(): Promise<IChatConversation[]> {
-            return Promise.resolve([]);
-        }
-        getConversation(conversationId: string): Promise<IChatConversation> {
-            throw new Error("Method not implemented.");
-        }
-        createConversation(conversation: IChatConversation): Promise<boolean> {
-            throw new Error("Method not implemented.");
-        }
-        updateConversation(conversation: IChatConversation): Promise<boolean> {
-            throw new Error("Method not implemented.");
-        }
-        deleteConversation(conversationId: string): Promise<boolean> {
-            throw new Error("Method not implemented.");
-        }
-        reset(): Promise<boolean> {
-            throw new Error("Method not implemented.");
-        }
-        getMessage(conversationId: string, messageId: string): Promise<IChatMessage> {
-            throw new Error("Method not implemented.");
-        }
-        updateMessageStatus(conversationId: string, messageId: string, profileId: string, status: string, timestamp: string): Promise<boolean> {
-            throw new Error("Method not implemented.");
-        }
-        createMessage(message: IChatMessage): Promise<boolean> {
-            throw new Error("Method not implemented.");
-        }
-        getMessages(conversationId: string): Promise<IChatMessage[]> {
-            throw new Error("Method not implemented.");
-        }
-
-    }
-
     it("should initialise", done => {
 
         let foundation = new MockFoundation();
@@ -140,10 +143,10 @@ describe("Chat Logic tests", () => {
         let chatLogic = new ComapiChatLogic(foundation);
 
         let chatConfig: IComapiChatConfig = {
-            conversationStore: new MockStore(),
+            conversationStore: new MemoryConversationStore(),
             eventPageSize: 10,
             messagePageSize: 10,
-            lazyLoadThreshold: 0
+            lazyLoadThreshold: 10
         };
 
         chatLogic.initialise(chatConfig)
@@ -153,7 +156,7 @@ describe("Chat Logic tests", () => {
             })
             .then(result => {
                 expect(result).toBeDefined();
-                expect(result.length).toBe(0);
+                expect(result.length).toBe(2);
                 done();
             })
 

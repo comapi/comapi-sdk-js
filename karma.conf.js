@@ -10,7 +10,7 @@ module.exports = function (config) {
             "src/**/*.ts",
             // "specs/**/*.ts",
             "chatLayer/**/*.ts",
-            "chatLayerSpecs/**/*.spec.ts",
+            "chatLayerSpecs/**/logic-new-device.spec.ts",
         ],
 
         preprocessors: {
@@ -32,7 +32,7 @@ module.exports = function (config) {
                 "html": "coverage",
                 "text-summary": "",
                 "teamcity": ""
-            },
+            },/*
             coverageOptions: {
                 instrumentation: false
             },
@@ -43,7 +43,7 @@ module.exports = function (config) {
                 module: "commonjs",
                 sourceMap: false,
                 target: "ES5"
-            }
+            }*/
 
         }
     });

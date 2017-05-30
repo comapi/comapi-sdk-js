@@ -1,8 +1,8 @@
-import { Foundation, MessageStatusBuilder, MessageBuilder } from "../../src/foundation";
+import { MessageStatusBuilder, MessageBuilder } from "../../src/foundation";
 import { Utils, DoUntilOperationFunction, DoUntilTestFunction } from "../../src/utils";
 import { IChatLogic, IComapiChatConfig, IConversationStore, IChatConversation, IChatMessage, IChatInfo } from "../interfaces/chatLayer";
 
-import { IMessageSentPayload, IMessageStatusUpdatePayload, IConversationParticipant } from "../../src/interfaces";
+import { IFoundation, IMessageSentPayload, IMessageStatusUpdatePayload, IConversationParticipant } from "../../src/interfaces";
 
 import {
     IConversationDetails2,
@@ -84,7 +84,7 @@ export class ComapiChatLogic implements IChatLogic {
     /**
      * 
      */
-    constructor(private _foundation: Foundation) { }
+    constructor(private _foundation: IFoundation) { }
 
     /**
      * Initialise Chat Layer
@@ -452,14 +452,14 @@ export class ComapiChatLogic implements IChatLogic {
 
                 messages = getMessagesReult.messages.map(message => {
                     return {
-                        conversationId: message.context.conversationId,
+                        conversationId: message.context && message.context.conversationId || undefined,
                         id: message.id,
                         metadata: message.metadata,
                         parts: message.parts,
-                        senderId: message.context.from.id,
+                        senderId: message.context && message.context.from && message.context.from.id || undefined,
                         // TODO: error in IConversationMessage interface
                         sentEventId: message.sentEventId,
-                        sentOn: message.context.sentOn,
+                        sentOn: message.context && message.context.sentOn || undefined,
                         statusUpdates: message.statusUpdates
                     };
                 });
@@ -501,6 +501,7 @@ export class ComapiChatLogic implements IChatLogic {
             isPublic: conversation.isPublic,
             // TODO: this will be a different property!!!
             lastMessageTimestamp: conversation._updatedOn,
+            latestRemoteEventId: conversation.latestSentEventId,
             name: conversation.name,
             roles: conversation.roles,
         };

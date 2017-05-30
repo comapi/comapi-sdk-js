@@ -47,21 +47,6 @@ describe("MemoryConversationStore tests", () => {
     });
 
 
-    it("should fail if try to create a Conversation that already exists", done => {
-        let conversation = new ConversationBuilder().withName("Test Conversation #1");
-        memoryConversationStore.createConversation(conversation)
-            .then(succeeded => {
-                expect(succeeded).toBeTruthy();
-
-                memoryConversationStore.createConversation(conversation)
-                    .catch(error => {
-                        expect(error.message).toBeDefined();
-                        done();
-                    });
-
-            });
-    });
-
     it("should create a Conversation and allow it to be queried with getConversation", done => {
         let id: string = "myConversationId";
         let conversation = new ConversationBuilder().withName("Test Conversation #1").withId(id);

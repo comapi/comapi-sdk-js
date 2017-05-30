@@ -1,3 +1,4 @@
+
 import {
     IChatConversation,
     IChatMessage,
@@ -16,6 +17,15 @@ export class MemoryConversationStore implements IConversationStore {
     // will create a dictionary keyed off conversationId ...
 
     private messageStore: { [id: string]: IChatMessage[]; } = {};
+
+    /**
+     * 
+     */
+    public reset(): Promise<boolean> {
+        this.conversations = [];
+        this.messageStore = {};
+        return Promise.resolve(true);
+    }
 
     /**
      * 
@@ -47,6 +57,9 @@ export class MemoryConversationStore implements IConversationStore {
      * @param conversation 
      */
     public updateConversation(conversation: IChatConversation): Promise<boolean> {
+
+        console.log("%c updateConversation', 'background: #222; color: #bada55", conversation);
+
         return new Promise((resolve, reject) => {
 
             let found = this._findConversation(conversation.id);
@@ -56,8 +69,8 @@ export class MemoryConversationStore implements IConversationStore {
                 found.description = conversation.description;
                 found.roles = conversation.roles;
                 found.isPublic = conversation.isPublic;
-                found.earliestEventId = conversation.earliestEventId;
-                found.latestEventId = conversation.latestEventId;
+                found.earliestLocalEventId = conversation.earliestLocalEventId;
+                found.latestLocalEventId = conversation.latestLocalEventId;
                 found.continuationToken = conversation.continuationToken;
 
                 resolve(true);
@@ -109,18 +122,24 @@ export class MemoryConversationStore implements IConversationStore {
 
             if (message) {
                 // if we get delivered and read out of order, dont overwrite "read" with delivered 
-                if (message.statusUpdates[profileId] &&
+                if (message.statusUpdates &&
+                    message.statusUpdates[profileId] &&
                     message.statusUpdates[profileId].status === "read") {
+                    console.log("<-- updateMessageStatus(false)");
                     resolve(false);
-
                 } else {
+
+                    if (!message.statusUpdates) {
+                        message.statusUpdates = {};
+                    }
+
                     message.statusUpdates[profileId] = {
                         status,
                         on: timestamp
                     };
+                    console.log("<-- updateMessageStatus(true)");
                     resolve(true);
                 }
-
             } else {
                 reject({ message: `Message ${messageId} not found in conversation ${conversationId}` });
             }
@@ -134,28 +153,36 @@ export class MemoryConversationStore implements IConversationStore {
     public createMessage(message: IChatMessage): Promise<boolean> {
         return new Promise((resolve, reject) => {
 
-            // messages are ordered by sentEventId
-            // iterate backwards to see where to insert (will 99% prob be just on the end)
+            // check for dupes
+            if (this._findMessage(message.conversationId, message.id) === null) {
+                // messages are ordered by sentEventId
+                // iterate backwards to see where to insert (will 99% prob be just on the end)
+                // UNLESS we are backfilling where it is prob going to be the beginning ...
+                // may be better off just appending and sorting ???
 
-            let conversationMessages: IChatMessage[] = this.messageStore[message.conversationId];
+                let conversationMessages: IChatMessage[] = this.messageStore[message.conversationId];
 
-            if (conversationMessages) {
+                if (conversationMessages) {
 
-                let position: number = conversationMessages.length;
-                for (let i = conversationMessages.length - 1; i >= 0; i--) {
-                    let _message = conversationMessages[i];
+                    let position: number = /*conversationMessages.length*/0; // lets default to the beginning ..
+                    for (let i = conversationMessages.length - 1; i >= 0; i--) {
+                        let _message = conversationMessages[i];
 
-                    if (_message.sentEventId < message.sentEventId) {
-                        position = i + 1;
-                        break;
+                        if (_message.sentEventId < message.sentEventId) {
+                            position = i + 1;
+                            break;
+                        }
                     }
+
+                    conversationMessages.splice(position, 0, message);
+                    resolve(true);
+
+                } else {
+                    reject({ message: `Conversation ${message.conversationId} not found in messageStore` });
                 }
-
-                conversationMessages.splice(position, 0, message);
-                resolve(true);
-
             } else {
-                reject({ message: `Conversation ${message.conversationId} not found in messageStore` });
+                console.warn("Message already in store", message);
+                resolve(false);
             }
         });
     }
@@ -201,7 +228,14 @@ export class MemoryConversationStore implements IConversationStore {
 
         if (conversationMessages) {
             let message: IChatMessage[] = conversationMessages.filter(x => x.id === messageId);
-            return message.length === 1 ? message[0] : null;
+            // return message.length === 1 ? message[0] : null;
+            if (message.length === 1) {
+                return message[0];
+            } else {
+                return null;
+            }
+        } else {
+            return null;
         }
     }
 

@@ -34,15 +34,11 @@ describe("IndexedDBConversationStore tests", () => {
 
     beforeEach(done => {
         conversationStore = new IndexedDBConversationStore();
-
-        conversationStore.initialise()
-            .then(succeeded => {
-                done();
-            });
+        done();
     });
 
     afterEach(done => {
-        conversationStore.emptyDatabase()
+        conversationStore.reset()
             .then(succeeded => {
                 done();
             });
@@ -58,21 +54,6 @@ describe("IndexedDBConversationStore tests", () => {
             });
     });
 
-
-    it("should fail if try to create a Conversation that already exists", done => {
-        let conversation = new ConversationBuilder().withName("Test Conversation #1");
-        conversationStore.createConversation(conversation)
-            .then(succeeded => {
-                expect(succeeded).toBeTruthy();
-
-                conversationStore.createConversation(conversation)
-                    .catch(error => {
-                        expect(error.message).toBeDefined();
-                        done();
-                    });
-
-            });
-    });
 
     it("should create a Conversation and allow it to be queried with getConversation", done => {
         let id: string = "myConversationId";

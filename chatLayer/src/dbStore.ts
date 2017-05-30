@@ -1,4 +1,5 @@
 
+
 import {
     IChatConversation,
     IChatMessage,
@@ -24,10 +25,266 @@ export class IndexedDBConversationStore implements IConversationStore {
      */
     private _isIE = navigator.userAgent.indexOf("Trident/") !== -1 || navigator.userAgent.indexOf("Edge") !== -1;
 
+
+    /**
+     * 
+     * @param conversationId 
+     */
+    public getConversation(conversationId: string): Promise<IChatConversation> {
+
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise<IChatConversation>((resolve, reject) => {
+
+                    let transaction = this._database.transaction([this._ConversationsStore], "readonly");
+
+                    let objectStore = transaction.objectStore(this._ConversationsStore);
+
+                    // we want all the messages from this conversation ...
+                    // using a keyrange to encapsulate just the specified conversationId and all the dates
+                    let keyRange = IDBKeyRange.only(conversationId);
+
+                    let cursorRequest = objectStore.openCursor(keyRange);
+
+                    cursorRequest.onsuccess = function (event) {
+                        let cursor: IDBCursorWithValue = (<IDBRequest>event.target).result;
+
+                        // only one record ...
+                        if (cursor) {
+                            resolve(cursor.value);
+                        }
+                        else {
+                            resolve(null);
+                        }
+                    };
+
+                    cursorRequest.onerror = function (e: any) {
+                        reject({ message: "Failed to openCursor: " + e.target.error.name });
+                    };
+                });
+            });
+    }
+
+    /**
+     * 
+     * @param conversation 
+     */
+    public createConversation(conversation: IChatConversation): Promise<boolean> {
+        return this.putConversation(conversation);
+    }
+
+    /**
+     * 
+     * @param conversation 
+     */
+    public updateConversation(conversation: IChatConversation): Promise<boolean> {
+        return this.getConversation(conversation.id)
+            .then(c => {
+                if (c) {
+                    return this.putConversation(conversation);
+                } else {
+                    return Promise.reject<boolean>({ message: `Conversation ${conversation.id} not found` });
+                }
+            });
+    }
+
+
+    /**
+     * 
+     * @param conversationId 
+     */
+    public deleteConversation(conversationId: string): Promise<boolean> {
+
+        // check conv exists first as we cnt tell whether we actually deleted anything ...
+        return this.getConversation(conversationId)
+            .then(c => {
+                if (c !== null) {
+                    return this._deleteConversation(conversationId);
+                } else {
+                    return Promise.reject<boolean>({ message: `Conversation ${conversationId} not found` });
+                }
+            });
+    }
+
+
+    /**
+     * 
+     * @param conversationId 
+     * @param messageId 
+     */
+    public getMessage(conversationId: string, messageId: string): Promise<IChatMessage> {
+
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise<IChatMessage>((resolve, reject) => {
+                    let transaction: IDBTransaction = this._database.transaction([this._MessagesStore], "readonly");
+
+                    let objectStore: IDBObjectStore = transaction.objectStore(this._MessagesStore);
+
+                    let cursorRequest: IDBRequest = objectStore.get(messageId);
+
+                    cursorRequest.onsuccess = (event: any) => {
+                        let message: IChatMessage = event.target.result;
+                        if (message) {
+                            resolve(message);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+
+                    cursorRequest.onerror = function (event) {
+                        reject({ message: `Failed to openCursor: ${(<IDBRequest>event.target).error.name}` });
+                    };
+                });
+            });
+    }
+
+    /**
+     * 
+     * @param conversationId 
+     * @param messageId 
+     * @param statusUdates 
+     */
+    public updateMessageStatus(conversationId: string, messageId: string, profileId: string, status: string, timestamp: string): Promise<boolean> {
+
+        return this.getMessage(conversationId, messageId)
+            .then(message => {
+
+                // if we get delivered and read out of order, dont overwrite "read" with delivered 
+                if (message.statusUpdates &&
+                    message.statusUpdates[profileId] &&
+                    message.statusUpdates[profileId].status === "read") {
+                    Promise.resolve(false);
+
+                } else {
+
+                    if (!message.statusUpdates) {
+                        message.statusUpdates = {};
+                    }
+
+                    message.statusUpdates[profileId] = {
+                        status,
+                        on: timestamp
+                    };
+                    return this.putMessage(message);
+                }
+            });
+    }
+
+    /**
+     * 
+     * @param message 
+     */
+    public createMessage(message: IChatMessage): Promise<boolean> {
+
+        return this.getConversation(message.conversationId)
+            .then(c => {
+                if (c !== null) {
+                    return this.putMessage(message);
+                } else {
+                    return Promise.reject<boolean>({ message: `Conversation ${message.conversationId} not found` });
+                }
+            });
+    }
+
+    /**
+     * Method for app to use
+     */
+    public getConversations(): Promise<IChatConversation[]> {
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise<IChatConversation[]>((resolve, reject) => {
+
+                    let transaction = this._database.transaction([this._ConversationsStore], "readonly");
+                    let objectStore = transaction.objectStore(this._ConversationsStore);
+
+                    let conversations: IChatConversation[] = [];
+                    let cursorRequest = objectStore.openCursor();
+
+                    cursorRequest.onsuccess = function (event) {
+                        let cursor: IDBCursorWithValue = (<IDBRequest>event.target).result;
+
+                        if (cursor) {
+                            conversations.push(cursor.value);
+                            cursor.continue();
+                        } else {
+                            resolve(conversations);
+                        }
+                    };
+
+                    cursorRequest.onerror = function (event) {
+                        reject({ message: "Failed to openCursor: " + (<IDBRequest>event.target).error.name });
+                    };
+
+                });
+            });
+
+    }
+
+    /**
+     * Method for app to use
+     */
+    public getMessages(conversationId: string): Promise<IChatMessage[]> {
+
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise<IChatMessage[]>((resolve, reject) => {
+
+                    let transaction: IDBTransaction = this._database.transaction([this._MessagesStore], "readonly");
+
+                    let objectStore: IDBObjectStore = transaction.objectStore(this._MessagesStore);
+
+                    let index = objectStore.index(this._isIE ? "conversationId_sentEventId" : "conversation");
+
+                    let keyRange = this.getKeyRange(conversationId);
+
+                    let messages: IChatMessage[] = [];
+                    let cursorRequest: IDBRequest = index.openCursor(keyRange, "prev");
+
+                    cursorRequest.onsuccess = (event) => {
+                        let cursor: IDBCursorWithValue = (<IDBRequest>event.target).result;
+
+                        if (cursor) {
+                            messages.unshift(cursor.value);
+                            cursor.continue();
+                        }
+                        else {
+                            resolve(messages);
+                        }
+                    };
+
+                    cursorRequest.onerror = function (event) {
+                        reject({ message: "Failed to openCursor: " + (<IDBRequest>event.target).error.name });
+                    };
+                });
+            });
+    }
+
+    /**
+     * 
+     */
+    public reset(): Promise<boolean> {
+
+        return this.clearObjectStore(this._ConversationsStore)
+            .then(cleared => {
+                return this.clearObjectStore(this._MessagesStore);
+            })
+            .then(cleared => {
+                return Promise.resolve(true);
+            });
+    }
+
+    /**
+     * 
+     */
+    private ensureInitialised() {
+        return this._database ? Promise.resolve(true) : this.initialise();
+    }
+
     /**
      * Create the database and stores
      */
-    public initialise(): Promise<boolean> {
+    private initialise(): Promise<boolean> {
 
         return new Promise((resolve, reject) => {
 
@@ -84,290 +341,39 @@ export class IndexedDBConversationStore implements IConversationStore {
 
     /**
      * 
-     * @param conversationId 
+     * @param message 
      */
-    public getConversation(conversationId: string): Promise<IChatConversation> {
-        return new Promise((resolve, reject) => {
-            if (this._database) {
+    private putMessage(message: IChatMessage): Promise<boolean> {
 
-                let transaction = this._database.transaction([this._ConversationsStore], "readonly");
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise((resolve, reject) => {
 
-                let objectStore = transaction.objectStore(this._ConversationsStore);
+                    let transaction: IDBTransaction = this._database.transaction([this._MessagesStore], "readwrite");
+                    let store: IDBObjectStore = transaction.objectStore(this._MessagesStore);
 
-                // we want all the messages from this conversation ...
-                // using a keyrange to encapsulate just the specified conversationId and all the dates
-                let keyRange = IDBKeyRange.only(conversationId);
-
-                let cursorRequest = objectStore.openCursor(keyRange);
-
-                cursorRequest.onsuccess = function (event) {
-                    let cursor: IDBCursorWithValue = (<IDBRequest>event.target).result;
-
-                    // only one record ...
-                    if (cursor) {
-                        resolve(cursor.value);
+                    if (this._isIE) {
+                        // add a "conversationId_sentEventId" property as we are using this for an index
+                        /* tslint:disable:no-string-literal */
+                        message["conversationId_sentEventId"] = `${message.conversationId}_${message.sentEventId}`;
+                        /* tslint:enable:no-string-literal */
                     }
-                    else {
-                        resolve(null);
-                    }
-                };
 
-                cursorRequest.onerror = function (e: any) {
-                    reject({ message: "Failed to openCursor: " + e.target.error.name });
-                };
+                    let request = store.put(message);
 
-            } else {
-                reject({ message: "Database not open" });
-            }
-        });
-    }
-
-    /**
-     * 
-     * @param conversation 
-     */
-    public createConversation(conversation: IChatConversation): Promise<boolean> {
-        return this.upsertConversation(conversation, false);
-    }
-
-    /**
-     * 
-     * @param conversation 
-     */
-    public updateConversation(conversation: IChatConversation): Promise<boolean> {
-        return this.getConversation(conversation.id)
-            .then(c => {
-                if (c) {
-                    return this.upsertConversation(conversation, true);
-                } else {
-                    return Promise.reject<boolean>({ message: `Conversation ${conversation.id} not found` });
-                }
-            });
-    }
-
-
-    /**
-     * 
-     * @param conversationId 
-     */
-    public deleteConversation(conversationId: string): Promise<boolean> {
-
-        // check conv exists first as we cnt tell whether we actually deleted anything ...
-        return this.getConversation(conversationId)
-            .then(c => {
-                if (c !== null) {
-                    return this._deleteConversation(conversationId);
-                } else {
-                    return Promise.reject<boolean>({ message: `Conversation ${conversationId} not found` });
-                }
-            });
-    }
-
-
-    /**
-     * 
-     * @param conversationId 
-     * @param messageId 
-     */
-    public getMessage(conversationId: string, messageId: string): Promise<IChatMessage> {
-        return new Promise((resolve, reject) => {
-            if (this._database) {
-                let transaction: IDBTransaction = this._database.transaction([this._MessagesStore], "readonly");
-
-                let objectStore: IDBObjectStore = transaction.objectStore(this._MessagesStore);
-
-                let cursorRequest: IDBRequest = objectStore.get(messageId);
-
-                cursorRequest.onsuccess = (event: any) => {
-                    let message: IChatMessage = event.target.result;
-                    if (message) {
-                        resolve(message);
-                    } else {
-                        resolve(null);
-                    }
-                };
-
-                cursorRequest.onerror = function (event) {
-                    reject({ message: `Failed to openCursor: ${(<IDBRequest>event.target).error.name}` });
-                };
-
-            } else {
-                reject({ message: "Database not open" });
-            }
-        });
-    }
-
-    /**
-     * 
-     * @param conversationId 
-     * @param messageId 
-     * @param statusUdates 
-     */
-    public updateMessageStatus(conversationId: string, messageId: string, profileId: string, status: string, timestamp: string): Promise<boolean> {
-
-        return this.getMessage(conversationId, messageId)
-            .then(message => {
-
-                // if we get delivered and read out of order, dont overwrite "read" with delivered 
-                if (message.statusUpdates[profileId] &&
-                    message.statusUpdates[profileId].status === "read") {
-                    Promise.resolve(false);
-
-                } else {
-                    message.statusUpdates[profileId] = {
-                        status,
-                        on: timestamp
+                    request.onerror = function (e: any) {
+                        console.error("Error", e.target.error.name);
+                        reject({ message: "add failed: " + e.target.error.name });
                     };
-                    return this.upsertMessage(message, true);
-                }
+
+                    request.onsuccess = function (event) {
+                        // http://stackoverflow.com/questions/12502830/how-to-return-auto-increment-id-from-objectstore-put-in-an-indexeddb
+                        // returns auto incremented id ...
+                        // resolve((<IDBRequest>event.target).result);
+                        resolve(true);
+                    };
+                });
             });
-    }
-
-    /**
-     * 
-     * @param message 
-     */
-    public createMessage(message: IChatMessage): Promise<boolean> {
-
-        return this.getConversation(message.conversationId)
-            .then(c => {
-                if (c !== null) {
-                    return this.upsertMessage(message, false);
-                } else {
-                    return Promise.reject<boolean>({ message: `Conversation ${message.conversationId} not found` });
-                }
-            });
-    }
-
-    /**
-     * Method for app to use
-     */
-    public getConversations(): Promise<IChatConversation[]> {
-        return new Promise((resolve, reject) => {
-            if (this._database) {
-
-                let transaction = this._database.transaction([this._ConversationsStore], "readonly");
-                let objectStore = transaction.objectStore(this._ConversationsStore);
-
-                let conversations = [];
-                let cursorRequest = objectStore.openCursor();
-
-                cursorRequest.onsuccess = function (event) {
-                    let cursor: IDBCursorWithValue = (<IDBRequest>event.target).result;
-
-                    if (cursor) {
-                        conversations.push(cursor.value);
-                        cursor.continue();
-                    } else {
-                        resolve(conversations);
-                    }
-                };
-
-                cursorRequest.onerror = function (event) {
-                    reject({ message: "Failed to openCursor: " + (<IDBRequest>event.target).error.name });
-                };
-
-            } else {
-                reject({ message: "Database not open" });
-            }
-        });
-    }
-
-    /**
-     * Method for app to use
-     */
-    public getMessages(conversationId: string): Promise<IChatMessage[]> {
-
-        return new Promise((resolve, reject) => {
-            if (this._database) {
-
-                let transaction: IDBTransaction = this._database.transaction([this._MessagesStore], "readonly");
-
-                let objectStore: IDBObjectStore = transaction.objectStore(this._MessagesStore);
-
-                let index = objectStore.index(this._isIE ? "conversationId_sentEventId" : "conversation");
-
-                let keyRange = this.getKeyRange(conversationId);
-
-                let messages: IChatMessage[] = [];
-                let cursorRequest: IDBRequest = index.openCursor(keyRange, "prev");
-
-                cursorRequest.onsuccess = (event) => {
-                    let cursor: IDBCursorWithValue = (<IDBRequest>event.target).result;
-
-                    if (cursor) {
-                        messages.unshift(cursor.value);
-                        cursor.continue();
-                    }
-                    else {
-                        resolve(messages);
-                    }
-                };
-
-                cursorRequest.onerror = function (event) {
-                    reject({ message: "Failed to openCursor: " + (<IDBRequest>event.target).error.name });
-                };
-
-            } else {
-                reject({ message: "Database not open" });
-            }
-        });
-    }
-
-    /**
-     * 
-     */
-    public emptyDatabase(): Promise<boolean> {
-
-        return this.clearObjectStore(this._ConversationsStore)
-            .then(cleared => {
-                return this.clearObjectStore(this._MessagesStore);
-            })
-            .then(cleared => {
-                return Promise.resolve(true);
-            });
-    }
-
-    /**
-     * 
-     * @param message 
-     * @param doPut 
-     */
-    private upsertMessage(message: IChatMessage, doPut: boolean): Promise<boolean> {
-
-        return new Promise((resolve, reject) => {
-            if (this._database) {
-
-                let transaction: IDBTransaction = this._database.transaction([this._MessagesStore], "readwrite");
-                let store: IDBObjectStore = transaction.objectStore(this._MessagesStore);
-
-                if (this._isIE) {
-                    // add a "conversationId_sentEventId" property as we are using this for an index
-                    /* tslint:disable:no-string-literal */
-                    message["conversationId_sentEventId"] = `${message.conversationId}_${message.sentEventId}`;
-                    /* tslint:enable:no-string-literal */
-                }
-
-                // Perform the add / put ...
-                let request = doPut === true ? store.put(message) : store.add(message);
-
-                request.onerror = function (e: any) {
-                    console.error("Error", e.target.error.name);
-                    reject({ message: "add failed: " + e.target.error.name });
-                };
-
-                request.onsuccess = function (event) {
-                    // http://stackoverflow.com/questions/12502830/how-to-return-auto-increment-id-from-objectstore-put-in-an-indexeddb
-                    // returns auto incremented id ...
-                    // resolve((<IDBRequest>event.target).result);
-                    resolve(true);
-                };
-
-            } else {
-                reject({ message: "Database not open" });
-            }
-        });
-
     }
 
     /**
@@ -388,74 +394,69 @@ export class IndexedDBConversationStore implements IConversationStore {
      */
     private deleteConversationMessages(conversationId: string): Promise<boolean> {
 
-        return new Promise((resolve, reject) => {
-            if (this._database) {
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise((resolve, reject) => {
 
-                let transaction = this._database.transaction([this._MessagesStore], "readwrite");
+                    let transaction = this._database.transaction([this._MessagesStore], "readwrite");
 
-                let objectStore = transaction.objectStore(this._MessagesStore);
+                    let objectStore = transaction.objectStore(this._MessagesStore);
 
-                let index = objectStore.index(this._isIE ? "conversationId_sentEventId" : "conversation");
+                    let index = objectStore.index(this._isIE ? "conversationId_sentEventId" : "conversation");
 
-                let keyRange = this.getKeyRange(conversationId);
+                    let keyRange = this.getKeyRange(conversationId);
 
-                // we want all the messages from this conversation ...
-                // using a keyrange to encapsulate just the specified conversationId and all the dates
+                    // we want all the messages from this conversation ...
+                    // using a keyrange to encapsulate just the specified conversationId and all the dates
 
-                let cursorRequest = index.openCursor(keyRange, "next");
+                    let cursorRequest = index.openCursor(keyRange, "next");
 
-                cursorRequest.onsuccess = (event) => {
-                    let cursor: IDBCursor = (<IDBRequest>event.target).result;
+                    cursorRequest.onsuccess = (event) => {
+                        let cursor: IDBCursor = (<IDBRequest>event.target).result;
 
-                    if (cursor) {
-                        objectStore.delete(cursor.primaryKey);
-                        cursor.continue();
-                    }
-                    else {
-                        resolve(true);
-                    }
-                };
+                        if (cursor) {
+                            objectStore.delete(cursor.primaryKey);
+                            cursor.continue();
+                        }
+                        else {
+                            resolve(true);
+                        }
+                    };
 
-                cursorRequest.onerror = function (e: any) {
-                    reject({ message: "Failed to openCursor: " + e.target.error.name });
-                };
+                    cursorRequest.onerror = function (e: any) {
+                        reject({ message: "Failed to openCursor: " + e.target.error.name });
+                    };
 
-            } else {
-                reject({ message: "Database not open" });
-            }
-        });
-
+                });
+            });
     }
 
     /**
      * 
      * @param conversation 
-     * @param doPut 
      */
-    private upsertConversation(conversation: IChatConversation, doPut: boolean): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            if (this._database) {
+    private putConversation(conversation: IChatConversation): Promise<boolean> {
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise((resolve, reject) => {
 
-                let transaction = this._database.transaction([this._ConversationsStore], "readwrite");
-                let store = transaction.objectStore(this._ConversationsStore);
+                    let transaction = this._database.transaction([this._ConversationsStore], "readwrite");
+                    let store = transaction.objectStore(this._ConversationsStore);
 
-                let request = doPut === true ? store.put(conversation) : store.add(conversation);
+                    let request = store.put(conversation);
 
-                request.onerror = function (event) {
-                    reject({ message: "add failed: " + (<IDBRequest>event.target).error.name });
-                };
+                    request.onerror = function (event) {
+                        reject({ message: "add failed: " + (<IDBRequest>event.target).error.name });
+                    };
 
-                request.onsuccess = function (event) {
-                    // http://stackoverflow.com/questions/12502830/how-to-return-auto-increment-id-from-objectstore-put-in-an-indexeddb
-                    // returns auto incremented id ...
-                    // resolve((<IDBRequest>event.target).result);
-                    resolve(true);
-                };
-
-            } else {
-                reject({ message: "Database not open" });
-            }
-        });
+                    request.onsuccess = function (event) {
+                        // http://stackoverflow.com/questions/12502830/how-to-return-auto-increment-id-from-objectstore-put-in-an-indexeddb
+                        // returns auto incremented id ...
+                        // resolve((<IDBRequest>event.target).result);
+                        resolve(true);
+                    };
+                });
+            });
     }
 
     /**
@@ -469,31 +470,29 @@ export class IndexedDBConversationStore implements IConversationStore {
         // can't reference objectStore in the promise without this ...
         let _objectStoreName: string = objectStoreName;
 
-        return new Promise((resolve, reject) => {
-            if (this._database) {
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise((resolve, reject) => {
 
-                // open a read/write db transaction, ready for clearing the data
-                let transaction = this._database.transaction([_objectStoreName], "readwrite");
+                    // open a read/write db transaction, ready for clearing the data
+                    let transaction = this._database.transaction([_objectStoreName], "readwrite");
 
-                transaction.onerror = function (event) {
-                    console.error("Transaction not opened due to error: " + transaction.error);
-                };
+                    transaction.onerror = function (event) {
+                        console.error("Transaction not opened due to error: " + transaction.error);
+                    };
 
-                let objectStore = transaction.objectStore(_objectStoreName);
-                let objectStoreRequest = objectStore.clear();
+                    let objectStore = transaction.objectStore(_objectStoreName);
+                    let objectStoreRequest = objectStore.clear();
 
-                objectStoreRequest.onsuccess = function (event) {
-                    resolve(true);
-                };
+                    objectStoreRequest.onsuccess = function (event) {
+                        resolve(true);
+                    };
 
-                objectStoreRequest.onerror = function (event) {
-                    reject({ message: "Failed to clear object store: " + (<IDBRequest>event.target).error.name });
-                };
-
-            } else {
-                reject({ message: "Database not open" });
-            }
-        });
+                    objectStoreRequest.onerror = function (event) {
+                        reject({ message: "Failed to clear object store: " + (<IDBRequest>event.target).error.name });
+                    };
+                });
+            });
     }
 
     /**
@@ -501,31 +500,29 @@ export class IndexedDBConversationStore implements IConversationStore {
      * @param conversationId 
      */
     private _deleteConversation(conversationId: string): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            if (this._database) {
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise((resolve, reject) => {
 
-                let transaction = this._database.transaction([this._ConversationsStore], "readwrite");
-                let store = transaction.objectStore(this._ConversationsStore);
+                    let transaction = this._database.transaction([this._ConversationsStore], "readwrite");
+                    let store = transaction.objectStore(this._ConversationsStore);
 
-                let request = store.delete(conversationId);
+                    let request = store.delete(conversationId);
 
-                request.onerror = function (event) {
-                    reject({ message: `delete failed: ${(<IDBRequest>event.target).error.name}` });
-                };
+                    request.onerror = function (event) {
+                        reject({ message: `delete failed: ${(<IDBRequest>event.target).error.name}` });
+                    };
 
-                request.onsuccess = (event) => {
+                    request.onsuccess = (event) => {
 
-                    console.log("store.delete", (<IDBRequest>event.target).result);
+                        console.log("store.delete", (<IDBRequest>event.target).result);
 
-                    this.deleteConversationMessages(conversationId)
-                        .then(succeeded => {
-                            resolve(succeeded);
-                        });
-                };
-
-            } else {
-                reject({ message: "Database not open" });
-            }
-        });
+                        this.deleteConversationMessages(conversationId)
+                            .then(succeeded => {
+                                resolve(succeeded);
+                            });
+                    };
+                });
+            });
     }
 }

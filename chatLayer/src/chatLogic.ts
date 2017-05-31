@@ -660,9 +660,9 @@ export class ComapiChatLogic implements IChatLogic {
                     id: messageSentPayload.messageId,
                     metadata: messageSentPayload.metadata,
                     parts: messageSentPayload.parts,
-                    senderId: messageSentPayload.context.from.id,
+                    senderId: messageSentPayload.context && messageSentPayload.context.from && messageSentPayload.context.from.id || undefined,
                     sentEventId: event.conversationEventId,
-                    sentOn: messageSentPayload.context.sentOn,
+                    sentOn: messageSentPayload.context && messageSentPayload.context.sentOn || undefined,
                 };
 
                 console.log("--> createMessage()", message);

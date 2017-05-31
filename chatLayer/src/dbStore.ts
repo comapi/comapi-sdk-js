@@ -220,7 +220,6 @@ export class IndexedDBConversationStore implements IConversationStore {
      */
     public getMessages(conversationId: string): Promise<IChatMessage[]> {
 
-        console.log(`getting messages for ${conversationId}`);
         return this.ensureInitialised()
             .then(initialised => {
                 return new Promise<IChatMessage[]>((resolve, reject) => {
@@ -240,8 +239,6 @@ export class IndexedDBConversationStore implements IConversationStore {
                         let cursor: IDBCursorWithValue = (<IDBRequest>event.target).result;
 
                         if (cursor) {
-                            console.log(`adding message ${JSON.stringify(cursor.value)}`);
-
                             messages.unshift(cursor.value);
                             cursor.continue();
                         }
@@ -337,8 +334,6 @@ export class IndexedDBConversationStore implements IConversationStore {
      */
     private putMessage(message: IChatMessage): Promise<boolean> {
 
-        console.log("putMessage", JSON.stringify(message));
-
         return this.ensureInitialised()
             .then(initialised => {
                 return new Promise((resolve, reject) => {
@@ -357,7 +352,6 @@ export class IndexedDBConversationStore implements IConversationStore {
                         // http://stackoverflow.com/questions/12502830/how-to-return-auto-increment-id-from-objectstore-put-in-an-indexeddb
                         // returns auto incremented id ...
                         // resolve((<IDBRequest>event.target).result);
-                        console.log(`store.put() succeeded: ${(<IDBRequest>event.target).result}`);
                         resolve(true);
                     };
                 });

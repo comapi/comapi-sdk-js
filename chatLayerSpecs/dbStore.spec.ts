@@ -34,7 +34,11 @@ describe("IndexedDBConversationStore tests", () => {
 
     beforeEach(done => {
         conversationStore = new IndexedDBConversationStore();
-        done();
+
+        conversationStore.reset()
+            .then(succeeded => {
+                done();
+            });
     });
 
     afterEach(done => {
@@ -183,25 +187,36 @@ describe("IndexedDBConversationStore tests", () => {
                 let message2 = createMessage(id, 2);
                 let message3 = createMessage(id, 3);
 
+                console.log("Adding message 1");
                 conversationStore.createMessage(message1)
                     .then(succeeded => {
-                        return conversationStore.createMessage(message3);
-                    })
-                    .then(succeeded => {
+                        console.log("Adding message 2");
                         return conversationStore.createMessage(message2);
                     })
                     .then(succeeded => {
-                        return conversationStore.getMessages(id)
+                        console.log("Adding message 3");
+                        return conversationStore.createMessage(message3);
+                    })
+                    .then(succeeded => {
+                        console.log("Getting messages ...");
+                        return conversationStore.getMessages(id);
+                        // return conversationStore.getAllMessages();
                     })
                     .then(messages => {
+                        console.log("=>", JSON.stringify(messages));
                         expect(messages.length).toBe(3);
                         expect(messages[0].sentEventId).toBe(1);
                         expect(messages[1].sentEventId).toBe(2);
                         expect(messages[2].sentEventId).toBe(3);
                         done();
                     })
+                    .catch(error => {
+                        console.error(`Caught something: ${JSON.stringify(error)}`)
+                        done();
+                    });
             });
     });
+
 
     it("should add messages to a conversation and get them by messageId", done => {
 

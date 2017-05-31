@@ -7,10 +7,11 @@ module.exports = function (config) {
 
         files: [
             'lib/es5-promise-polyfill.js',
+            'lib/array-find-polyfill.js',
             "src/**/*.ts",
             // "specs/**/*.ts",
             "chatLayer/**/*.ts",
-            "chatLayerSpecs/**/logic-new-device.spec.ts",
+            "chatLayerSpecs/**/*.spec.ts",
         ],
 
         preprocessors: {
@@ -20,6 +21,14 @@ module.exports = function (config) {
         reporters: ["progress", "karma-typescript", "teamcity"],
 
         browsers: ["Chrome"],
+
+        // level of logging
+        // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
+        logLevel: config.LOG_DEBUG,
+
+        client: {
+            captureConsole: true
+        },
 
         karmaTypescriptConfig: {
             reports:
@@ -32,7 +41,7 @@ module.exports = function (config) {
                 "html": "coverage",
                 "text-summary": "",
                 "teamcity": ""
-            },/*
+            },
             coverageOptions: {
                 instrumentation: false
             },
@@ -43,7 +52,7 @@ module.exports = function (config) {
                 module: "commonjs",
                 sourceMap: false,
                 target: "ES5"
-            }*/
+            }
 
         }
     });

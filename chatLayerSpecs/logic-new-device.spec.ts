@@ -40,7 +40,7 @@ describe("Chat Logic tests", () => {
             throw new Error("Method not implemented.");
         }
         getParticipantsInConversation(conversationId: string): Promise<IConversationParticipant[]> {
-            throw new Error("Method not implemented.");
+            return Promise.resolve([]);
         }
         getConversations(scope?: ConversationScope, profileId?: string): Promise<IConversationDetails2[]> {
             return Promise.resolve([
@@ -157,8 +157,12 @@ describe("Chat Logic tests", () => {
             .then(result => {
                 expect(result).toBeDefined();
                 expect(result.length).toBe(2);
-                done();
+                return chatLogic.getConversationInfo("F2695C92-6FCA-4464-ABF1-C16EDB06B2F3");
             })
+            .then(result => {
+                expect(result).toBeDefined();
+                done();
+            });
 
     });
 

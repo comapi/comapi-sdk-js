@@ -95,6 +95,8 @@ export class ComapiChatLogic implements IChatLogic {
      */
     public initialise(config: IComapiChatConfig): Promise<boolean> {
 
+        console.log(`initialise(${config})`);
+
         if (config.eventPageSize !== undefined) {
             this._eventPageSize = config.eventPageSize;
         }
@@ -114,9 +116,12 @@ export class ComapiChatLogic implements IChatLogic {
         this._hasInitialised = true;
         this._store = config.conversationStore;
 
+        console.log("Calling Synchronise ...");
+
         return this.synchronize()
             .then(synced => {
                 this._hasSynced = true;
+                console.log("Synchronised!");
                 return synced;
             });
     }
@@ -161,11 +166,11 @@ export class ComapiChatLogic implements IChatLogic {
     public synchronize(): Promise<boolean> {
 
         if (!this._foundation) {
-            return Promise.reject({ message: "No Foundation interface" });
+            return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
         if (this._updating) {
-            return Promise.reject({ message: "synchronize called when this._updating set to true" });
+            return Promise.reject<boolean>({ message: "synchronize called when this._updating set to true" });
         }
 
         // 0) Set busy flag
@@ -303,7 +308,7 @@ export class ComapiChatLogic implements IChatLogic {
     public getPreviousMessages(conversationId: string): Promise<boolean> {
 
         if (!this._foundation) {
-            return Promise.reject({ message: "No Foundation itterface" });
+            return Promise.reject<boolean>({ message: "No Foundation itterface" });
         }
 
         if (!this._updating) {
@@ -323,7 +328,7 @@ export class ComapiChatLogic implements IChatLogic {
                 });
 
         } else {
-            return Promise.reject({ message: "busy" });
+            return Promise.reject<boolean>({ message: "busy" });
         }
     }
 
@@ -382,7 +387,7 @@ export class ComapiChatLogic implements IChatLogic {
     // returns massageId as string ...
     public sendMessage(conversationId: string, text: string): Promise<string> {
         if (!this._foundation) {
-            return Promise.reject({ message: "No Foundation interface" });
+            return Promise.reject<string>({ message: "No Foundation interface" });
         }
         let message = new MessageBuilder().withText(text);
         return this._foundation.services.appMessaging.sendMessageToConversation(conversationId, message)
@@ -393,7 +398,7 @@ export class ComapiChatLogic implements IChatLogic {
 
     public createConversation(converstion: IChatConversation): Promise<boolean> {
         if (!this._foundation) {
-            return Promise.reject({ message: "No Foundation interface" });
+            return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
         return this._foundation.services.appMessaging.createConversation(converstion)
@@ -404,7 +409,7 @@ export class ComapiChatLogic implements IChatLogic {
 
     public updateConversation(conversation: IChatConversation): Promise<boolean> {
         if (!this._foundation) {
-            return Promise.reject({ message: "No Foundation interface" });
+            return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
         // conversation updated event will trigger the store to update ...
         return this._foundation.services.appMessaging.updateConversation(conversation)
@@ -415,7 +420,7 @@ export class ComapiChatLogic implements IChatLogic {
 
     public deleteConversation(conversationId: string): Promise<boolean> {
         if (!this._foundation) {
-            return Promise.reject({ message: "No Foundation interface" });
+            return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
         return this._foundation.services.appMessaging.deleteConversation(conversationId);
@@ -496,7 +501,7 @@ export class ComapiChatLogic implements IChatLogic {
             // DONT copy this as this is the latest on the server            
             // latestEventId: conversation.latestSentEventId,
             // TODO: standardise on _etag - requires breaking change ...
-            eTag: conversation._etag,
+            eTag: (<any>conversation)._etag,
             id: conversation.id,
             isPublic: conversation.isPublic,
             // TODO: this will be a different property!!!
@@ -533,7 +538,7 @@ export class ComapiChatLogic implements IChatLogic {
                 if (localConv.latestRemoteEventId !== found.latestSentEventId) {
                     console.log(`${found.id}: latestRemoteEventId and latestSentEventId differ, needs updating `);
                     needsUpdating = true;
-                } else if (found._etag && localConv.eTag && found._etag !== localConv.eTag) {
+                } else if ((<any>found)._etag && localConv.eTag && (<any>found)._etag !== localConv.eTag) {
                     console.log(`${found.id}: etagS differ, needs updating `);
                     needsUpdating = true;
                 }
@@ -545,7 +550,7 @@ export class ComapiChatLogic implements IChatLogic {
                     localConv.description = found.description;
                     localConv.roles = found.roles;
                     localConv.isPublic = found.isPublic;
-                    localConv.eTag = found._etag;
+                    localConv.eTag = (<any>found)._etag;
                     localConv.latestRemoteEventId = found.latestSentEventId;
 
                     updateArray.push(localConv);
@@ -675,7 +680,7 @@ export class ComapiChatLogic implements IChatLogic {
                     splitResult[1], // ["delivered"|"read"]
                     statusUpdate.timestamp);
             default:
-                return Promise.reject({ message: `Unknown option ${event.name}` });
+                return Promise.reject<boolean>({ message: `Unknown option ${event.name}` });
 
         }
     }
@@ -756,7 +761,7 @@ export class ComapiChatLogic implements IChatLogic {
         console.log(`applyCachedEvents ${this._cachedEvents.length}`);
 
         if (this._updating) {
-            return Promise.reject({ message: "applyCachedEvents() called while updating" });
+            return Promise.reject<boolean>({ message: "applyCachedEvents() called while updating" });
         }
 
         if (this._cachedEvents.length > 0) {
@@ -853,7 +858,7 @@ export class ComapiChatLogic implements IChatLogic {
                 conversation.description = event.description;
                 conversation.roles = event.roles;
                 conversation.isPublic = event.isPublic;
-                conversation.eTag = event.eTag;
+                conversation.eTag = (<any>event).eTag;
                 // TODO: not sure this is correct ...
                 conversation.lastMessageTimestamp = event.timestamp;
 

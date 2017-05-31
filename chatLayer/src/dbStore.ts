@@ -14,17 +14,11 @@ export class IndexedDBConversationStore implements IConversationStore {
 
     private _database: IDBDatabase;
 
-    private _DbNme: string = "IConversationStore";
+    private _DbNme: string = "IConversationStore4";
     private _ConversationsStore: string = "IChatConversation";
     private _MessagesStore: string = "IChatMessage";
     private _DbVersion: number = 1;
     private _maxInt: number = 2147483647;
-
-    /**
-     * IE doesn't support compound indexed so we will manually work around this based on this flag
-     */
-    private _isIE = navigator.userAgent.indexOf("Trident/") !== -1 || navigator.userAgent.indexOf("Edge") !== -1;
-
 
     /**
      * 
@@ -226,6 +220,7 @@ export class IndexedDBConversationStore implements IConversationStore {
      */
     public getMessages(conversationId: string): Promise<IChatMessage[]> {
 
+        console.log(`getting messages for ${conversationId}`);
         return this.ensureInitialised()
             .then(initialised => {
                 return new Promise<IChatMessage[]>((resolve, reject) => {
@@ -234,9 +229,9 @@ export class IndexedDBConversationStore implements IConversationStore {
 
                     let objectStore: IDBObjectStore = transaction.objectStore(this._MessagesStore);
 
-                    let index = objectStore.index(this._isIE ? "conversationId_sentEventId" : "conversation");
+                    let index = objectStore.index("conversation");
 
-                    let keyRange = this.getKeyRange(conversationId);
+                    let keyRange = IDBKeyRange.only(`${conversationId}`);
 
                     let messages: IChatMessage[] = [];
                     let cursorRequest: IDBRequest = index.openCursor(keyRange, "prev");
@@ -245,11 +240,15 @@ export class IndexedDBConversationStore implements IConversationStore {
                         let cursor: IDBCursorWithValue = (<IDBRequest>event.target).result;
 
                         if (cursor) {
+                            console.log(`adding message ${JSON.stringify(cursor.value)}`);
+
                             messages.unshift(cursor.value);
                             cursor.continue();
                         }
                         else {
-                            resolve(messages);
+                            resolve(messages.sort((m1: IChatMessage, m2: IChatMessage) => {
+                                return m1.sentEventId - m2.sentEventId;
+                            }));
                         }
                     };
 
@@ -302,14 +301,7 @@ export class IndexedDBConversationStore implements IConversationStore {
                      */
                     if (!thisDB.objectStoreNames.contains(this._MessagesStore)) {
                         let os = thisDB.createObjectStore(this._MessagesStore, { keyPath: "id" });
-
-                        // IE doesn't support compound indexes so caoncatenate the two fields ...
-                        if (this._isIE) {
-                            os.createIndex("conversationId_sentEventId", "conversationId_sentEventId", { unique: true });
-                        } else {
-                            os.createIndex("conversation", ["conversationId", "sentEventId"], { unique: true });
-                        }
-
+                        os.createIndex("conversation", "conversationId", { unique: false });
                     }
 
                     /**
@@ -345,19 +337,14 @@ export class IndexedDBConversationStore implements IConversationStore {
      */
     private putMessage(message: IChatMessage): Promise<boolean> {
 
+        console.log("putMessage", JSON.stringify(message));
+
         return this.ensureInitialised()
             .then(initialised => {
                 return new Promise((resolve, reject) => {
 
                     let transaction: IDBTransaction = this._database.transaction([this._MessagesStore], "readwrite");
                     let store: IDBObjectStore = transaction.objectStore(this._MessagesStore);
-
-                    if (this._isIE) {
-                        // add a "conversationId_sentEventId" property as we are using this for an index
-                        /* tslint:disable:no-string-literal */
-                        message["conversationId_sentEventId"] = `${message.conversationId}_${message.sentEventId}`;
-                        /* tslint:enable:no-string-literal */
-                    }
 
                     let request = store.put(message);
 
@@ -370,23 +357,11 @@ export class IndexedDBConversationStore implements IConversationStore {
                         // http://stackoverflow.com/questions/12502830/how-to-return-auto-increment-id-from-objectstore-put-in-an-indexeddb
                         // returns auto incremented id ...
                         // resolve((<IDBRequest>event.target).result);
+                        console.log(`store.put() succeeded: ${(<IDBRequest>event.target).result}`);
                         resolve(true);
                     };
                 });
             });
-    }
-
-    /**
-     * we want all the messages from this conversation ...
-     * using a keyrange to encapsulate just the specified conversationId and all the events we want
-     */
-    private getKeyRange(conversationId: string) {
-
-        if (this._isIE) {
-            return IDBKeyRange.bound(`${conversationId}_0}`, `${conversationId}_${this._maxInt}`);
-        } else {
-            return IDBKeyRange.bound([conversationId, 0], [conversationId, this._maxInt]);
-        }
     }
 
     /**
@@ -402,9 +377,9 @@ export class IndexedDBConversationStore implements IConversationStore {
 
                     let objectStore = transaction.objectStore(this._MessagesStore);
 
-                    let index = objectStore.index(this._isIE ? "conversationId_sentEventId" : "conversation");
+                    let index = objectStore.index("conversation");
 
-                    let keyRange = this.getKeyRange(conversationId);
+                    let keyRange = IDBKeyRange.only(`${conversationId}`);
 
                     // we want all the messages from this conversation ...
                     // using a keyrange to encapsulate just the specified conversationId and all the dates

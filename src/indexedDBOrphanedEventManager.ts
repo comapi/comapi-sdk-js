@@ -29,12 +29,7 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
     private _version: number = 1;
     private _continuationTokenStore: string = "ContinuationTokens";
     private _orphanedEventStore: string = "OrphanedEvents";
-    private _maxInt: number = 2147483647;
 
-    /**
-     * IE doesn't support compound indexed so we will manually work around this based on this flag
-     */
-    private _isIE = navigator.userAgent.indexOf("Trident/") !== -1 || navigator.userAgent.indexOf("Edge") !== -1;
 
     /**
      * 
@@ -146,13 +141,6 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
                     let transaction: IDBTransaction = this._database.transaction([this._orphanedEventStore], "readwrite");
                     let store: IDBObjectStore = transaction.objectStore(this._orphanedEventStore);
 
-                    if (this._isIE) {
-                        // add a "conversationId_sentEventId" property as we are using this for an index
-                        /* tslint:disable:no-string-literal */
-                        event["conversationId_conversationEventId"] = `${event.conversationId}_${event.conversationEventId}`;
-                        /* tslint:enable:no-string-literal */
-                    }
-
                     let request = store.put(event);
 
                     request.onerror = function (e: any) {
@@ -209,9 +197,9 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
 
                     let objectStore: IDBObjectStore = transaction.objectStore(this._orphanedEventStore);
 
-                    let index = objectStore.index(this._isIE ? "conversationId_conversationEventId" : "orphanedEvents");
+                    let index = objectStore.index("conversationId");
 
-                    let keyRange = this.getKeyRange(conversationId);
+                    let keyRange = IDBKeyRange.only(conversationId);
 
                     let events: IConversationMessageEvent[] = [];
                     let cursorRequest: IDBRequest = index.openCursor(keyRange, "prev");
@@ -224,7 +212,9 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
                             cursor.continue();
                         }
                         else {
-                            resolve(events);
+                            resolve(events.sort((e1: IConversationMessageEvent, e2: IConversationMessageEvent) => {
+                                return e1.conversationEventId - e2.conversationEventId;
+                            }));
                         }
                     };
 
@@ -266,14 +256,7 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
                      */
                     if (!thisDB.objectStoreNames.contains(self._orphanedEventStore)) {
                         let os = thisDB.createObjectStore(self._orphanedEventStore, { keyPath: "eventId" });
-
-                        // IE doesn't support compound indexes so concatenate the two fields ...
-                        // TODO: why am I giving this a different name ????
-                        if (this._isIE) {
-                            os.createIndex("conversationId_conversationEventId", "conversationId_conversationEventId", { unique: true });
-                        } else {
-                            os.createIndex("orphanedEvents", ["conversationId", "conversationEventId"], { unique: true });
-                        }
+                        os.createIndex("conversationId", "conversationId", { unique: false });
                     }
                 };
 
@@ -348,18 +331,6 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
     }
 
     /**
-     * we want all the messages from this conversation ...
-     * using a keyrange to encapsulate just the specified conversationId and all the events we want
-     */
-    private getKeyRange(conversationId: string) {
-        if (this._isIE) {
-            return IDBKeyRange.bound(`${conversationId}_0}`, `${conversationId}_${this._maxInt}`);
-        } else {
-            return IDBKeyRange.bound([conversationId, 0], [conversationId, this._maxInt]);
-        }
-    }
-
-    /**
      * 
      */
     private deleteEvents(conversationId: string): Promise<boolean> {
@@ -369,9 +340,9 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
 
             let objectStore = transaction.objectStore(this._orphanedEventStore);
 
-            let index = objectStore.index(this._isIE ? "conversationId_conversationEventId" : "orphanedEvents");
+            let index = objectStore.index("conversationId");
 
-            let keyRange = this.getKeyRange(conversationId);
+            let keyRange = IDBKeyRange.only(conversationId);
 
             // we want all the messages from this conversation ...
             // using a keyrange to encapsulate just the specified conversationId and all the dates

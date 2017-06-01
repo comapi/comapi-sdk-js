@@ -16,7 +16,8 @@ import {
     IServices,
     IDevice,
     IChannels,
-    IFoundation
+    IFoundation,
+    IOrphanedEventManager
 } from "./interfaces";
 
 import { EventManager } from "./eventManager";
@@ -36,6 +37,9 @@ import { WebSocketManager } from "./webSocketManager";
 import { ConversationBuilder } from "./conversationBuilder";
 import { MessageBuilder } from "./messageBuilder";
 import { MessageStatusBuilder } from "./messageStatusBuilder";
+import { IndexedDBOrphanedEventManager } from "./indexedDBOrphanedEventManager";
+import { LocalStorageOrphanedEventManager } from "./localStorageOrphanedEventManager";
+
 import { ComapiConfig } from "./comapiConfig";
 
 import { AppMessaging } from "./appMessaging";
@@ -205,7 +209,17 @@ export class Foundation implements IFoundation {
         /*private*/ _messageManager: IMessageManager,
         /*private*/ _comapiConfig: IComapiConfig) {
 
-        let messagePager = new MessagePager(_logger, _localStorageData, _messageManager);
+
+        let dbSupported: boolean = "indexedDB" in window;
+        let orphanedEventManager: IOrphanedEventManager;
+
+        if (dbSupported) {
+            orphanedEventManager = new IndexedDBOrphanedEventManager();
+        } else {
+            orphanedEventManager = new LocalStorageOrphanedEventManager(_localStorageData);
+        }
+
+        let messagePager = new MessagePager(_logger, _localStorageData, _messageManager, orphanedEventManager);
 
         let appMessaging = new AppMessaging(this._networkManager, _conversationManager, _messageManager, messagePager);
 

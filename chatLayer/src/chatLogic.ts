@@ -702,6 +702,10 @@ export class ComapiChatLogic implements IChatLogic {
                 console.log("getConversation() ==>", chatConversation);
                 _chatConversation = chatConversation;
 
+                // is there a conversation ?
+                // if not, can run the onParticipantAdded logic ....
+
+
                 // is there a gap ?
                 if (event.conversationEventId > _chatConversation.latestLocalEventId + 1) {
 

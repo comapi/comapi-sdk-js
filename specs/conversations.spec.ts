@@ -129,7 +129,7 @@ describe("Conversations tests", () => {
             .then(result => {
                 console.log("createConversation()", result);
                 expect(result.id).toBe(conversationDetails.id);
-                expect(result.ETag).toBeDefined();
+                expect(result._etag).toBeDefined();
 
                 return foundation.services.appMessaging.deleteConversation(conversationDetails.id);
             })
@@ -153,13 +153,13 @@ describe("Conversations tests", () => {
             .then(result => {
                 console.log("createConversation()", result);
                 expect(result.id).toBe(conversationDetails.id);
-                expect(result.ETag).toBeDefined();
+                expect(result._etag).toBeDefined();
 
                 let copy = JSON.parse(JSON.stringify(conversationDetails));
 
                 copy.name = "My Updated Test Conversation";
 
-                return foundation.services.appMessaging.updateConversation(copy, result.ETag);
+                return foundation.services.appMessaging.updateConversation(copy, result._etag);
             })
             .then(result => {
                 console.log("updateConversation()", result);
@@ -187,7 +187,7 @@ describe("Conversations tests", () => {
             .then(result => {
                 console.log("createConversation()", result);
                 expect(result.id).toBe(conversationDetails.id);
-                expect(result.ETag).toBeDefined();
+                expect(result._etag).toBeDefined();
 
                 let copy = JSON.parse(JSON.stringify(conversationDetails));
 
@@ -228,7 +228,7 @@ describe("Conversations tests", () => {
             .then(result => {
                 console.log("createConversation()", result);
                 expect(result.id).toBe(conversationDetails.id);
-                expect(result.ETag).toBeDefined();
+                expect(result._etag).toBeDefined();
 
                 return foundation.services.appMessaging.getConversations(ConversationScope.public, "stevanl");
             })
@@ -259,7 +259,7 @@ describe("Conversations tests", () => {
             .then(result => {
                 console.log("createConversation()", result);
                 expect(result.id).toBe(conversationDetails.id);
-                expect(result.ETag).toBeDefined();
+                expect(result._etag).toBeDefined();
 
                 return foundation.services.appMessaging.getConversation(conversationDetails.id);
             })
@@ -301,7 +301,7 @@ describe("Conversations tests", () => {
             .then(result => {
                 console.log("createConversation()", result);
                 expect(result.id).toBe(conversationDetails.id);
-                expect(result.ETag).toBeDefined();
+                expect(result._etag).toBeDefined();
 
                 return foundation.services.appMessaging.addParticipantsToConversation(conversationDetails.id, members);
             })

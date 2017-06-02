@@ -11,8 +11,8 @@ module.exports = function (config) {
             "src/**/*.ts",
             // "specs/**/*.ts",
             "chatLayer/**/*.ts",
-            //"chatLayerSpecs/**/*.spec.ts",
-            "chatLayerSpecs/event-with-missing-conversation.spec.ts",
+            "chatLayerSpecs/**/*.spec.ts",
+            //"chatLayerSpecs/conversation-crud.spec.ts",
         ],
 
         preprocessors: {
@@ -42,7 +42,7 @@ module.exports = function (config) {
                 "html": "coverage",
                 "text-summary": "",
                 "teamcity": ""
-            },
+            },/*
             coverageOptions: {
                 instrumentation: false
             },
@@ -53,7 +53,7 @@ module.exports = function (config) {
                 module: "commonjs",
                 sourceMap: false,
                 target: "ES5"
-            }
+            }*/
 
         }
     });

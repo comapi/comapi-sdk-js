@@ -385,14 +385,27 @@ export class ComapiChatLogic implements IChatLogic {
     // }
 
     // returns massageId as string ...
-    public sendMessage(conversationId: string, text: string): Promise<string> {
+    public sendMessage(conversationId: string, text: string): Promise<boolean> {
         if (!this._foundation) {
-            return Promise.reject<string>({ message: "No Foundation interface" });
+            return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
+
+
         let message = new MessageBuilder().withText(text);
         return this._foundation.services.appMessaging.sendMessageToConversation(conversationId, message)
             .then(rslt => {
-                return rslt.id;
+
+                let m: IChatMessage = {
+                    conversationId: conversationId,
+                    id: rslt.id,
+                    metadata: message.metadata,
+                    parts: message.parts,
+                    senderId: this._profileId,
+                    sentEventId: rslt.eventId,
+                    sentOn: new Date().toISOString(),
+                    statusUpdates: {}
+                };
+                return this._store.createMessage(m);
             });
     }
 
@@ -403,7 +416,7 @@ export class ComapiChatLogic implements IChatLogic {
 
         return this._foundation.services.appMessaging.createConversation(converstion)
             .then(rslt => {
-                return true;
+                return this._store.createConversation(this.mapConversation(rslt));
             });
     }
 
@@ -423,7 +436,10 @@ export class ComapiChatLogic implements IChatLogic {
             return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
-        return this._foundation.services.appMessaging.deleteConversation(conversationId);
+        return this._foundation.services.appMessaging.deleteConversation(conversationId)
+            .then(() => {
+                return this._store.deleteConversation(conversationId);
+            });
     }
 
     public getParticipantsInConversation(conversationId: string): Promise<IConversationParticipant[]> {
@@ -501,7 +517,7 @@ export class ComapiChatLogic implements IChatLogic {
             // DONT copy this as this is the latest on the server            
             // latestEventId: conversation.latestSentEventId,
             // TODO: standardise on _etag - requires breaking change ...
-            eTag: (<any>conversation)._etag,
+            eTag: conversation._etag,
             id: conversation.id,
             isPublic: conversation.isPublic,
             // TODO: this will be a different property!!!
@@ -538,7 +554,7 @@ export class ComapiChatLogic implements IChatLogic {
                 if (localConv.latestRemoteEventId !== found.latestSentEventId) {
                     console.log(`${found.id}: latestRemoteEventId and latestSentEventId differ, needs updating `);
                     needsUpdating = true;
-                } else if ((<any>found)._etag && localConv.eTag && (<any>found)._etag !== localConv.eTag) {
+                } else if (found._etag && localConv.eTag && found._etag !== localConv.eTag) {
                     console.log(`${found.id}: etagS differ, needs updating `);
                     needsUpdating = true;
                 }
@@ -550,7 +566,7 @@ export class ComapiChatLogic implements IChatLogic {
                     localConv.description = found.description;
                     localConv.roles = found.roles;
                     localConv.isPublic = found.isPublic;
-                    localConv.eTag = (<any>found)._etag;
+                    localConv.eTag = found._etag;
                     localConv.latestRemoteEventId = found.latestSentEventId;
 
                     updateArray.push(localConv);
@@ -700,18 +716,21 @@ export class ComapiChatLogic implements IChatLogic {
         return this._store.getConversation(event.conversationId)
             .then(chatConversation => {
                 console.log("getConversation() ==>", chatConversation);
-                _chatConversation = chatConversation;
 
                 // is there a conversation ?
                 // if not, can run the onParticipantAdded logic ....
-
+                if (chatConversation === null) {
+                    return this.initialiseConversation(event.conversationId);
+                } else {
+                    return chatConversation;
+                }
+            })
+            .then((chatConversation) => {
+                _chatConversation = chatConversation;
 
                 // is there a gap ?
                 if (event.conversationEventId > _chatConversation.latestLocalEventId + 1) {
-
                     console.warn(`Gap detected in conversation: latestEventId: ${_chatConversation.latestLocalEventId}, conversationEventId: ${event.conversationEventId}`);
-
-
                 }
 
                 return this._applyConversationMessageEvent(event);
@@ -808,7 +827,7 @@ export class ComapiChatLogic implements IChatLogic {
                     })
                     .catch(error => {
                         this._updating = false;
-                        console.error("failed to process event event");
+                        console.error("failed to process event", error);
                     });
             } else {
                 console.warn("Received event while updating, caching ...", info);
@@ -830,8 +849,9 @@ export class ComapiChatLogic implements IChatLogic {
         return this.applyConversationMessageEvent(event)
             .then(updated => {
 
+                let payload: IMessageSentPayload = (<IMessageSentPayload>event.payload);
                 // if it was a message sent, send a delivered (unless I sent it!) ...
-                if (event.name === "conversationMessage.sent" && (<IMessageSentPayload>event.payload).context.from.id !== this._profileId) {
+                if (event.name === "conversationMessage.sent" && payload.context && payload.context.from && payload.context.from.id !== this._profileId) {
                     let status = new MessageStatusBuilder().deliveredStatusUpdate(event.payload.messageId);
                     this._foundation.services.appMessaging.sendMessageStatusUpdates(event.conversationId, [status]);
                 }
@@ -862,12 +882,38 @@ export class ComapiChatLogic implements IChatLogic {
                 conversation.description = event.description;
                 conversation.roles = event.roles;
                 conversation.isPublic = event.isPublic;
-                conversation.eTag = (<any>event).eTag;
+                conversation.eTag = event.eTag;
                 // TODO: not sure this is correct ...
                 conversation.lastMessageTimestamp = event.timestamp;
 
                 return this._store.updateConversation(conversation);
             });
+    }
+
+    /**
+     * Get a conversation and load in last page of messages
+     * @param conversationId 
+     */
+    private initialiseConversation(conversationId: string): Promise<IChatConversation> {
+        let _conversation: IChatConversation;
+
+        // check whether we already have this ...
+        // if this user creates the conversation, we need to ignore the participantAdded behaviour
+        return this._store.getConversation(conversationId)
+            .then(conversation => {
+                return conversation === null ? this._foundation.services.appMessaging.getConversation(conversationId)
+                    .then(remoteConversation => {
+                        _conversation = this.mapConversation(remoteConversation);
+                        return this._store.createConversation(_conversation);
+                    })
+                    .then(result => {
+                        return this.getMessages(_conversation);
+                    })
+                    .then(result => {
+                        return _conversation;
+                    }) : conversation;
+            });
+
     }
 
     /**
@@ -880,25 +926,19 @@ export class ComapiChatLogic implements IChatLogic {
         // if this is me, need to add the conversation ...
         if (event.profileId === this._profileId) {
 
-            let _conversation: IChatConversation;
-
             // HACK: Race condition !!!
             // due to a secondary store being in use, the conversation may not exist when trying
             // to query it off the back of a  onParticipantAdded event ...
 
             return new Promise((resolve, reject) => {
                 setTimeout(function () { resolve(); }, 1000);
-            }).then(() => {
-
-                return this._foundation.services.appMessaging.getConversation(event.conversationId)
-                    .then(conversation => {
-                        _conversation = this.mapConversation(conversation);
-                        return this._store.createConversation(_conversation);
-                    })
-                    .then(result => {
-                        return this.getMessages(_conversation);
-                    });
-            });
+            })
+                .then(() => {
+                    return this.initialiseConversation(event.conversationId);
+                })
+                .then(() => {
+                    return true;
+                });
 
         } else {
             return Promise.resolve(false);

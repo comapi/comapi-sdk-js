@@ -47,7 +47,7 @@ export class ConversationManager implements IConversationManager {
 
         return this._restClient.post(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations`, {}, conversationDetails)
             .then(function (result) {
-                result.response.ETag = result.headers.ETag;
+                result.response._etag = result.headers.ETag;
                 return Promise.resolve<IConversationDetails2>(result.response);
             });
     }
@@ -75,7 +75,7 @@ export class ConversationManager implements IConversationManager {
 
         return this._restClient.put(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationDetails.id}`, headers, args)
             .then(function (result) {
-                result.response.ETag = result.headers.ETag;
+                result.response._etag = result.headers.ETag;
                 return Promise.resolve<IConversationDetails2>(result.response);
             });
     }
@@ -90,7 +90,7 @@ export class ConversationManager implements IConversationManager {
     public getConversation(conversationId: string): Promise<IConversationDetails2> {
         return this._restClient.get(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}`)
             .then(function (result) {
-                result.response.ETag = result.headers.ETag;
+                result.response._etag = result.headers.ETag;
                 return Promise.resolve<IConversationDetails2>(result.response);
             });
     }

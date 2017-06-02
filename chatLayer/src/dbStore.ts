@@ -18,7 +18,6 @@ export class IndexedDBConversationStore implements IConversationStore {
     private _ConversationsStore: string = "IChatConversation";
     private _MessagesStore: string = "IChatMessage";
     private _DbVersion: number = 1;
-    private _maxInt: number = 2147483647;
 
     /**
      * 

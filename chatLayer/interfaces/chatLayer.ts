@@ -1,5 +1,5 @@
 import {
-    IComapiConfig,
+    // IComapiConfig,
     // IConversationRoles,
     IMessagePart,
     IConversationParticipant

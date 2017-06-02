@@ -305,6 +305,7 @@ export class WebSocketManager implements IWebSocketManager {
                         // the user who updated the conversation
                         createdBy: event.context.createdBy,
                         description: event.payload.description,
+                        eTag: event.etag,
                         isPublic: event.payload.isPublic,
                         name: event.payload.name,
                         roles: event.payload.roles,

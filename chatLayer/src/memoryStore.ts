@@ -153,8 +153,9 @@ export class MemoryConversationStore implements IConversationStore {
     public createMessage(message: IChatMessage): Promise<boolean> {
         return new Promise((resolve, reject) => {
 
+            let found: IChatMessage = this._findMessage(message.conversationId, message.id);
             // check for dupes
-            if (this._findMessage(message.conversationId, message.id) === null) {
+            if (found === null) {
                 // messages are ordered by sentEventId
                 // iterate backwards to see where to insert (will 99% prob be just on the end)
                 // UNLESS we are backfilling where it is prob going to be the beginning ...
@@ -181,7 +182,12 @@ export class MemoryConversationStore implements IConversationStore {
                     reject({ message: `Conversation ${message.conversationId} not found in messageStore` });
                 }
             } else {
-                console.warn("Message already in store", message);
+                console.warn("Message already in store, updating ...", message);
+                found.sentEventId = message.sentEventId;
+                found.senderId = message.senderId;
+                found.sentOn = message.sentOn;
+                found.statusUpdates = message.statusUpdates;
+
                 resolve(false);
             }
         });

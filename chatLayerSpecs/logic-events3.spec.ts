@@ -1,4 +1,3 @@
-// TODO: If a conversationMessage is received for a conversation that is not stored locally, sdk must not crashimport {
 import {
     ComapiChatLogic
 } from "../chatLayer/src/chatLogic";
@@ -39,14 +38,12 @@ describe("Chat Logic tests", () => {
         getConversation(conversationId: string): Promise<IConversationDetails2> {
 
             switch (conversationId) {
-
                 case "B716C321-7025-47BA-9539-A34D69100884":
                     return Promise.resolve({
                         id: "B716C321-7025-47BA-9539-A34D69100884",
                         name: "Test Conv",
                         isPublic: false,
                     });
-
                 default:
                     throw new Error("Method not implemented.");
             }
@@ -77,6 +74,7 @@ describe("Chat Logic tests", () => {
             throw new Error("Method not implemented.");
         }
         getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse> {
+
             switch (conversationId) {
                 case "B716C321-7025-47BA-9539-A34D69100884":
                     return Promise.resolve({
@@ -163,6 +161,18 @@ describe("Chat Logic tests", () => {
             .then(result => {
                 expect(result).toBeDefined();
 
+                // trigger a participant added
+                // chat layer should query for the conversation and load messages if there are any.
+                // will have to set a timer to check..
+
+                foundation.trigger("participantAdded", {
+                    conversationId: "B716C321-7025-47BA-9539-A34D69100884",
+                    createdBy: "unitTestUser",
+                    profileId: "unitTestUser",
+                });
+
+                // write a event to 
+
                 foundation.trigger("conversationMessageEvent", {
                     // conversationEventId: event.conversationEventId,
                     conversationId: "B716C321-7025-47BA-9539-A34D69100884",
@@ -180,11 +190,34 @@ describe("Chat Logic tests", () => {
 
                 setTimeout(() => {
 
-                    store.getMessage("B716C321-7025-47BA-9539-A34D69100884", "E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E")
+                    // can I get this conversation from the store ?
+                    store.getConversation("B716C321-7025-47BA-9539-A34D69100884")
+                        .then(conversation => {
+                            expect(conversation).toBeDefined();
+                            expect(conversation.id).toBe("B716C321-7025-47BA-9539-A34D69100884");
+                            return store.getMessage("B716C321-7025-47BA-9539-A34D69100884", "E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
+                        })
                         .then(message => {
-                            expect(message !== null).toBeTruthy();
                             expect(message.id).toBe("E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
-                            done();
+
+                            // trigger a participant removed and then query for the conversation - should be gone 
+                            foundation.trigger("conversationUpdated", {
+                                conversationId: "B716C321-7025-47BA-9539-A34D69100884",
+                                createdBy: "unitTestUser",
+                                name: "Test Conv - updated",
+                                description: "updated"
+                            });
+
+                            setTimeout(() => {
+                                store.getConversation("B716C321-7025-47BA-9539-A34D69100884")
+                                    .then(conversation => {
+                                        expect(conversation.name).toBe("Test Conv - updated");
+                                        expect(conversation.description).toBe("updated");
+                                        done();
+                                    });
+
+                            }, 1000);
+
                         });
                 }, 2000);
 

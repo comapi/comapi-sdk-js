@@ -1,4 +1,3 @@
-// TODO: If a conversationMessage is received for a conversation that is not stored locally, sdk must not crashimport {
 import {
     ComapiChatLogic
 } from "../chatLayer/src/chatLogic";
@@ -14,6 +13,9 @@ import {
     EventManager
 } from "../src/eventManager";
 
+import {
+    Utils
+} from "../src/utils";
 
 import { IComapiChatConfig, IConversationStore, IChatConversation, IChatMessage } from "../chatLayer/interfaces/chatLayer";
 
@@ -30,30 +32,41 @@ import {
 describe("Chat Logic tests", () => {
 
     class MockAppMessaging implements IAppMessaging {
+        private nextEventId: number = 0;
+        constructor(private _eventManager: EventManager) { }
+
         createConversation(conversationDetails: IConversationDetails): Promise<IConversationDetails> {
-            throw new Error("Method not implemented.");
+            // real sdk will trigger this 
+            this.trigger("participantAdded", {
+                conversationId: conversationDetails.id,
+                createdBy: "unitTestUser",
+                profileId: "unitTestUser",
+                role: undefined,
+                timestamp: new Date().toISOString()
+            });
+            // real sdk will return this + some extra fields that we dont care about ...
+            return Promise.resolve(conversationDetails);
         }
         updateConversation(conversationDetails: IConversationDetails, eTag?: string): Promise<IConversationDetails2> {
             throw new Error("Method not implemented.");
         }
         getConversation(conversationId: string): Promise<IConversationDetails2> {
-
             switch (conversationId) {
-
-                case "B716C321-7025-47BA-9539-A34D69100884":
+                case "51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3":
                     return Promise.resolve({
-                        id: "B716C321-7025-47BA-9539-A34D69100884",
-                        name: "Test Conv",
-                        isPublic: false,
+                        id: "51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3",
+                        name: "Crud Test",
+                        roles: undefined,
+                        isPublic: false
                     });
 
                 default:
                     throw new Error("Method not implemented.");
             }
-        }
 
+        }
         deleteConversation(conversationId: string): Promise<boolean> {
-            throw new Error("Method not implemented.");
+            return Promise.resolve(true);
         }
         addParticipantsToConversation(conversationId: string, participants: IConversationParticipant[]): Promise<boolean> {
             throw new Error("Method not implemented.");
@@ -71,17 +84,23 @@ describe("Chat Logic tests", () => {
             throw new Error("Method not implemented.");
         }
         sendMessageToConversation(conversationId: string, message: IConversationMessage): Promise<ISendMessageResult> {
-            throw new Error("Method not implemented.");
+            // chat layer will insert ...
+            return Promise.resolve({
+                id: Utils.uuid(),
+                eventId: ++this.nextEventId
+            });
         }
         sendMessageStatusUpdates(conversationId: string, statuses: IMessageStatus[]): Promise<any> {
             throw new Error("Method not implemented.");
         }
         getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse> {
+
             switch (conversationId) {
-                case "B716C321-7025-47BA-9539-A34D69100884":
+                case "51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3":
                     return Promise.resolve({
                         messages: []
                     });
+
                 default:
                     throw new Error("Method not implemented.");
             }
@@ -93,14 +112,21 @@ describe("Chat Logic tests", () => {
         sendIsTypingOff(conversationId: string): Promise<boolean> {
             throw new Error("Method not implemented.");
         }
+
+        // use this to mock events ;-)
+        trigger(eventType: string, data: any) {
+            this._eventManager.publishLocalEvent(eventType, data);
+        }
+
     };
 
     class MockFoundation implements IFoundation {
 
-        private _eventManager = new EventManager();
+        constructor(private _eventManager: EventManager) {
+        }
 
         services: IServices = {
-            appMessaging: new MockAppMessaging(),
+            appMessaging: new MockAppMessaging(this._eventManager),
             profile: null
         };
         device: IDevice;
@@ -140,9 +166,12 @@ describe("Chat Logic tests", () => {
         }
     };
 
-    it("should create a conversation on receipt of a participant added event", done => {
+    it("should perform crud operations", done => {
 
-        let foundation = new MockFoundation();
+        let eventManager = new EventManager();
+
+
+        let foundation = new MockFoundation(eventManager);
 
         let chatLogic = new ComapiChatLogic(foundation);
 
@@ -163,31 +192,40 @@ describe("Chat Logic tests", () => {
             .then(result => {
                 expect(result).toBeDefined();
 
-                foundation.trigger("conversationMessageEvent", {
-                    // conversationEventId: event.conversationEventId,
-                    conversationId: "B716C321-7025-47BA-9539-A34D69100884",
-                    // eventId: event.eventId,
-                    name: "conversationMessage.sent",
-                    payload: {
-                        // alert: event.payload.alert,
-                        // context: event.payload.context,
-                        messageId: "E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E",
-                        // metadata: event.payload.metadata,
-                        parts: [{ data: "hello" }],
-                    }
+                return chatLogic.createConversation({
+                    id: "51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3",
+                    name: "Crud Test",
+                    roles: undefined,
+                    isPublic: false
                 });
-
-
-                setTimeout(() => {
-
-                    store.getMessage("B716C321-7025-47BA-9539-A34D69100884", "E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E")
-                        .then(message => {
-                            expect(message !== null).toBeTruthy();
-                            expect(message.id).toBe("E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
-                            done();
-                        });
-                }, 2000);
-
+            })
+            .then(rslt => {
+                return store.getConversation("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
+            })
+            .then(storeConv => {
+                expect(storeConv !== null).toBeTruthy();
+                expect(storeConv.id).toBe("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
+                return chatLogic.sendMessage("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3", "hello");
+            })
+            .then(rslt => {
+                // check something
+                return store.getMessages("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
+            })
+            .then(messages => {
+                expect(messages.length).toBe(1);
+                // check something
+                return chatLogic.deleteConversation("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
+            })
+            .then(rslt => {
+                return store.getConversation("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
+            })
+            .then(storeConv => {
+                expect(storeConv).toBeNull();
+                return store.getMessages("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
+            })
+            .then(messages => {
+                expect(messages.length).toBe(0);
+                done();
             });
     });
 

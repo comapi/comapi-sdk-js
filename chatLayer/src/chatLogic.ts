@@ -409,6 +409,56 @@ export class ComapiChatLogic implements IChatLogic {
             });
     }
 
+    /**
+     * 
+     * @param conversationId 
+     * @param messageIds 
+     */
+    public markMessagesAsRead(conversationId: string, messageIds: string[]): Promise<boolean> {
+
+        let statuses = new MessageStatusBuilder().readStatusUpdates(messageIds);
+
+        return this._foundation.services.appMessaging.sendMessageStatusUpdates(conversationId, [statuses]);
+    }
+
+
+    /**
+     * Go through all the messages we have in the store and mark them as read if necessary
+     * @param conversationId 
+     */
+    public markAllMessagesAsRead(conversationId: string): Promise<boolean> {
+
+        let unreadIds: string[] = [];
+        return this._store.getMessages(conversationId)
+            .then(messages => {
+
+                for (let message of messages) {
+                    if (!this.isMessageRead(message)) {
+                        unreadIds.push(message.id);
+                    }
+                }
+
+                return unreadIds.length > 0 ? this.markMessagesAsRead(conversationId, unreadIds) : Promise.resolve(false);
+            })
+    }
+
+    /**
+     * 
+     * @param message 
+     * @param profileId 
+     */
+    public isMessageRead(message: IChatMessage, profileId?: string): boolean {
+
+        // look at status updates ...
+        let _profileId = profileId ? profileId : this._profileId;
+
+        if (message.senderId !== this._profileId) {
+            return message.statusUpdates && message.statusUpdates[_profileId] && message.statusUpdates[_profileId].status === "read";
+        } else {
+            return true;
+        }
+    }
+
     public createConversation(converstion: IChatConversation): Promise<boolean> {
         if (!this._foundation) {
             return Promise.reject<boolean>({ message: "No Foundation interface" });

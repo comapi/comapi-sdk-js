@@ -6,6 +6,12 @@ import {
 } from "../../src/interfaces";
 
 
+export interface IStatusUpdates {
+    [profileId: string]: {
+        status: string;
+        on: string;
+    }
+}
 
 /**
  * 
@@ -18,9 +24,7 @@ export interface IChatMessage {
     sentEventId: number;
     metadata?: any;
     parts: IMessagePart[];
-    // TODO: Decode on status updates structure ...
-    // keep as-is or project onto an array ???
-    statusUpdates?: any;
+    statusUpdates?: IStatusUpdates;
 }
 
 /**
@@ -83,6 +87,8 @@ export interface IConversationStore {
     getMessage(conversationId: string, messageId: string): Promise<IChatMessage>;
     // read / delivered info has been added, hand back to client to store ...
     updateMessageStatus(conversationId: string, messageId: string, profileId: string, status: string, timestamp: string): Promise<boolean>;
+    // getMessageStatus(conversationId: string, messageId: string): Promise<boolean>;
+
     // new message added 
     createMessage(message: IChatMessage): Promise<boolean>;
 

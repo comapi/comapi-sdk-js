@@ -196,6 +196,10 @@ describe("Chat Logic tests", () => {
             })
             .then(result => {
                 expect(result).toBeDefined();
+                return chatLogic.getPreviousMessages("F2695C92-6FCA-4464-ABF1-C16EDB06B2F3");
+            })
+            .then(result => {
+                expect(result).toBeDefined();
                 done();
             });
 

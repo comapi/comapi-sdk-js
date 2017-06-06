@@ -658,6 +658,54 @@ export class ComapiChatLogic implements IChatLogic {
     }
 
     /**
+     * Keep getting pages of events and applying them onto the store until we hit the end ...
+     * @param conversation 
+     */
+    private updateConversationWithEvents(conversation: IChatConversation) {
+        let self = this;
+        let _events: IConversationMessageEvent[];
+
+        let _getPageOfEventsFunc: DoUntilOperationFunction = function (conv: IChatConversation): Promise<any> {
+            console.log("--> DoUntilOperationFunction()", conv);
+
+            return self._foundation.services.appMessaging.getConversationEvents(conv.id, conv.latestLocalEventId + 1, self._eventPageSize)
+                .then(events => {
+                    _events = events;
+                    console.log("getConversationEvents() retrned", events);
+                    return Utils.eachSeries(events, (event: IConversationMessageEvent) => {
+                        return self.applyConversationMessageEvent(event);
+                        // result of the last opertaion flows int the then below...
+                    }).then((result) => {
+
+                        // want the eventId of the last one
+                        conv.latestLocalEventId = _events[_events.length - 1].conversationEventId;
+                        console.log("<-- DoUntilOperationFunction()", conv);
+                        return conv;
+                    });
+                })
+                .catch(error => {
+                    console.error("getConversationEvents ;-( threw this", error);
+                    return conv;
+                });
+        };
+
+        let _compareFunc: DoUntilTestFunction = function (conv: IChatConversation): boolean {
+
+            if (_events) {
+                return _events.length === self._eventPageSize;
+            } else {
+                return false;
+            }
+
+        };
+
+        return Utils.doUntil(_getPageOfEventsFunc, _compareFunc, conversation)
+            .then((conv: IChatConversation) => {
+                return this._store.updateConversation(conv);
+            });
+    }
+
+    /**
      * Update a conversation by applying new events to the conversation store.
      * New events will be queried in pages and applied until we get all unseen events.
      * Any logical decison regarding whether this conversation is too out of date to be refreshed in this way are not dealt with here.
@@ -683,47 +731,7 @@ export class ComapiChatLogic implements IChatLogic {
             return Promise.resolve(false);
         } else {
             // get events and apply
-            let self = this;
-            let _events: IConversationMessageEvent[];
-
-            let _getPageOfEventsFunc: DoUntilOperationFunction = function (conv: IChatConversation): Promise<any> {
-                console.log("--> DoUntilOperationFunction()", conv);
-
-                return self._foundation.services.appMessaging.getConversationEvents(conv.id, conv.latestLocalEventId, self._eventPageSize)
-                    .then(events => {
-                        _events = events;
-                        console.log("getConversationEvents() retrned", events);
-                        return Utils.eachSeries(events, (event: IConversationMessageEvent) => {
-                            return self.applyConversationMessageEvent(event);
-                            // result of the last opertaion flows int the then below...
-                        }).then((result) => {
-
-                            // want the eventId of the last one
-                            conv.latestLocalEventId = _events[_events.length - 1].conversationEventId;
-                            console.log("<-- DoUntilOperationFunction()", conv);
-                            return conv;
-                        });
-                    })
-                    .catch(error => {
-                        console.error("getConversationEvents ;-( threw this", error);
-                        return conv;
-                    });
-            };
-
-            let _compareFunc: DoUntilTestFunction = function (conv: IChatConversation): boolean {
-
-                if (_events) {
-                    return _events.length === self._eventPageSize;
-                } else {
-                    return false;
-                }
-
-            };
-
-            return Utils.doUntil(_getPageOfEventsFunc, _compareFunc, conversation)
-                .then((conv: IChatConversation) => {
-                    return this._store.updateConversation(conv);
-                });
+            return this.updateConversationWithEvents(conversation);
         }
     }
 
@@ -806,6 +814,10 @@ export class ComapiChatLogic implements IChatLogic {
 
                 if (_chatConversation.earliestLocalEventId === undefined) {
                     _chatConversation.earliestLocalEventId = event.conversationEventId;
+                }
+
+                if (_chatConversation.latestLocalEventId === undefined) {
+                    _chatConversation.latestLocalEventId = event.conversationEventId;
                 }
 
                 if (event.conversationEventId > _chatConversation.latestLocalEventId) {
@@ -952,13 +964,14 @@ export class ComapiChatLogic implements IChatLogic {
                                 return this._onComapiEvent(info);
 
                             case IncomingEventAction.FillGap:
-                                return this.synchronizeConversation(actionInfo.conversation);
+                                // NOTE Need to set latestRemoteEventId to info.event.conversationEventId otherwise it wont sync ...
+                                return this.updateConversationWithEvents(actionInfo.conversation);
 
                             case IncomingEventAction.ReloadConversation:
-                                // TODO: Need to set latestRemoteEventId to something otherwise synchronizeConversation will think there are no messsages in the conversation.
+                                // NOTE: Need to set latestRemoteEventId to something otherwise synchronizeConversation will think there are no messsages in the conversation.
                                 return this._store.deleteAllMessages(info.event.conversationId, info.event.conversationEventId)
                                     .then(result => {
-                                        return this.synchronizeConversation(actionInfo.conversation);
+                                        return this.getMessages(actionInfo.conversation);
                                     });
                         }
                     })

@@ -205,15 +205,22 @@ describe("Chat Logic tests", () => {
             .then(storeConv => {
                 expect(storeConv !== null).toBeTruthy();
                 expect(storeConv.id).toBe("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
+                expect(storeConv.earliestLocalEventId).not.toBeDefined();
+                expect(storeConv.latestLocalEventId).not.toBeDefined();
+                expect(storeConv.continuationToken).not.toBeDefined();
+                expect(storeConv.latestRemoteEventId).not.toBeDefined();
                 return chatLogic.sendMessage("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3", "hello");
             })
             .then(rslt => {
-                // check something
+                expect(rslt).toBeTruthy();
                 return store.getMessages("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
             })
             .then(messages => {
                 expect(messages.length).toBe(1);
-                // check something
+                expect(messages[0].conversationId).toBe("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
+                expect(messages[0].parts).toBeDefined();
+                expect(messages[0].parts.length).toBe(1);
+                expect(messages[0].parts[0].data).toBe("hello");
                 return chatLogic.deleteConversation("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
             })
             .then(rslt => {

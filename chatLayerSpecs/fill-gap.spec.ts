@@ -61,7 +61,45 @@ describe("Chat Logic tests", () => {
             ]);
         }
         getConversationEvents(conversationId: string, from: number, limit: number): Promise<IConversationMessageEvent[]> {
-            throw new Error("Method not implemented.");
+
+            switch (conversationId) {
+
+                case "D35A13DF-6876-4CC8-BA70-841B45A0003C":
+                    return Promise.resolve([
+                        {
+                            conversationEventId: 1,
+                            conversationId: "D35A13DF-6876-4CC8-BA70-841B45A0003C",
+                            eventId: "F4184777-CCFE-4433-B95E-3D876012F05F",
+                            name: "conversationMessage.sent",
+                            payload: {
+                                alert: undefined,
+                                context: {},
+                                messageId: "EF567174-CFFD-4FCD-A1DF-48F2A00369DC",
+                                metadata: undefined,
+                                parts: [{ data: "hello" }],
+                            }
+
+                        },
+                        {
+                            conversationEventId: 2,
+                            conversationId: "D35A13DF-6876-4CC8-BA70-841B45A0003C",
+                            eventId: "31F850A7-9951-4B18-BD42-D45092E365FF",
+                            name: "conversationMessage.sent",
+                            payload: {
+                                alert: undefined,
+                                context: {},
+                                messageId: "E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E",
+                                metadata: undefined,
+                                parts: [{ data: "hello" }],
+                            }
+
+                        },
+                    ]);
+
+                default:
+                    throw new Error("Method not implemented.");
+
+            }
         }
         sendMessageToConversation(conversationId: string, message: IConversationMessage): Promise<ISendMessageResult> {
             throw new Error("Method not implemented.");
@@ -107,10 +145,10 @@ describe("Chat Logic tests", () => {
 
     class MockFoundation implements IFoundation {
 
-        private _eventManager = new EventManager();
+        constructor(private _eventManager: EventManager, private _appMessaging: IAppMessaging) { }
 
         services: IServices = {
-            appMessaging: new MockAppMessaging(),
+            appMessaging: this._appMessaging,
             profile: null
         };
         device: IDevice;
@@ -152,13 +190,18 @@ describe("Chat Logic tests", () => {
 
     it("should initialise", done => {
 
-        let foundation = new MockFoundation();
+        let _eventManager = new EventManager();
+        let _appMessaging = new MockAppMessaging();
+
+        let foundation = new MockFoundation(_eventManager, _appMessaging);
 
         let chatLogic = new ComapiChatLogic(foundation);
 
         let store = new MemoryConversationStore();
 
         spyOn(store, "deleteAllMessages").and.callThrough();
+
+        spyOn(_appMessaging, "getConversationEvents").and.callThrough();;
 
         let chatConfig: IComapiChatConfig = {
             conversationStore: store,
@@ -199,7 +242,7 @@ describe("Chat Logic tests", () => {
 
                 // trigger a conversation Message event that looks like a gap ...
                 foundation.trigger("conversationMessageEvent", {
-                    conversationEventId: 200,
+                    conversationEventId: 2,
                     conversationId: "D35A13DF-6876-4CC8-BA70-841B45A0003C",
                     // eventId: event.eventId,
                     name: "conversationMessage.sent",
@@ -214,26 +257,24 @@ describe("Chat Logic tests", () => {
 
                 setTimeout(() => {
 
-                    expect(store.deleteAllMessages).toHaveBeenCalledWith("D35A13DF-6876-4CC8-BA70-841B45A0003C", 200);
+                    expect(_appMessaging.getConversationEvents).toHaveBeenCalledWith("D35A13DF-6876-4CC8-BA70-841B45A0003C", 1, 10);
 
-
-                    // TODO: ensure conversation is reloaded
                     return store.getConversation("D35A13DF-6876-4CC8-BA70-841B45A0003C")
                         .then(conversation => {
-                            expect(conversation.earliestLocalEventId).toBe(200);
-                            expect(conversation.latestLocalEventId).toBe(200);
-                            return store.getMessage("D35A13DF-6876-4CC8-BA70-841B45A0003C", "2EDB545D-B4A1-44DF-A5D2-5F67379F3986")
-
+                            expect(conversation.earliestLocalEventId).toBe(0);
+                            expect(conversation.latestLocalEventId).toBe(2);
+                            return store.getMessages("D35A13DF-6876-4CC8-BA70-841B45A0003C");
                         })
-                        .then(message => {
-                            expect(message !== null).toBeTruthy();
+                        .then(messages => {
+                            expect(messages.length).toBe(3);
+                            expect(messages[0].id).toBe("4D319AE5-6434-4CF1-9F31-EFADC178745F");
+                            expect(messages[1].id).toBe("EF567174-CFFD-4FCD-A1DF-48F2A00369DC");
+                            expect(messages[2].id).toBe("E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
                             done();
                         });
 
                 }, 1000);
 
-
-                // done();
             });
 
     });

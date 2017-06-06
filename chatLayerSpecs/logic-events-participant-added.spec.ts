@@ -174,9 +174,9 @@ describe("Chat Logic tests", () => {
                 // write a event to 
 
                 foundation.trigger("conversationMessageEvent", {
-                    // conversationEventId: event.conversationEventId,
+                    conversationEventId: 0,
                     conversationId: "B716C321-7025-47BA-9539-A34D69100884",
-                    // eventId: event.eventId,
+                    eventId: "7ABB7241-CB6C-4CE9-8850-0D3CE2955F93",
                     name: "conversationMessage.sent",
                     payload: {
                         // alert: event.payload.alert,
@@ -195,10 +195,20 @@ describe("Chat Logic tests", () => {
                         .then(conversation => {
                             expect(conversation).toBeDefined();
                             expect(conversation.id).toBe("B716C321-7025-47BA-9539-A34D69100884");
+                            expect(conversation.continuationToken).not.toBeDefined();
+                            expect(conversation.earliestLocalEventId).toBe(0);
+                            expect(conversation.latestLocalEventId).toBe(0);
+                            expect(conversation.lastMessageTimestamp).not.toBeDefined();
+                            expect(conversation.latestRemoteEventId).not.toBeDefined();
+                            expect(conversation.name).toBe("Test Conv");
                             return store.getMessage("B716C321-7025-47BA-9539-A34D69100884", "E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
                         })
                         .then(message => {
+                            expect(message.sentEventId).toBe(0);
+                            expect(message.conversationId).toBe("B716C321-7025-47BA-9539-A34D69100884");
                             expect(message.id).toBe("E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
+                            expect(message.parts.length).toBe(1);
+                            expect(message.parts[0].data).toBe("hello");
                             done();
                         });
                 }, 2000);

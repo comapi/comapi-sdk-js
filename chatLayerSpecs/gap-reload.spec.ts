@@ -2,17 +2,14 @@ import {
     ComapiChatLogic
 } from "../chatLayer/src/chatLogic";
 
+import {
+    EventManager
+} from "../src/eventManager";
 
 import {
     IFoundation, IConversationDetails, IConversationDetails2, IConversationParticipant, ConversationScope, IConversationMessageEvent, IConversationMessage, ISendMessageResult, IMessageStatus,
     ISession, IServices, IAppMessaging, IProfile, IDevice, IChannels, IGetMessagesResponse, IComapiConfig
 } from "../src/interfaces";
-
-
-import {
-    EventManager
-} from "../src/eventManager";
-
 
 import { IComapiChatConfig, IConversationStore, IChatConversation, IChatMessage } from "../chatLayer/interfaces/chatLayer";
 
@@ -36,19 +33,8 @@ describe("Chat Logic tests", () => {
             throw new Error("Method not implemented.");
         }
         getConversation(conversationId: string): Promise<IConversationDetails2> {
-
-            switch (conversationId) {
-                case "B716C321-7025-47BA-9539-A34D69100884":
-                    return Promise.resolve({
-                        id: "B716C321-7025-47BA-9539-A34D69100884",
-                        name: "Test Conv",
-                        isPublic: false,
-                    });
-                default:
-                    throw new Error("Method not implemented.");
-            }
+            throw new Error("Method not implemented.");
         }
-
         deleteConversation(conversationId: string): Promise<boolean> {
             throw new Error("Method not implemented.");
         }
@@ -59,10 +45,20 @@ describe("Chat Logic tests", () => {
             throw new Error("Method not implemented.");
         }
         getParticipantsInConversation(conversationId: string): Promise<IConversationParticipant[]> {
-            throw new Error("Method not implemented.");
+            return Promise.resolve([]);
         }
         getConversations(scope?: ConversationScope, profileId?: string): Promise<IConversationDetails2[]> {
-            return Promise.resolve([]);
+            return Promise.resolve([
+                {
+                    id: "D35A13DF-6876-4CC8-BA70-841B45A0003C",
+                    name: "Conversation 1",
+                    roles: undefined,
+                    isPublic: false,
+                    _createdOn: new Date().toISOString(),
+                    _updatedOn: new Date().toISOString(),
+                    latestSentEventId: 0
+                }
+            ]);
         }
         getConversationEvents(conversationId: string, from: number, limit: number): Promise<IConversationMessageEvent[]> {
             throw new Error("Method not implemented.");
@@ -74,23 +70,39 @@ describe("Chat Logic tests", () => {
             throw new Error("Method not implemented.");
         }
         getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse> {
-
+            // This will be called when sdk syncs after deleting the local messages
             switch (conversationId) {
-                case "B716C321-7025-47BA-9539-A34D69100884":
+                case "D35A13DF-6876-4CC8-BA70-841B45A0003C":
                     return Promise.resolve({
-                        messages: []
+                        continuationToken: -1,
+                        earliestEventId: 200,
+                        latestEventId: 200,
+                        messages: [{
+                            id: "2EDB545D-B4A1-44DF-A5D2-5F67379F3986",
+                            sentEventId: 200,
+                            metadata: {},
+                            context: {
+                                conversationId: "D35A13DF-6876-4CC8-BA70-841B45A0003C",
+                            },
+                            parts: [{
+                                data: "hello",
+                                type: "text/plain"
+                            }],
+                        }]
                     });
+
                 default:
                     throw new Error("Method not implemented.");
+
             }
         }
-
         sendIsTyping(conversationId: string): Promise<boolean> {
             throw new Error("Method not implemented.");
         }
         sendIsTypingOff(conversationId: string): Promise<boolean> {
             throw new Error("Method not implemented.");
         }
+
     };
 
     class MockFoundation implements IFoundation {
@@ -138,13 +150,15 @@ describe("Chat Logic tests", () => {
         }
     };
 
-    it("should create a conversation on receipt of a participant added event", done => {
+    it("should initialise", done => {
 
         let foundation = new MockFoundation();
 
         let chatLogic = new ComapiChatLogic(foundation);
 
         let store = new MemoryConversationStore();
+
+        spyOn(store, "deleteAllMessages").and.callThrough();
 
         let chatConfig: IComapiChatConfig = {
             conversationStore: store,
@@ -153,29 +167,40 @@ describe("Chat Logic tests", () => {
             lazyLoadThreshold: 10
         };
 
-        return chatLogic.initialise(chatConfig)
-            .then(result => {
-                expect(result).toBeDefined();
-                return chatLogic.getConversations();
+
+        // populate store with some conversations and some messages ...           
+
+
+        store.createConversation({
+            id: "D35A13DF-6876-4CC8-BA70-841B45A0003C",
+            name: "Conversation 1",
+            roles: undefined,
+            isPublic: false,
+            latestLocalEventId: 0,
+            earliestLocalEventId: 0,
+            continuationToken: -1,
+
+        })
+            .then(created => {
+                return store.createMessage({
+                    id: "4D319AE5-6434-4CF1-9F31-EFADC178745F",
+                    conversationId: "D35A13DF-6876-4CC8-BA70-841B45A0003C",
+                    senderId: "unitTester",
+                    sentOn: new Date().toISOString(),
+                    sentEventId: 0,
+                    parts: [],
+                });
+            })
+            .then(created => {
+                return chatLogic.initialise(chatConfig);
             })
             .then(result => {
                 expect(result).toBeDefined();
 
-                // trigger a participant added
-                // chat layer should query for the conversation and load messages if there are any.
-                // will have to set a timer to check..
-
-                foundation.trigger("participantAdded", {
-                    conversationId: "B716C321-7025-47BA-9539-A34D69100884",
-                    createdBy: "unitTestUser",
-                    profileId: "unitTestUser",
-                });
-
-                // write a event to 
-
+                // trigger a conversation Message event that looks like a gap ...
                 foundation.trigger("conversationMessageEvent", {
-                    // conversationEventId: event.conversationEventId,
-                    conversationId: "B716C321-7025-47BA-9539-A34D69100884",
+                    conversationEventId: 200,
+                    conversationId: "D35A13DF-6876-4CC8-BA70-841B45A0003C",
                     // eventId: event.eventId,
                     name: "conversationMessage.sent",
                     payload: {
@@ -187,42 +212,30 @@ describe("Chat Logic tests", () => {
                     }
                 });
 
-
                 setTimeout(() => {
 
-                    // can I get this conversation from the store ?
-                    store.getConversation("B716C321-7025-47BA-9539-A34D69100884")
+                    expect(store.deleteAllMessages).toHaveBeenCalledWith("D35A13DF-6876-4CC8-BA70-841B45A0003C", 200);
+
+
+                    // TODO: ensure conversation is reloaded
+                    return store.getConversation("D35A13DF-6876-4CC8-BA70-841B45A0003C")
                         .then(conversation => {
-                            expect(conversation).toBeDefined();
-                            expect(conversation.id).toBe("B716C321-7025-47BA-9539-A34D69100884");
-                            return store.getMessage("B716C321-7025-47BA-9539-A34D69100884", "E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
+                            expect(conversation.earliestLocalEventId).toBe(200);
+                            expect(conversation.latestLocalEventId).toBe(200);
+                            return store.getMessage("D35A13DF-6876-4CC8-BA70-841B45A0003C", "2EDB545D-B4A1-44DF-A5D2-5F67379F3986")
+
                         })
                         .then(message => {
-                            expect(message.id).toBe("E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
-
-
-                            // trigger a participant removed and then query for the conversation - should be gone 
-                            foundation.trigger("participantRemoved", {
-                                conversationId: "B716C321-7025-47BA-9539-A34D69100884",
-                                createdBy: "unitTestUser",
-                                profileId: "unitTestUser",
-                            });
-
-                            setTimeout(() => {
-                                store.getConversation("B716C321-7025-47BA-9539-A34D69100884")
-                                    .then(conversation => {
-                                        expect(conversation).toBeNull();
-                                        done();
-                                    });
-
-                            }, 1000);
-
-
-
+                            expect(message !== null).toBeTruthy();
+                            done();
                         });
-                }, 2000);
 
+                }, 1000);
+
+
+                // done();
             });
+
     });
 
 });

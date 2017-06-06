@@ -456,7 +456,7 @@ export class ComapiChatLogic implements IChatLogic {
                 }
 
                 return unreadIds.length > 0 ? this.markMessagesAsRead(conversationId, unreadIds) : Promise.resolve(false);
-            })
+            });
     }
 
     /**
@@ -927,7 +927,7 @@ export class ComapiChatLogic implements IChatLogic {
                         }
                     } else {
                         // TODO: this should get handled - 
-                        console.warn("getIncomingEventAction() coundnt find conversation")
+                        console.warn("getIncomingEventAction() coundnt find conversation");
                         return Promise.resolve({
                             action: IncomingEventAction.ApplyEvent,
                             conversation: undefined
@@ -985,6 +985,9 @@ export class ComapiChatLogic implements IChatLogic {
                                     .then(result => {
                                         return this.getMessages(actionInfo.conversation);
                                     });
+
+                            default:
+                                return Promise.reject<boolean>(`Unknown action ${actionInfo.action}`);
 
                         }
                     })
@@ -1075,7 +1078,7 @@ export class ComapiChatLogic implements IChatLogic {
             })
             .then(result => {
                 return _conversation;
-            })
+            });
     }
 
     /**
@@ -1084,8 +1087,6 @@ export class ComapiChatLogic implements IChatLogic {
      * @param conversationId 
      */
     private initialiseConversation(conversationId: string): Promise<IChatConversation> {
-        let _conversation: IChatConversation;
-
         // check whether we already have this ...
         // if this user creates the conversation, we need to ignore the participantAdded behaviour
         return this._store.getConversation(conversationId)

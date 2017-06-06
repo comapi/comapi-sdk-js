@@ -10,7 +10,7 @@ export interface IStatusUpdates {
     [profileId: string]: {
         status: string;
         on: string;
-    }
+    };
 }
 
 /**

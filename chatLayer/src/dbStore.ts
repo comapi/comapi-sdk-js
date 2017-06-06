@@ -255,6 +255,47 @@ export class IndexedDBConversationStore implements IConversationStore {
             });
     }
 
+    /**
+     * @param {string} conversationId - the conversationId
+     */
+    public deleteConversationMessages(conversationId: string): Promise<boolean> {
+
+        return this.ensureInitialised()
+            .then(initialised => {
+                return new Promise((resolve, reject) => {
+
+                    let transaction = this._database.transaction([this._MessagesStore], "readwrite");
+
+                    let objectStore = transaction.objectStore(this._MessagesStore);
+
+                    let index = objectStore.index("conversation");
+
+                    let keyRange = IDBKeyRange.only(`${conversationId}`);
+
+                    // we want all the messages from this conversation ...
+                    // using a keyrange to encapsulate just the specified conversationId and all the dates
+
+                    let cursorRequest = index.openCursor(keyRange, "next");
+
+                    cursorRequest.onsuccess = (event) => {
+                        let cursor: IDBCursor = (<IDBRequest>event.target).result;
+
+                        if (cursor) {
+                            objectStore.delete(cursor.primaryKey);
+                            cursor.continue();
+                        }
+                        else {
+                            resolve(true);
+                        }
+                    };
+
+                    cursorRequest.onerror = function (e: any) {
+                        reject({ message: "Failed to openCursor: " + e.target.error.name });
+                    };
+
+                });
+            });
+    }
 
     /**
      * 
@@ -358,47 +399,6 @@ export class IndexedDBConversationStore implements IConversationStore {
             });
     }
 
-    /**
-     * @param {string} conversationId - the conversationId
-     */
-    public deleteConversationMessages(conversationId: string): Promise<boolean> {
-
-        return this.ensureInitialised()
-            .then(initialised => {
-                return new Promise((resolve, reject) => {
-
-                    let transaction = this._database.transaction([this._MessagesStore], "readwrite");
-
-                    let objectStore = transaction.objectStore(this._MessagesStore);
-
-                    let index = objectStore.index("conversation");
-
-                    let keyRange = IDBKeyRange.only(`${conversationId}`);
-
-                    // we want all the messages from this conversation ...
-                    // using a keyrange to encapsulate just the specified conversationId and all the dates
-
-                    let cursorRequest = index.openCursor(keyRange, "next");
-
-                    cursorRequest.onsuccess = (event) => {
-                        let cursor: IDBCursor = (<IDBRequest>event.target).result;
-
-                        if (cursor) {
-                            objectStore.delete(cursor.primaryKey);
-                            cursor.continue();
-                        }
-                        else {
-                            resolve(true);
-                        }
-                    };
-
-                    cursorRequest.onerror = function (e: any) {
-                        reject({ message: "Failed to openCursor: " + e.target.error.name });
-                    };
-
-                });
-            });
-    }
 
     /**
      * 

@@ -31,6 +31,23 @@ interface IComapiEvent {
     event: any;
 }
 
+// possible actions to be taken on receipt of a websocket event  
+enum IncomingEventAction {
+    None = 0,
+    // We are in sync, so just apply the new event
+    ApplyEvent = 1,
+    // We have a gap, load in missing events and apply them 
+    FillGap,
+    // We have a large gap - too large to replay so just reload the conversation 
+    ReloadConversation,
+}
+
+interface IncomingEventActionInfo {
+    action: IncomingEventAction;
+    conversation: IChatConversation;
+}
+
+
 
 
 /**
@@ -70,7 +87,7 @@ export class ComapiChatLogic implements IChatLogic {
 
 
     // if a gap is detected greater than this, we will scrap what we have and just load in the last _messagePageSize messages
-    // private _maxEventGap: number = 100;
+    private _maxEventGap: number = 100;
 
     private _listen: boolean = true;
 
@@ -862,6 +879,59 @@ export class ComapiChatLogic implements IChatLogic {
         }
     }
 
+
+    private getIncomingEventAction(info: IComapiEvent): Promise<IncomingEventActionInfo> {
+
+        if (info.type === "conversationMessageEvent") {
+
+            return this._store.getConversation(info.event.conversationId)
+                .then(conversation => {
+
+                    if (conversation !== null) {
+                        let gap = info.event.conversationEventId - (conversation.latestLocalEventId + 1);
+                        if (gap > 0) {
+                            // gap needs filling 
+                            if (gap < this._maxEventGap) {
+                                return Promise.resolve({
+                                    action: IncomingEventAction.FillGap,
+                                    conversation: conversation
+                                });
+
+                            } else {
+                                return Promise.resolve({
+                                    action: IncomingEventAction.ReloadConversation,
+                                    conversation: conversation
+                                });
+                            }
+
+                        } else {
+                            return Promise.resolve({
+                                action: IncomingEventAction.ApplyEvent,
+                                conversation: conversation
+                            });
+                        }
+                    } else {
+                        // TODO: this should get handled - 
+                        console.warn("getIncomingEventAction() coundnt find conversation")
+                        return Promise.resolve({
+                            action: IncomingEventAction.ApplyEvent,
+                            conversation: undefined
+                        });
+
+                    }
+
+                });
+
+        } else {
+            return Promise.resolve({
+                action: IncomingEventAction.ApplyEvent,
+                conversation: undefined
+            });
+
+        }
+
+    }
+
     /**
      * handle the event if we are idle (and listening), otherwise cache it ...
      */
@@ -870,7 +940,28 @@ export class ComapiChatLogic implements IChatLogic {
         if (this._listen) {
             if (!this._updating) {
                 this._updating = true;
-                this._onComapiEvent(info)
+
+                // Gap detection logic here ?
+                return this.getIncomingEventAction(info)
+                    .then(actionInfo => {
+
+                        console.log("getIncomingEventAction => ", actionInfo);
+
+                        switch (actionInfo.action) {
+                            case IncomingEventAction.ApplyEvent:
+                                return this._onComapiEvent(info);
+
+                            case IncomingEventAction.FillGap:
+                                return this.synchronizeConversation(actionInfo.conversation);
+
+                            case IncomingEventAction.ReloadConversation:
+                                // TODO: Need to set latestRemoteEventId to something otherwise synchronizeConversation will think there are no messsages in the conversation.
+                                return this._store.deleteAllMessages(info.event.conversationId, info.event.conversationEventId)
+                                    .then(result => {
+                                        return this.synchronizeConversation(actionInfo.conversation);
+                                    });
+                        }
+                    })
                     .then(updated => {
                         this._updating = false;
                         this.applyCachedEvents();

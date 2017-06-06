@@ -121,6 +121,9 @@ describe("Chat Logic tests", () => {
         getMessage(conversationId: string, messageId: string): Promise<IChatMessage> {
             throw new Error("Method not implemented.");
         }
+        deleteAllMessages(conversationId: string): Promise<boolean> {
+            throw new Error("Method not implemented.");
+        }
         updateMessageStatus(conversationId: string, messageId: string, profileId: string, status: string, timestamp: string): Promise<boolean> {
             throw new Error("Method not implemented.");
         }

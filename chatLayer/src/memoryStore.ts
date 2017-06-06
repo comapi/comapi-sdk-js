@@ -209,6 +209,34 @@ export class MemoryConversationStore implements IConversationStore {
     }
 
     /**
+     * 
+     * @param conversationId 
+     */
+    public deleteAllMessages(conversationId: string, latestRemoteEventId: number): Promise<boolean> {
+
+        let conversation = this._findConversation(conversationId);
+
+        if (conversation) {
+            conversation.earliestLocalEventId = undefined;
+            conversation.latestLocalEventId = undefined;
+            conversation.latestRemoteEventId = latestRemoteEventId;
+            conversation.continuationToken = undefined;
+            conversation.eTag = undefined;
+            conversation.lastMessageTimestamp = undefined;
+
+            // crater all messages too
+            this.messageStore[conversationId] = [];
+
+            return Promise.resolve(true);
+
+        } else {
+            return Promise.reject<boolean>({ message: `Conversation ${conversationId} not found in messageStore` });
+        }
+
+    }
+
+
+    /**
      * @param conversationId 
      */
     private _findConversation(conversationId: string): IChatConversation {

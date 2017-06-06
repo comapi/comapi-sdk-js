@@ -257,6 +257,33 @@ export class IndexedDBConversationStore implements IConversationStore {
 
     /**
      * 
+     * @param conversationId 
+     */
+    public deleteAllMessages(conversationId: string, latestRemoteEventId: number): Promise<boolean> {
+        return this.getConversation(conversationId)
+            .then(conversation => {
+                if (conversation) {
+
+                    conversation.earliestLocalEventId = undefined;
+                    conversation.latestLocalEventId = undefined;
+                    conversation.latestRemoteEventId = latestRemoteEventId;
+                    conversation.continuationToken = undefined;
+                    conversation.eTag = undefined;
+                    conversation.lastMessageTimestamp = undefined;
+
+                    return this.putConversation(conversation);
+
+                } else {
+                    return Promise.reject<boolean>({ message: `Conversation ${conversation.id} not found` });
+                }
+            })
+            .then(result => {
+                return this.deleteConversationMessages(conversationId);
+            });
+    }
+
+    /**
+     * 
      */
     public reset(): Promise<boolean> {
 

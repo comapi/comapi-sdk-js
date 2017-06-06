@@ -506,6 +506,9 @@ export class ComapiChatLogic implements IChatLogic {
         return this._foundation.services.appMessaging.deleteConversation(conversationId)
             .then(() => {
                 return this._store.deleteConversation(conversationId);
+            })
+            .then(() => {
+                return this._store.deleteConversationMessages(conversationId);
             });
     }
 
@@ -968,11 +971,21 @@ export class ComapiChatLogic implements IChatLogic {
                                 return this.updateConversationWithEvents(actionInfo.conversation);
 
                             case IncomingEventAction.ReloadConversation:
-                                // NOTE: Need to set latestRemoteEventId to something otherwise synchronizeConversation will think there are no messsages in the conversation.
-                                return this._store.deleteAllMessages(info.event.conversationId, info.event.conversationEventId)
+
+                                return this._store.deleteConversationMessages(info.event.conversationId)
+                                    .then(result => {
+
+                                        actionInfo.conversation.continuationToken = -1;
+                                        actionInfo.conversation.earliestLocalEventId = undefined;
+                                        actionInfo.conversation.latestLocalEventId = undefined;
+                                        actionInfo.conversation.latestRemoteEventId = info.event.conversationEventId;
+
+                                        return this._store.updateConversation(actionInfo.conversation);
+                                    })
                                     .then(result => {
                                         return this.getMessages(actionInfo.conversation);
                                     });
+
                         }
                     })
                     .then(updated => {
@@ -1044,8 +1057,30 @@ export class ComapiChatLogic implements IChatLogic {
             });
     }
 
+
     /**
-     * Get a conversation and load in last page of messages
+     * Get a conversation from rest api and load in last page of messages
+     * @param conversationId 
+     */
+    private _initialiseConversation(conversationId: string): Promise<IChatConversation> {
+        let _conversation: IChatConversation;
+
+        return this._foundation.services.appMessaging.getConversation(conversationId)
+            .then(remoteConversation => {
+                _conversation = this.mapConversation(remoteConversation);
+                return this._store.createConversation(_conversation);
+            })
+            .then(result => {
+                return this.getMessages(_conversation);
+            })
+            .then(result => {
+                return _conversation;
+            })
+    }
+
+    /**
+     * Get a conversation and load in last page of messages but check we dont have it already
+     * Valid scenario of processing the participantAdded event on the device that created a conversation - conversation will already exist! 
      * @param conversationId 
      */
     private initialiseConversation(conversationId: string): Promise<IChatConversation> {
@@ -1055,19 +1090,8 @@ export class ComapiChatLogic implements IChatLogic {
         // if this user creates the conversation, we need to ignore the participantAdded behaviour
         return this._store.getConversation(conversationId)
             .then(conversation => {
-                return conversation === null ? this._foundation.services.appMessaging.getConversation(conversationId)
-                    .then(remoteConversation => {
-                        _conversation = this.mapConversation(remoteConversation);
-                        return this._store.createConversation(_conversation);
-                    })
-                    .then(result => {
-                        return this.getMessages(_conversation);
-                    })
-                    .then(result => {
-                        return _conversation;
-                    }) : conversation;
+                return conversation === null ? this._initialiseConversation(conversationId) : conversation;
             });
-
     }
 
     /**

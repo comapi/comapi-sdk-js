@@ -82,7 +82,9 @@ export interface IConversationStore {
     createConversation(conversation: IChatConversation): Promise<boolean>;
     updateConversation(conversation: IChatConversation): Promise<boolean>;
     deleteConversation(conversationId: string): Promise<boolean>;
-    deleteAllMessages(conversationId: string, latestRemoteEventId: number): Promise<boolean>;
+    deleteConversationMessages(conversationId: string): Promise<boolean>;
+
+
     reset(): Promise<boolean>;
     // sdk calls this to see whether it needs to update / add the new message 
     getMessage(conversationId: string, messageId: string): Promise<IChatMessage>;

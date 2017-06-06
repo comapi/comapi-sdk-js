@@ -90,9 +90,6 @@ export class MemoryConversationStore implements IConversationStore {
             if (index >= 0) {
                 this.conversations.splice(index, 1);
 
-                // crater all messages too
-                this.messageStore[conversationId] = undefined;
-
                 resolve(true);
             } else {
                 reject({ message: `Conversation ${conversationId} not found` });
@@ -212,26 +209,30 @@ export class MemoryConversationStore implements IConversationStore {
      * 
      * @param conversationId 
      */
-    public deleteAllMessages(conversationId: string, latestRemoteEventId: number): Promise<boolean> {
+    public deleteConversationMessages(conversationId: string): Promise<boolean> {
 
-        let conversation = this._findConversation(conversationId);
+        this.messageStore[conversationId] = [];
 
-        if (conversation) {
-            conversation.earliestLocalEventId = undefined;
-            conversation.latestLocalEventId = undefined;
-            conversation.latestRemoteEventId = latestRemoteEventId;
-            conversation.continuationToken = undefined;
-            conversation.eTag = undefined;
-            conversation.lastMessageTimestamp = undefined;
+        return Promise.resolve(true);
 
-            // crater all messages too
-            this.messageStore[conversationId] = [];
+        // let conversation = this._findConversation(conversationId);
 
-            return Promise.resolve(true);
+        // if (conversation) {
+        //     conversation.earliestLocalEventId = undefined;
+        //     conversation.latestLocalEventId = undefined;
+        //     conversation.latestRemoteEventId = undefined;
+        //     conversation.continuationToken = undefined;
+        //     conversation.eTag = undefined;
+        //     conversation.lastMessageTimestamp = undefined;
 
-        } else {
-            return Promise.reject<boolean>({ message: `Conversation ${conversationId} not found in messageStore` });
-        }
+        //     // crater all messages too
+        //     this.messageStore[conversationId] = [];
+
+        //     return Promise.resolve(true);
+
+        // } else {
+        //     return Promise.reject<boolean>({ message: `Conversation ${conversationId} not found in messageStore` });
+        // }
 
     }
 

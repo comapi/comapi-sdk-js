@@ -12,7 +12,7 @@ module.exports = function (config) {
             // "specs/**/*.ts",
             "chatLayer/**/*.ts",
             "chatLayerSpecs/**/*.spec.ts",
-            //"chatLayerSpecs/logic-events.spec.ts",
+            //"chatLayerSpecs/gap-reload.spec.ts",
         ],
 
         preprocessors: {

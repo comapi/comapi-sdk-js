@@ -150,7 +150,7 @@ describe("Chat Logic tests", () => {
         }
     };
 
-    it("should initialise", done => {
+    it("should reload a conversatioj if a large gap is detected", done => {
 
         let foundation = new MockFoundation();
 
@@ -158,7 +158,7 @@ describe("Chat Logic tests", () => {
 
         let store = new MemoryConversationStore();
 
-        spyOn(store, "deleteAllMessages").and.callThrough();
+        spyOn(store, "deleteConversationMessages").and.callThrough();
 
         let chatConfig: IComapiChatConfig = {
             conversationStore: store,
@@ -214,7 +214,7 @@ describe("Chat Logic tests", () => {
 
                 setTimeout(() => {
 
-                    expect(store.deleteAllMessages).toHaveBeenCalledWith("D35A13DF-6876-4CC8-BA70-841B45A0003C", 200);
+                    expect(store.deleteConversationMessages).toHaveBeenCalledWith("D35A13DF-6876-4CC8-BA70-841B45A0003C");
 
 
                     // TODO: ensure conversation is reloaded
@@ -222,11 +222,10 @@ describe("Chat Logic tests", () => {
                         .then(conversation => {
                             expect(conversation.earliestLocalEventId).toBe(200);
                             expect(conversation.latestLocalEventId).toBe(200);
-                            return store.getMessage("D35A13DF-6876-4CC8-BA70-841B45A0003C", "2EDB545D-B4A1-44DF-A5D2-5F67379F3986")
-
+                            return store.getMessage("D35A13DF-6876-4CC8-BA70-841B45A0003C", "2EDB545D-B4A1-44DF-A5D2-5F67379F3986");
                         })
                         .then(message => {
-                            expect(message !== null).toBeTruthy();
+                            expect(message).not.toBeNull();
                             done();
                         });
 

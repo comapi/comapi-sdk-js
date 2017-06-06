@@ -199,8 +199,6 @@ describe("Chat Logic tests", () => {
 
         let store = new MemoryConversationStore();
 
-        spyOn(store, "deleteAllMessages").and.callThrough();
-
         spyOn(_appMessaging, "getConversationEvents").and.callThrough();;
 
         let chatConfig: IComapiChatConfig = {

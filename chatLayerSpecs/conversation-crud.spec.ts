@@ -203,7 +203,7 @@ describe("Chat Logic tests", () => {
                 return store.getConversation("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
             })
             .then(storeConv => {
-                expect(storeConv !== null).toBeTruthy();
+                expect(storeConv).not.toBeNull();
                 expect(storeConv.id).toBe("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
                 expect(storeConv.earliestLocalEventId).not.toBeDefined();
                 expect(storeConv.latestLocalEventId).not.toBeDefined();

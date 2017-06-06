@@ -189,7 +189,7 @@ describe("Chat Logic tests", () => {
                             return store.getMessage("B716C321-7025-47BA-9539-A34D69100884", "E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
                         })
                         .then(message => {
-                            expect(message !== null).toBeTruthy();
+                            expect(message).not.toBeNull();
                             expect(message.id).toBe("E8ADFCB9-F873-4AA7-8BA7-B7966B7E4E9E");
                             expect(message.parts.length).toBe(1);
                             expect(message.parts[0].data).toBe("hello");

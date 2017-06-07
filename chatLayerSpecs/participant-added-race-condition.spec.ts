@@ -51,8 +51,8 @@ describe("Chat Logic tests", () => {
                             isPublic: false,
                         });
                     } else {
-                        console.error("getConversation() => throwing a 401 ...");
-                        return Promise.reject<IConversationDetails2>({ statusCode: 401 });
+                        console.error("getConversation() => throwing a 404 ...");
+                        return Promise.reject<IConversationDetails2>({ statusCode: 404 });
                     }
                 default:
                     throw new Error("Method not implemented.");

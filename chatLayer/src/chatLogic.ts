@@ -1076,12 +1076,12 @@ export class ComapiChatLogic {
 
     /**
      * Get a conversation from rest api and load in last page of messages
+     * due to a secondary store being in use, the conversation may not exist when trying
+     * to query it off the back of a onParticipantAdded event - hence the retry logic ...
      * @param conversationId 
      */
-    private _initialiseConversation(conversationId: string, depth: number = 0): Promise<IChatConversation> {
+    private initialiseConversation(conversationId: string, depth: number = 0): Promise<IChatConversation> {
         let _conversation: IChatConversation;
-
-        console.log(`==> _initialiseConversation(${conversationId}, ${depth})`);
 
         return this._foundation.services.appMessaging.getConversation(conversationId)
             .then(remoteConversation => {
@@ -1092,38 +1092,23 @@ export class ComapiChatLogic {
                 return this.getMessages(_conversation);
             })
             .then(result => {
-                console.log("<== _initialiseConversation()");
-
                 return _conversation;
             })
             .catch(error => {
-                if (error.statusCode === 401 && depth < this._getConversationMaxRetry) {
-                    // sleep and recurse 
+                // TODO: Consider moving this functionality into foundation ...
+                if (error.statusCode === 404 && depth < this._getConversationMaxRetry) {
+                    // sleep and recurse configurable 
 
                     return new Promise((resolve, reject) => {
                         setTimeout(function () { resolve(); }, this._getConversationSleepTimeout);
                     })
                         .then(() => {
-                            return this._initialiseConversation(conversationId, ++depth);
+                            return this.initialiseConversation(conversationId, ++depth);
                         });
 
                 } else {
                     throw error;
                 }
-            });
-    }
-
-    /**
-     * Get a conversation and load in last page of messages but check we dont have it already
-     * Valid scenario of processing the participantAdded event on the device that created a conversation - conversation will already exist! 
-     * @param conversationId 
-     */
-    private initialiseConversation(conversationId: string): Promise<IChatConversation> {
-        // check whether we already have this ...
-        // if this user creates the conversation, we need to ignore the participantAdded behaviour
-        return this._store.getConversation(conversationId)
-            .then(conversation => {
-                return conversation === null ? this._initialiseConversation(conversationId) : conversation;
             });
     }
 
@@ -1137,13 +1122,16 @@ export class ComapiChatLogic {
         // if this is me, need to add the conversation ...
         if (event.profileId === this._profileId) {
 
-            // HACK: Race condition !!!
-            // due to a secondary store being in use, the conversation may not exist when trying
-            // to query it off the back of a  onParticipantAdded event ...
-
-            return this.initialiseConversation(event.conversationId)
-                .then(() => {
-                    return true;
+            // If this client created the conversation, we will have already stored it off the back of the rest call.
+            // check it isn't in the store already and if not initialise it
+            return this._store.getConversation(event.conversationId)
+                .then(conversation => {
+                    return conversation === null ?
+                        this.initialiseConversation(event.conversationId)
+                        : conversation;
+                })
+                .then(conversation => {
+                    return conversation !== null;
                 });
 
         } else {

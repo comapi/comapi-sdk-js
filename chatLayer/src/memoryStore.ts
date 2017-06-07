@@ -210,30 +210,8 @@ export class MemoryConversationStore implements IConversationStore {
      * @param conversationId 
      */
     public deleteConversationMessages(conversationId: string): Promise<boolean> {
-
         this.messageStore[conversationId] = [];
-
         return Promise.resolve(true);
-
-        // let conversation = this._findConversation(conversationId);
-
-        // if (conversation) {
-        //     conversation.earliestLocalEventId = undefined;
-        //     conversation.latestLocalEventId = undefined;
-        //     conversation.latestRemoteEventId = undefined;
-        //     conversation.continuationToken = undefined;
-        //     conversation.eTag = undefined;
-        //     conversation.lastMessageTimestamp = undefined;
-
-        //     // crater all messages too
-        //     this.messageStore[conversationId] = [];
-
-        //     return Promise.resolve(true);
-
-        // } else {
-        //     return Promise.reject<boolean>({ message: `Conversation ${conversationId} not found in messageStore` });
-        // }
-
     }
 
 

@@ -1,6 +1,6 @@
 import { MessageStatusBuilder, MessageBuilder } from "../../src/foundation";
 import { Utils, DoUntilOperationFunction, DoUntilTestFunction } from "../../src/utils";
-import { IChatLogic, IComapiChatConfig, IConversationStore, IChatConversation, IChatMessage, IChatInfo } from "../interfaces/chatLayer";
+import { IComapiChatConfig, IConversationStore, IChatConversation, IChatMessage, IChatInfo } from "../interfaces/chatLayer";
 
 import { IFoundation, IMessageSentPayload, IMessageStatusUpdatePayload, IConversationParticipant } from "../../src/interfaces";
 
@@ -69,7 +69,7 @@ interface IncomingEventActionInfo {
  * 4) Page through conversation
  *  - backfill using continuation token
  */
-export class ComapiChatLogic implements IChatLogic {
+export class ComapiChatLogic {
 
     private _hasInitialised: boolean = false;
 
@@ -84,6 +84,11 @@ export class ComapiChatLogic implements IChatLogic {
     private _messagePageSize: number = 10;
 
     private _lazyLoadThreshold: number = 1;
+
+
+    private _getConversationSleepTimeout: number = 1000;
+    private _getConversationMaxRetry: number = 3;
+
 
 
     // if a gap is detected greater than this, we will scrap what we have and just load in the last _messagePageSize messages
@@ -122,6 +127,14 @@ export class ComapiChatLogic implements IChatLogic {
         }
         if (config.lazyLoadThreshold !== undefined) {
             this._lazyLoadThreshold = config.lazyLoadThreshold;
+        }
+
+        if (config.getConversationSleepTimeout !== undefined) {
+            this._getConversationSleepTimeout = config.getConversationSleepTimeout;
+        }
+
+        if (config.getConversationMaxRetry !== undefined) {
+            this._getConversationMaxRetry = config.getConversationMaxRetry;
         }
 
         this._foundation.on("conversationMessageEvent", event => { this.onComapiEvent({ type: "conversationMessageEvent", event }); });
@@ -1065,8 +1078,10 @@ export class ComapiChatLogic implements IChatLogic {
      * Get a conversation from rest api and load in last page of messages
      * @param conversationId 
      */
-    private _initialiseConversation(conversationId: string): Promise<IChatConversation> {
+    private _initialiseConversation(conversationId: string, depth: number = 0): Promise<IChatConversation> {
         let _conversation: IChatConversation;
+
+        console.log(`==> _initialiseConversation(${conversationId}, ${depth})`);
 
         return this._foundation.services.appMessaging.getConversation(conversationId)
             .then(remoteConversation => {
@@ -1077,7 +1092,24 @@ export class ComapiChatLogic implements IChatLogic {
                 return this.getMessages(_conversation);
             })
             .then(result => {
+                console.log("<== _initialiseConversation()");
+
                 return _conversation;
+            })
+            .catch(error => {
+                if (error.statusCode === 401 && depth < this._getConversationMaxRetry) {
+                    // sleep and recurse 
+
+                    return new Promise((resolve, reject) => {
+                        setTimeout(function () { resolve(); }, this._getConversationSleepTimeout);
+                    })
+                        .then(() => {
+                            return this._initialiseConversation(conversationId, ++depth);
+                        });
+
+                } else {
+                    throw error;
+                }
             });
     }
 
@@ -1109,12 +1141,7 @@ export class ComapiChatLogic implements IChatLogic {
             // due to a secondary store being in use, the conversation may not exist when trying
             // to query it off the back of a  onParticipantAdded event ...
 
-            return new Promise((resolve, reject) => {
-                setTimeout(function () { resolve(); }, 1000);
-            })
-                .then(() => {
-                    return this.initialiseConversation(event.conversationId);
-                })
+            return this.initialiseConversation(event.conversationId)
                 .then(() => {
                     return true;
                 });

@@ -1,6 +1,4 @@
 import {
-    // IComapiConfig,
-    // IConversationRoles,
     IMessagePart,
     IConversationParticipant
 } from "../../src/interfaces";
@@ -67,6 +65,8 @@ export interface IComapiChatConfig {
     eventPageSize: number;
     messagePageSize: number;
     lazyLoadThreshold: number;
+    getConversationSleepTimeout?: number
+    getConversationMaxRetry?: number
 }
 
 
@@ -97,25 +97,4 @@ export interface IConversationStore {
 
     getMessages(conversationId: string): Promise<IChatMessage[]>;
 
-    // TODO: Participants need syncing too
-
-}
-
-
-
-
-
-export interface IChatLogic {
-    /**
-     * 
-     */
-    initialise(config: IComapiChatConfig): Promise<boolean>;
-    /**
-     * 
-     */
-    synchronize(): Promise<boolean>;
-    /**
-     * 
-     */
-    getPreviousMessages(conversationId: string): Promise<boolean>;
 }

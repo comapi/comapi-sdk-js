@@ -229,10 +229,7 @@ describe("Chat Logic tests", () => {
                             done();
                         });
 
-                }, 1000);
-
-
-                // done();
+                }, 500);
             });
 
     });

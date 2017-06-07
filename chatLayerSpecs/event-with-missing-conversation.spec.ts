@@ -195,7 +195,7 @@ describe("Chat Logic tests", () => {
                             expect(message.parts[0].data).toBe("hello");
                             done();
                         });
-                }, 2000);
+                }, 500);
 
             });
     });

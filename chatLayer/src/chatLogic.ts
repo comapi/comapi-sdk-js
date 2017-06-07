@@ -14,6 +14,7 @@ import {
     IGetMessagesResponse
 } from "../../src/interfaces";
 
+import { Mutex } from "./mutex"
 
 
 interface IConversationSyncInfo {
@@ -54,11 +55,11 @@ interface IncomingEventActionInfo {
  * High Level Tasks that this interface needs to perform
  * 
  * 1) Synchronise on startup
- *  - initial loadup of convrsations / last x messges 
+ *  - initial loadup of conversations / last x messages 
  *  - update by getting events
  *  - know when to bin off and start again
  * 
- * 2) Handle realtime events
+ * 2) Handle real time events
  *  - happy path just play onto store
  *  - gap detection and appropriate action 
  * 
@@ -77,7 +78,7 @@ export class ComapiChatLogic {
 
     private _store: IConversationStore;
 
-    private _updating: boolean = false;
+    private _mutex: Mutex = new Mutex();
 
     private _eventPageSize: number = 10;
 
@@ -85,10 +86,9 @@ export class ComapiChatLogic {
 
     private _lazyLoadThreshold: number = 1;
 
-
     private _getConversationSleepTimeout: number = 1000;
-    private _getConversationMaxRetry: number = 3;
 
+    private _getConversationMaxRetry: number = 3;
 
 
     // if a gap is detected greater than this, we will scrap what we have and just load in the last _messagePageSize messages
@@ -152,7 +152,7 @@ export class ComapiChatLogic {
             .then(synced => {
                 this._hasSynced = true;
                 console.log("Synchronised!");
-                return synced;
+                return this._hasSynced;
             });
     }
 
@@ -199,131 +199,89 @@ export class ComapiChatLogic {
             return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
-        if (this._updating) {
-            return Promise.reject<boolean>({ message: "synchronize called when this._updating set to true" });
-        }
+        return this._mutex.runExclusive(() => {
 
-        // 0) Set busy flag
-        this._updating = true;
+            let remoteConversations: IConversationDetails2[];
+            let localConversations: IChatConversation[];
 
-        let remoteConversations: IConversationDetails2[];
-        let localConversations: IChatConversation[];
+            let syncInfo: IConversationSyncInfo;
 
-        let syncInfo: IConversationSyncInfo;
+            // Will explicitly start a session prior to calling getConversations so I can get the session info ...
+            // I am interested in the profileId of the user  ...
 
+            return this._foundation.startSession()
+                .then(session => {
+                    this._profileId = session.profileId;
+                    return this._foundation.services.appMessaging.getConversations();
+                })
+                // 1) get list of conversations from comapi
+                // return this._foundation.services.appMessaging.getConversations()
+                .then(conversations => {
+                    remoteConversations = conversations;
 
-        // Will explicitly start a session prior to calling getConversations so I can get the session info ...
-        // I am interested in the profileId of the user  ...
+                    // 2) get list from IConversationStore
+                    return this._store.getConversations();
+                })
+                .then(conversations => {
+                    // take a copy of this as we don't want it getting modified when we add/remove using the store ;-)
 
-        return this._foundation.startSession()
-            .then(session => {
-                this._profileId = session.profileId;
-                return this._foundation.services.appMessaging.getConversations();
-            })
-            // 1) get list of conversations from comapi
-            // return this._foundation.services.appMessaging.getConversations()
-            .then(conversations => {
-                remoteConversations = conversations;
+                    localConversations = conversations.slice();
 
-                // 2) get list from IConversationStore
-                return this._store.getConversations();
-            })
-            .then(conversations => {
-                // take a copy of this as we don't want it getting modified when we add/remove using the store ;-)
+                    syncInfo = this.getConversationSyncInfo(remoteConversations, localConversations);
 
-                localConversations = conversations.slice();
+                    return Utils.eachSeries(syncInfo.deleteArray, (conversationId: string) => {
 
-                syncInfo = this.getConversationSyncInfo(remoteConversations, localConversations);
-
-                return Utils.eachSeries(syncInfo.deleteArray, (conversationId: string) => {
-
-                    return this._store.deleteConversation(conversationId)
-                        .then(deleted => {
-                            // Remove the conversation from from localConversations
-                            for (let i = localConversations.length - 1; i >= 0; i--) {
-                                if (localConversations[i].id === conversationId) {
-                                    localConversations.splice(i, 1);
+                        return this._store.deleteConversation(conversationId)
+                            .then(deleted => {
+                                // Remove the conversation from from localConversations
+                                for (let i = localConversations.length - 1; i >= 0; i--) {
+                                    if (localConversations[i].id === conversationId) {
+                                        localConversations.splice(i, 1);
+                                    }
                                 }
-                            }
 
-                            return deleted;
-                        });
+                                return deleted;
+                            });
+                    });
+                })
+                .then((result) => {
+                    // 3) Add new ones
+                    return Utils.eachSeries(syncInfo.addArray, (conversation: IChatConversation) => {
+                        return this._store.createConversation(conversation);
+                    });
+                })
+                .then((result) => {
+                    // 4) Update existing ones that have changed
+                    return Utils.eachSeries(syncInfo.updateArray, (conversation: IChatConversation) => {
+                        return this._store.updateConversation(conversation);
+                    });
+                })
+                .then((result) => {
+                    // Add the new conversations to the localConversations array ...
+                    // TODO: the orig. call to _store.getConversations() returned  reference (in my memoryStore sample)
+                    // the dDB version wont do that ....
+                    // a) mem version returns a copy 
+                    for (let newConv of syncInfo.addArray) {
+                        localConversations.push(newConv);
+                    }
+
+                    localConversations.sort((a: IChatConversation, b: IChatConversation) => {
+                        let left = Number(new Date(a.lastMessageTimestamp));
+                        let right = Number(new Date(b.lastMessageTimestamp));
+                        return (/*sortOrder === "asc"*/true) ? right - left : left - right;
+                    });
+
+                    // we will just pick the first _lazyLoadThreshold from the ordered array to synchronise
+                    let syncSet = localConversations.slice(0, this._lazyLoadThreshold);
+
+                    // 4) Sync conversation messages 
+                    return Utils.eachSeries(syncSet, (conversation: IChatConversation) => {
+                        return this.synchronizeConversation(conversation);
+                    });
+
                 });
-            })
-            .then((result) => {
-                // 3) Add new ones
-                return Utils.eachSeries(syncInfo.addArray, (conversation: IChatConversation) => {
-                    return this._store.createConversation(conversation);
-                });
-            })
-            .then((result) => {
-                // 4) Update existing ones that have changed
-                return Utils.eachSeries(syncInfo.updateArray, (conversation: IChatConversation) => {
-                    return this._store.updateConversation(conversation);
-                });
-            })
-            .then((result) => {
-                // Add the new conversations to the localConversations array ...
-                // TODO: the orig. call to _store.getConversations() returned  reference (in my memoryStore sample)
-                // the dDB version wont do that ....
-                // a) mem version returns a copy 
-                for (let newConv of syncInfo.addArray) {
-                    localConversations.push(newConv);
-                }
+        });
 
-                // localConversations.sort(function (c1, c2) {
-                //     let a = new Date(c1.updated);
-                //     let b = new Date(c2.updated);
-                //     return a > b ? -1 : a < b ? 1 : 0;
-                // });
-
-                // sort localConversations by some date
-                // just load the first _lazyLoadThreshold 
-
-                localConversations.sort((a: IChatConversation, b: IChatConversation) => {
-                    let left = Number(new Date(a.lastMessageTimestamp));
-                    let right = Number(new Date(b.lastMessageTimestamp));
-                    return (/*sortOrder === "asc"*/true) ? right - left : left - right;
-                });
-
-                // remoteConversations.sort((a: IConversationDetails2, b: IConversationDetails2) => {
-                //     let left = Number(new Date(a._updatedOn));
-                //     let right = Number(new Date(b._updatedOn));
-                //     return (/*sortOrder === "asc"*/true) ? right - left : left - right;
-                // });
-
-                // if (localConversations.length !== remoteConversations.length) {
-                //     console.error("Mismatched lengths");
-                // }
-
-                // we will just pick the first _lazyLoadThreshold from the ordered array to synchronise
-                let syncSet = localConversations.slice(0, this._lazyLoadThreshold);
-
-                // Now go through the top n conversations ...
-
-
-
-
-                // 4) Sync conversation messages 
-                return Utils.eachSeries(syncSet, (conversation: IChatConversation) => {
-                    return this.synchronizeConversation(conversation);
-                });
-
-                // TODO: if we dont sync, we will need to at least record the server latest eventId
-
-                // return true;
-            })
-            .then((result) => {
-                // 5) Reset busy flag
-                this._updating = false;
-                console.log("synchronize succeeded");
-                return this.applyCachedEvents();
-            })
-            .catch(error => {
-                this._updating = false;
-                console.error("synchronize failed", error);
-                return Promise.reject(error);
-            });
     }
 
 
@@ -341,32 +299,22 @@ export class ComapiChatLogic {
             return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
-        if (!this._updating) {
-            this._updating = true;
+        return this._mutex.runExclusive(() => {
             return this._store.getConversation(conversationId)
                 .then(conversation => {
                     return this.getMessages(conversation);
-                })
-                .then(result => {
-                    this._updating = false;
-                    return this.applyCachedEvents();
-                })
-                .catch(error => {
-                    console.error(`backfillConversation(${conversationId}) failed`, error);
-                    this._updating = false;
-                    return false;
                 });
+        });
 
-        } else {
-            return Promise.reject<boolean>({ message: "busy" });
-        }
     }
 
     /**
      * Power a master view
      */
     public getConversations(): Promise<IChatConversation[]> {
-        return this._store.getConversations();
+        return this._mutex.runExclusive(() => {
+            return this._store.getConversations();
+        });
     }
 
     /**
@@ -374,39 +322,43 @@ export class ComapiChatLogic {
      */
     public getConversationInfo(conversationId: string): Promise<IChatInfo> {
 
-        let _conversation: IChatConversation;
-        let _messages: IChatMessage[];
-        let _participants: IConversationParticipant[];
+        return this._mutex.runExclusive(() => {
 
-        return this._store.getConversation(conversationId)
-            .then(conversation => {
-                _conversation = conversation;
+            let _conversation: IChatConversation;
+            let _messages: IChatMessage[];
+            let _participants: IConversationParticipant[];
 
-                // do we need to intitalise ?
-                if (_conversation.latestLocalEventId === undefined ||
-                    // or do we need to sync ?
-                    _conversation.latestLocalEventId < _conversation.latestRemoteEventId) {
-                    return this.synchronizeConversation(conversation);
-                } else {
-                    return Promise.resolve(true);
-                }
-            })
-            .then(() => {
-                return this._store.getMessages(conversationId);
-            })
-            .then(messages => {
-                _messages = messages;
-                return this._foundation.services.appMessaging.getParticipantsInConversation(conversationId);
-            })
-            .then(participants => {
-                _participants = participants;
+            return this._store.getConversation(conversationId)
+                .then(conversation => {
+                    _conversation = conversation;
 
-                return {
-                    conversation: _conversation,
-                    messages: _messages,
-                    participants: _participants
-                };
-            });
+                    // do we need to intitalise ?
+                    if (_conversation.latestLocalEventId === undefined ||
+                        // or do we need to sync ?
+                        _conversation.latestLocalEventId < _conversation.latestRemoteEventId) {
+                        return this.synchronizeConversation(conversation);
+                    } else {
+                        return Promise.resolve(true);
+                    }
+                })
+                .then(() => {
+                    return this._store.getMessages(conversationId);
+                })
+                .then(messages => {
+                    _messages = messages;
+                    return this._foundation.services.appMessaging.getParticipantsInConversation(conversationId);
+                })
+                .then(participants => {
+                    _participants = participants;
+
+                    return {
+                        conversation: _conversation,
+                        messages: _messages,
+                        participants: _participants
+                    };
+                });
+        });
+
     }
 
     // // Shouldn't need this ...
@@ -420,23 +372,26 @@ export class ComapiChatLogic {
             return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
+        return this._mutex.runExclusive(() => {
 
-        let message = new MessageBuilder().withText(text);
-        return this._foundation.services.appMessaging.sendMessageToConversation(conversationId, message)
-            .then(rslt => {
+            let message = new MessageBuilder().withText(text);
+            return this._foundation.services.appMessaging.sendMessageToConversation(conversationId, message)
+                .then(result => {
 
-                let m: IChatMessage = {
-                    conversationId: conversationId,
-                    id: rslt.id,
-                    metadata: message.metadata,
-                    parts: message.parts,
-                    senderId: this._profileId,
-                    sentEventId: rslt.eventId,
-                    sentOn: new Date().toISOString(),
-                    statusUpdates: {}
-                };
-                return this._store.createMessage(m);
-            });
+                    let m: IChatMessage = {
+                        conversationId: conversationId,
+                        id: result.id,
+                        metadata: message.metadata,
+                        parts: message.parts,
+                        senderId: this._profileId,
+                        sentEventId: result.eventId,
+                        sentOn: new Date().toISOString(),
+                        statusUpdates: {}
+                    };
+                    return this._store.createMessage(m);
+                });
+        });
+
     }
 
     /**
@@ -445,10 +400,10 @@ export class ComapiChatLogic {
      * @param messageIds 
      */
     public markMessagesAsRead(conversationId: string, messageIds: string[]): Promise<boolean> {
-
-        let statuses = new MessageStatusBuilder().readStatusUpdates(messageIds);
-
-        return this._foundation.services.appMessaging.sendMessageStatusUpdates(conversationId, [statuses]);
+        return this._mutex.runExclusive(() => {
+            let statuses = new MessageStatusBuilder().readStatusUpdates(messageIds);
+            return this._foundation.services.appMessaging.sendMessageStatusUpdates(conversationId, [statuses]);
+        });
     }
 
 
@@ -457,19 +412,20 @@ export class ComapiChatLogic {
      * @param conversationId 
      */
     public markAllMessagesAsRead(conversationId: string): Promise<boolean> {
+        return this._mutex.runExclusive(() => {
+            let unreadIds: string[] = [];
+            return this._store.getMessages(conversationId)
+                .then(messages => {
 
-        let unreadIds: string[] = [];
-        return this._store.getMessages(conversationId)
-            .then(messages => {
-
-                for (let message of messages) {
-                    if (!this.isMessageRead(message)) {
-                        unreadIds.push(message.id);
+                    for (let message of messages) {
+                        if (!this.isMessageRead(message)) {
+                            unreadIds.push(message.id);
+                        }
                     }
-                }
 
-                return unreadIds.length > 0 ? this.markMessagesAsRead(conversationId, unreadIds) : Promise.resolve(false);
-            });
+                    return unreadIds.length > 0 ? this.markMessagesAsRead(conversationId, unreadIds) : Promise.resolve(false);
+                });
+        });
     }
 
     /**
@@ -489,26 +445,32 @@ export class ComapiChatLogic {
         }
     }
 
-    public createConversation(converstion: IChatConversation): Promise<boolean> {
+    public createConversation(conversation: IChatConversation): Promise<boolean> {
         if (!this._foundation) {
             return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
-        return this._foundation.services.appMessaging.createConversation(converstion)
-            .then(rslt => {
-                return this._store.createConversation(this.mapConversation(rslt));
-            });
+        return this._mutex.runExclusive(() => {
+            return this._foundation.services.appMessaging.createConversation(conversation)
+                .then(result => {
+                    return this._store.createConversation(this.mapConversation(result));
+                });
+        });
     }
 
     public updateConversation(conversation: IChatConversation): Promise<boolean> {
         if (!this._foundation) {
             return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
-        // conversation updated event will trigger the store to update ...
-        return this._foundation.services.appMessaging.updateConversation(conversation)
-            .then(updated => {
-                return true;
-            });
+
+        return this._mutex.runExclusive(() => {
+            // conversation updated event will trigger the store to update ...
+            return this._foundation.services.appMessaging.updateConversation(conversation)
+                .then(updated => {
+                    return true;
+                });
+        });
+
     }
 
     public deleteConversation(conversationId: string): Promise<boolean> {
@@ -516,13 +478,15 @@ export class ComapiChatLogic {
             return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
-        return this._foundation.services.appMessaging.deleteConversation(conversationId)
-            .then(() => {
-                return this._store.deleteConversation(conversationId);
-            })
-            .then(() => {
-                return this._store.deleteConversationMessages(conversationId);
-            });
+        return this._mutex.runExclusive(() => {
+            return this._foundation.services.appMessaging.deleteConversation(conversationId)
+                .then(() => {
+                    return this._store.deleteConversation(conversationId);
+                })
+                .then(() => {
+                    return this._store.deleteConversationMessages(conversationId);
+                });
+        });
     }
 
     public getParticipantsInConversation(conversationId: string): Promise<IConversationParticipant[]> {
@@ -872,42 +836,6 @@ export class ComapiChatLogic {
         }
     }
 
-    /**
-     * Call this method to apply any events that were received while we were busy doing something
-     */
-    private applyCachedEvents(): Promise<boolean> {
-        console.log(`applyCachedEvents ${this._cachedEvents.length}`);
-
-        if (this._updating) {
-            return Promise.reject<boolean>({ message: "applyCachedEvents() called while updating" });
-        }
-
-        if (this._cachedEvents.length > 0) {
-
-            // copy the events to a local array and empty cache (could get topped up while we are processing )
-            let _events: IComapiEvent[] = this._cachedEvents.slice();
-            this._cachedEvents = [];
-
-            this._updating = true;
-            return Utils.eachSeries(_events, (event: IComapiEvent) => {
-                return this._onComapiEvent(event);
-            })
-                .then(result => {
-                    this._updating = false;
-                    _events = [];
-                    // recurse (some more may have been cached) ...
-                    return this.applyCachedEvents();
-                })
-                .catch(error => {
-                    this._updating = false;
-                    return Promise.resolve(false);
-                });
-        } else {
-            return Promise.resolve(false);
-        }
-    }
-
-
     private getIncomingEventAction(info: IComapiEvent): Promise<IncomingEventActionInfo> {
 
         if (info.type === "conversationMessageEvent") {
@@ -940,14 +868,12 @@ export class ComapiChatLogic {
                         }
                     } else {
                         // TODO: this should get handled - 
-                        console.warn("getIncomingEventAction() coundnt find conversation");
+                        console.warn("getIncomingEventAction() couldn't find conversation");
                         return Promise.resolve({
                             action: IncomingEventAction.ApplyEvent,
                             conversation: undefined
                         });
-
                     }
-
                 });
 
         } else {
@@ -966,8 +892,8 @@ export class ComapiChatLogic {
     private onComapiEvent(info: IComapiEvent) {
 
         if (this._listen) {
-            if (!this._updating) {
-                this._updating = true;
+
+            return this._mutex.runExclusive(() => {
 
                 // Gap detection logic here ?
                 return this.getIncomingEventAction(info)
@@ -1003,19 +929,9 @@ export class ComapiChatLogic {
                                 return Promise.reject<boolean>(`Unknown action ${actionInfo.action}`);
 
                         }
-                    })
-                    .then(updated => {
-                        this._updating = false;
-                        this.applyCachedEvents();
-                    })
-                    .catch(error => {
-                        this._updating = false;
-                        console.error("failed to process event", error);
                     });
-            } else {
-                console.warn("Received event while updating, caching ...", info);
-                this._cachedEvents.unshift(info);
-            }
+
+            });
         } else {
             console.warn("Received event while not listening, discarding ...", info);
         }

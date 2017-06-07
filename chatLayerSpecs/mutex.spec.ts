@@ -22,6 +22,16 @@ describe("Mutex tests", () => {
             })
     }
 
+    function doStuff2(x: number): Promise<number> {
+        return mutex.runExclusive(() => {
+            return incWithPromise(x)
+                .then(result => {
+                    return decWithPromise(result);
+                });
+        })
+    }
+
+
     /**
      * 
      */
@@ -81,13 +91,28 @@ describe("Mutex tests", () => {
 
     it("should doStuff ...", done => {
 
-        let val = 0;
+        let val = 5;
         mutex.runExclusive(() => {
-            doStuff(val);
-            expect(val).toBe(0);
+            return doStuff(val);
+        }).then(result => {
+            expect(result).toBe(5);
             done();
         });
 
     });
+
+
+    it("should doStuff2 ...", done => {
+
+        let val = 5;
+
+        doStuff2(val)
+            .then(result => {
+                expect(result).toBe(5);
+                done();
+            });
+
+    });
+
 
 });

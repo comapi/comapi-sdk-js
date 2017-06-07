@@ -338,7 +338,7 @@ export class ComapiChatLogic {
     public getPreviousMessages(conversationId: string): Promise<boolean> {
 
         if (!this._foundation) {
-            return Promise.reject<boolean>({ message: "No Foundation itterface" });
+            return Promise.reject<boolean>({ message: "No Foundation interface" });
         }
 
         if (!this._updating) {

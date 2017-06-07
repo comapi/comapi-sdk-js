@@ -11,8 +11,8 @@ module.exports = function (config) {
             "src/**/*.ts",
             // "specs/**/*.ts",
             "chatLayer/**/*.ts",
-            "chatLayerSpecs/**/*.spec.ts",
-            // "chatLayerSpecs/participant-added-race-condition.spec.ts",
+            // "chatLayerSpecs/**/*.spec.ts",
+            "chatLayerSpecs/mutex.spec.ts",
         ],
 
         preprocessors: {

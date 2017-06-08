@@ -1,9 +1,12 @@
-import MutexInterface from './mutexInterface';
+import IMutexInterface from "./mutexInterface";
 
 
-export class Mutex implements MutexInterface {
+export class Mutex implements IMutexInterface {
 
-    acquire(): Promise<MutexInterface.Releaser> {
+    private _queue: Array<(release: IMutexInterface.IReleaser) => void> = [];
+    private _pending = false;
+
+    public acquire(): Promise<IMutexInterface.IReleaser> {
         const ticket = new Promise(resolve => this._queue.push(resolve));
 
         if (!this._pending) {
@@ -13,7 +16,7 @@ export class Mutex implements MutexInterface {
         return ticket;
     }
 
-    runExclusive<T>(callback: MutexInterface.Worker<T>): Promise<T> {
+    public runExclusive<T>(callback: IMutexInterface.IWorker<T>): Promise<T> {
         return this
             .acquire()
             .then(release => {
@@ -48,7 +51,5 @@ export class Mutex implements MutexInterface {
         }
     }
 
-    private _queue: Array<(release: MutexInterface.Releaser) => void> = [];
-    private _pending = false;
 
 }

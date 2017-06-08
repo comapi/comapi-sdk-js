@@ -14,61 +14,21 @@ import {
     IGetMessagesResponse
 } from "../../src/interfaces";
 
-import { Mutex } from "./mutex"
+import { Mutex } from "./mutex";
 
 
 interface IConversationSyncInfo {
     // conversations that have been remotely deleted an need local clean up 
     deleteArray: string[];
-    // convesations that we dont have locally and need to acc
+    // conversations that we dont have locally and need to acc
     addArray: IChatConversation[];
     // conversations that we already have that have changed in some way - name changed, etc ...
     updateArray: IChatConversation[];
 }
 
 
-interface IComapiEvent {
-    type: string;
-    event: any;
-}
-
-// possible actions to be taken on receipt of a websocket event  
-enum IncomingEventAction {
-    None = 0,
-    // We are in sync, so just apply the new event
-    ApplyEvent = 1,
-    // We have a gap, load in missing events and apply them 
-    FillGap,
-    // We have a large gap - too large to replay so just reload the conversation 
-    ReloadConversation,
-}
-
-interface IncomingEventActionInfo {
-    action: IncomingEventAction;
-    conversation: IChatConversation;
-}
-
-
-
-
 /**
- * High Level Tasks that this interface needs to perform
- * 
- * 1) Synchronise on startup
- *  - initial loadup of conversations / last x messages 
- *  - update by getting events
- *  - know when to bin off and start again
- * 
- * 2) Handle real time events
- *  - happy path just play onto store
- *  - gap detection and appropriate action 
- * 
- * 3) Only do one thing at once 
- *  - buffer incoming events if doing something
- *  - some kind of mutex (busy flag?)
- * 
- * 4) Page through conversation
- *  - backfill using continuation token
+ *
  */
 export class ComapiChatLogic {
 
@@ -90,18 +50,10 @@ export class ComapiChatLogic {
 
     private _getConversationMaxRetry: number = 3;
 
-
     // if a gap is detected greater than this, we will scrap what we have and just load in the last _messagePageSize messages
     private _maxEventGap: number = 100;
 
-    private _listen: boolean = true;
-
     private _profileId: string;
-
-
-    // store of cached events that have arrived when we were busy ...
-    // these wil get processed at the end of an async task that uses the _updating flag
-    private _cachedEvents: IComapiEvent[] = [];
 
     /**
      * 
@@ -110,7 +62,7 @@ export class ComapiChatLogic {
 
     /**
      * Initialise Chat Layer
-     * 1) Initialise foudation interface
+     * 1) Initialise foundation interface
      * 2) Wre up event handlers
      * 3) Synchronise
      * @param config 
@@ -137,11 +89,11 @@ export class ComapiChatLogic {
             this._getConversationMaxRetry = config.getConversationMaxRetry;
         }
 
-        this._foundation.on("conversationMessageEvent", event => { this.onComapiEvent({ type: "conversationMessageEvent", event }); });
-        this._foundation.on("conversationDeleted", event => { this.onComapiEvent({ type: "conversationDeleted", event }); });
-        this._foundation.on("conversationUpdated", event => { this.onComapiEvent({ type: "conversationUpdated", event }); });
-        this._foundation.on("participantAdded", event => { this.onComapiEvent({ type: "participantAdded", event }); });
-        this._foundation.on("participantRemoved", event => { this.onComapiEvent({ type: "participantRemoved", event }); });
+        this._foundation.on("conversationMessageEvent", event => { this.onConversationMessageEvent(event); });
+        this._foundation.on("conversationDeleted", event => { this.onConversationDeleted(event); });
+        this._foundation.on("conversationUpdated", event => { this.onConversationUpdated(event); });
+        this._foundation.on("participantAdded", event => { this.onParticipantAdded(event); });
+        this._foundation.on("participantRemoved", event => { this.onParticipantRemoved(event); });
 
         this._hasInitialised = true;
         this._store = config.conversationStore;
@@ -332,7 +284,7 @@ export class ComapiChatLogic {
                 .then(conversation => {
                     _conversation = conversation;
 
-                    // do we need to intitalise ?
+                    // do we need to initialise ?
                     if (_conversation.latestLocalEventId === undefined ||
                         // or do we need to sync ?
                         _conversation.latestLocalEventId < _conversation.latestRemoteEventId) {
@@ -360,11 +312,6 @@ export class ComapiChatLogic {
         });
 
     }
-
-    // // Shouldn't need this ...
-    // public getConversation(id: string): Promise<IChatConversation> {
-    //     return Promise.reject("Not implemented");
-    // }
 
     // returns massageId as string ...
     public sendMessage(conversationId: string, text: string): Promise<boolean> {
@@ -508,17 +455,17 @@ export class ComapiChatLogic {
      */
     private getMessages(conversation: IChatConversation): Promise<boolean> {
 
-        let getMessagesReult: IGetMessagesResponse;
+        let getMessagesResult: IGetMessagesResponse;
 
         let messages: IChatMessage[];
 
         return this._foundation.services.appMessaging.getMessages(conversation.id, this._messagePageSize, conversation.continuationToken)
             .then(result => {
-                getMessagesReult = result;
+                getMessagesResult = result;
                 // update conversation object
                 // add the messages (after adapting IConversationMessage => IChatMessage)
 
-                messages = getMessagesReult.messages.map(message => {
+                messages = getMessagesResult.messages.map(message => {
                     return {
                         conversationId: message.context && message.context.conversationId || undefined,
                         id: message.id,
@@ -538,15 +485,15 @@ export class ComapiChatLogic {
                 });
             })
             .then(() => {
-                conversation.earliestLocalEventId = getMessagesReult.earliestEventId;
+                conversation.earliestLocalEventId = getMessagesResult.earliestEventId;
 
-                // getMessagesReult.latestEventId refers to the latest id in that block.
+                // getMessagesResult.latestEventId refers to the latest id in that block.
                 // DONT overwrite this once it has been set !!!
                 if (conversation.latestLocalEventId === undefined) {
-                    conversation.latestLocalEventId = getMessagesReult.latestEventId;
+                    conversation.latestLocalEventId = getMessagesResult.latestEventId;
                 }
 
-                conversation.continuationToken = getMessagesReult.continuationToken;
+                conversation.continuationToken = getMessagesResult.continuationToken;
 
                 console.log("getMessages()", conversation, messages);
 
@@ -576,7 +523,7 @@ export class ComapiChatLogic {
     }
 
     /**
-     * Method to compare what is local and what is remote and determine what cnversations need adding and removing
+     * Method to compare what is local and what is remote and determine what conversations need adding and removing
      * @param {IConversationDetails2[]} remoteConversations 
      * @param {IChatConversation[]} localConversations 
      * @returns {IConversationSyncInfo}
@@ -651,10 +598,10 @@ export class ComapiChatLogic {
             return self._foundation.services.appMessaging.getConversationEvents(conv.id, conv.latestLocalEventId + 1, self._eventPageSize)
                 .then(events => {
                     _events = events;
-                    console.log("getConversationEvents() retrned", events);
+                    console.log("getConversationEvents() returned", events);
                     return Utils.eachSeries(events, (event: IConversationMessageEvent) => {
                         return self.applyConversationMessageEvent(event);
-                        // result of the last opertaion flows int the then below...
+                        // result of the last operation flows int the then below...
                     }).then((result) => {
 
                         // want the eventId of the last one
@@ -688,7 +635,7 @@ export class ComapiChatLogic {
     /**
      * Update a conversation by applying new events to the conversation store.
      * New events will be queried in pages and applied until we get all unseen events.
-     * Any logical decison regarding whether this conversation is too out of date to be refreshed in this way are not dealt with here.
+     * Any logical decision regarding whether this conversation is too out of date to be refreshed in this way are not dealt with here.
      * @param {IChatConversation} conversation
      */
     private synchronizeConversation(conversation: IChatConversation): Promise<boolean> {
@@ -718,7 +665,7 @@ export class ComapiChatLogic {
     /**
      * Method to apply an event to the conversation store
      * @param {IConversationMessageEvent} event - the event to apply
-     * @returns {Promise<boolean>} - returns a boolean resut inside a Promise
+     * @returns {Promise<boolean>} - returns a boolean result inside a Promise
      */
     private _applyConversationMessageEvent(event: IConversationMessageEvent): Promise<boolean> {
         switch (event.name) {
@@ -760,17 +707,14 @@ export class ComapiChatLogic {
     /**
      * Method to apply an event to the conversation store, also updating the IChatConversation
      * @param {IConversationMessageEvent} event - the event to apply
-     * @returns {Promise<boolean>} - returns a boolean resut inside a Promise
+     * @returns {Promise<boolean>} - returns a boolean result inside a Promise
      */
     private applyConversationMessageEvent(event: IConversationMessageEvent): Promise<boolean> {
 
         let _chatConversation: IChatConversation;
 
-        console.log("--> ComapiChatLogic.applyEvent()", event);
-
         return this._store.getConversation(event.conversationId)
             .then(chatConversation => {
-                console.log("getConversation() ==>", chatConversation);
 
                 // is there a conversation ?
                 // if not, can run the onParticipantAdded logic ....
@@ -804,147 +748,71 @@ export class ComapiChatLogic {
                     _chatConversation.latestLocalEventId = event.conversationEventId;
                 }
 
-                console.log("--> updateConversation()", _chatConversation);
                 return this._store.updateConversation(_chatConversation);
-            })
-            .then(result => {
-                console.log("<-- applyEvent");
-                return Promise.resolve(true);
-            })
-            .catch(error => {
-                console.error("<-- applyEvent caught this", error);
             });
     }
 
-    /**
-     * Actually process the event ...
-     */
-    private _onComapiEvent(info: IComapiEvent): Promise<boolean> {
-        switch (info.type) {
-            case "conversationMessageEvent":
-                return this.onConversationMessageEvent(info.event);
-            case "conversationDeleted":
-                return this.onConversationDeleted(info.event);
-            case "conversationUpdated":
-                return this.onConversationUpdated(info.event);
-            case "participantAdded":
-                return this.onParticipantAdded(info.event);
-            case "participantRemoved":
-                return this.onParticipantRemoved(info.event);
-            default:
-                return Promise.resolve(false);
-        }
-    }
 
-    private getIncomingEventAction(info: IComapiEvent): Promise<IncomingEventActionInfo> {
 
-        if (info.type === "conversationMessageEvent") {
-
-            return this._store.getConversation(info.event.conversationId)
-                .then(conversation => {
-
-                    if (conversation !== null) {
-                        let gap = info.event.conversationEventId - (conversation.latestLocalEventId + 1);
-                        if (gap > 0) {
-                            // gap needs filling 
-                            if (gap < this._maxEventGap) {
-                                return Promise.resolve({
-                                    action: IncomingEventAction.FillGap,
-                                    conversation: conversation
-                                });
-
-                            } else {
-                                return Promise.resolve({
-                                    action: IncomingEventAction.ReloadConversation,
-                                    conversation: conversation
-                                });
-                            }
-
-                        } else {
-                            return Promise.resolve({
-                                action: IncomingEventAction.ApplyEvent,
-                                conversation: conversation
-                            });
-                        }
-                    } else {
-                        // TODO: this should get handled - 
-                        console.warn("getIncomingEventAction() couldn't find conversation");
-                        return Promise.resolve({
-                            action: IncomingEventAction.ApplyEvent,
-                            conversation: undefined
-                        });
-                    }
-                });
-
-        } else {
-            return Promise.resolve({
-                action: IncomingEventAction.ApplyEvent,
-                conversation: undefined
-            });
-
-        }
-
-    }
 
     /**
      * handle the event if we are idle (and listening), otherwise cache it ...
      */
-    private onComapiEvent(info: IComapiEvent) {
+    private onConversationMessageEvent(event: IConversationMessageEvent) {
 
-        if (this._listen) {
+        return this._mutex.runExclusive(() => {
 
-            return this._mutex.runExclusive(() => {
+            // check for a gap ...
+            return this._store.getConversation(event.conversationId)
+                .then(conversation => {
 
-                // Gap detection logic here ?
-                return this.getIncomingEventAction(info)
-                    .then(actionInfo => {
-
-                        console.log("getIncomingEventAction => ", actionInfo);
-
-                        switch (actionInfo.action) {
-                            case IncomingEventAction.ApplyEvent:
-                                return this._onComapiEvent(info);
-
-                            case IncomingEventAction.FillGap:
+                    if (conversation !== null) {
+                        let gap = event.conversationEventId - (conversation.latestLocalEventId + 1);
+                        if (gap > 0) {
+                            // gap needs filling 
+                            if (gap < this._maxEventGap) {
+                                // FillGap
                                 // NOTE Need to set latestRemoteEventId to info.event.conversationEventId otherwise it wont sync ...
-                                return this.updateConversationWithEvents(actionInfo.conversation);
+                                return this.updateConversationWithEvents(conversation);
 
-                            case IncomingEventAction.ReloadConversation:
-
-                                return this._store.deleteConversationMessages(info.event.conversationId)
+                            } else {
+                                // ReloadConversation
+                                return this._store.deleteConversationMessages(event.conversationId)
                                     .then(result => {
 
-                                        actionInfo.conversation.continuationToken = -1;
-                                        actionInfo.conversation.earliestLocalEventId = undefined;
-                                        actionInfo.conversation.latestLocalEventId = undefined;
-                                        actionInfo.conversation.latestRemoteEventId = info.event.conversationEventId;
+                                        conversation.continuationToken = -1;
+                                        conversation.earliestLocalEventId = undefined;
+                                        conversation.latestLocalEventId = undefined;
+                                        conversation.latestRemoteEventId = event.conversationEventId;
 
-                                        return this._store.updateConversation(actionInfo.conversation);
+                                        return this._store.updateConversation(conversation);
                                     })
                                     .then(result => {
-                                        return this.getMessages(actionInfo.conversation);
+                                        return this.getMessages(conversation);
                                     });
+                            }
 
-                            default:
-                                return Promise.reject<boolean>(`Unknown action ${actionInfo.action}`);
-
+                        } else {
+                            // ApplyEvent
+                            return this._onConversationMessageEvent(event);
                         }
-                    });
 
-            });
-        } else {
-            console.warn("Received event while not listening, discarding ...", info);
-        }
+                    } else {
+                        // ApplyEvent
+                        return this._onConversationMessageEvent(event);
+                    }
+
+                });
+
+        });
     }
-
 
     /**
      * Event handler to handle incoming Conversation Message events
      * @param {IConversationMessageEvent} event 
      */
-    private onConversationMessageEvent(event: IConversationMessageEvent): Promise<boolean> {
+    private _onConversationMessageEvent(event: IConversationMessageEvent): Promise<boolean> {
         console.log("onConversationMessageEvent", event);
-
         return this.applyConversationMessageEvent(event)
             .then(updated => {
 
@@ -963,8 +831,10 @@ export class ComapiChatLogic {
      * @param {IConversationDeletedEventData} event 
      */
     private onConversationDeleted(event: IConversationDeletedEventData): Promise<boolean> {
-        console.log("onConversationDeleted");
-        return this._store.deleteConversation(event.conversationId);
+        return this._mutex.runExclusive(() => {
+            console.log("onConversationDeleted");
+            return this._store.deleteConversation(event.conversationId);
+        });
     }
 
     /**
@@ -972,21 +842,23 @@ export class ComapiChatLogic {
      * @param {IConversationUpdatedEventData} event 
      */
     private onConversationUpdated(event: IConversationUpdatedEventData): Promise<boolean> {
-        console.log("onConversationUpdated");
+        return this._mutex.runExclusive(() => {
+            console.log("onConversationUpdated");
 
-        return this._store.getConversation(event.conversationId)
-            .then(conversation => {
+            return this._store.getConversation(event.conversationId)
+                .then(conversation => {
 
-                conversation.name = event.name;
-                conversation.description = event.description;
-                conversation.roles = event.roles;
-                conversation.isPublic = event.isPublic;
-                conversation.eTag = event.eTag;
-                // TODO: not sure this is correct ...
-                conversation.lastMessageTimestamp = event.timestamp;
+                    conversation.name = event.name;
+                    conversation.description = event.description;
+                    conversation.roles = event.roles;
+                    conversation.isPublic = event.isPublic;
+                    conversation.eTag = event.eTag;
+                    // TODO: not sure this is correct ...
+                    conversation.lastMessageTimestamp = event.timestamp;
 
-                return this._store.updateConversation(conversation);
-            });
+                    return this._store.updateConversation(conversation);
+                });
+        });
     }
 
 
@@ -1033,27 +905,28 @@ export class ComapiChatLogic {
      * @param {IParticipantAddedEventData} event 
      */
     private onParticipantAdded(event: IParticipantAddedEventData): Promise<boolean> {
-        console.log("onParticipantAdded");
+        return this._mutex.runExclusive(() => {
+            console.log("onParticipantAdded");
 
-        // if this is me, need to add the conversation ...
-        if (event.profileId === this._profileId) {
+            // if this is me, need to add the conversation ...
+            if (event.profileId === this._profileId) {
 
-            // If this client created the conversation, we will have already stored it off the back of the rest call.
-            // check it isn't in the store already and if not initialise it
-            return this._store.getConversation(event.conversationId)
-                .then(conversation => {
-                    return conversation === null ?
-                        this.initialiseConversation(event.conversationId)
-                        : conversation;
-                })
-                .then(conversation => {
-                    return conversation !== null;
-                });
+                // If this client created the conversation, we will have already stored it off the back of the rest call.
+                // check it isn't in the store already and if not initialise it
+                return this._store.getConversation(event.conversationId)
+                    .then(conversation => {
+                        return conversation === null ?
+                            this.initialiseConversation(event.conversationId)
+                            : conversation;
+                    })
+                    .then(conversation => {
+                        return conversation !== null;
+                    });
 
-        } else {
-            return Promise.resolve(false);
-        }
-
+            } else {
+                return Promise.resolve(false);
+            }
+        });
     }
 
     /**
@@ -1061,14 +934,16 @@ export class ComapiChatLogic {
      * @param {IParticipantRemovedEventData} event 
      */
     private onParticipantRemoved(event: IParticipantRemovedEventData): Promise<boolean> {
-        console.log("onParticipantRemoved");
+        return this._mutex.runExclusive(() => {
+            console.log("onParticipantRemoved");
 
-        // if this is me, need to add the conversation ...
-        if (event.profileId === this._profileId) {
-            return this._store.deleteConversation(event.conversationId);
-        } else {
-            return Promise.resolve(false);
-        }
+            // if this is me, need to add the conversation ...
+            if (event.profileId === this._profileId) {
+                return this._store.deleteConversation(event.conversationId);
+            } else {
+                return Promise.resolve(false);
+            }
+        });
 
     }
 

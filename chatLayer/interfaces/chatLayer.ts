@@ -65,8 +65,8 @@ export interface IComapiChatConfig {
     eventPageSize: number;
     messagePageSize: number;
     lazyLoadThreshold: number;
-    getConversationSleepTimeout?: number
-    getConversationMaxRetry?: number
+    getConversationSleepTimeout?: number;
+    getConversationMaxRetry?: number;
 }
 
 

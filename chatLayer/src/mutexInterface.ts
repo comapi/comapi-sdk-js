@@ -1,23 +1,23 @@
 // https://github.com/DirtyHairy/async-mutex
 
-interface MutexInterface {
+interface IMutexInterface {
 
-    acquire(): Promise<MutexInterface.Releaser>;
+    acquire(): Promise<IMutexInterface.IReleaser>;
 
-    runExclusive<T>(callback: MutexInterface.Worker<T>): Promise<T>;
+    runExclusive<T>(callback: IMutexInterface.IWorker<T>): Promise<T>;
 
 }
 
-module MutexInterface {
-
-    export interface Releaser {
+namespace IMutexInterface {
+    "use strict";
+    export interface IReleaser {
         (): void;
     }
 
-    export interface Worker<T> {
+    export interface IWorker<T> {
         (): Promise<T> | T;
     }
 
 }
 
-export default MutexInterface;
+export default IMutexInterface;

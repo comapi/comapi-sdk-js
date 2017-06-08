@@ -98,16 +98,12 @@ export class ComapiChatLogic {
         this._hasInitialised = true;
         this._store = config.conversationStore;
 
-        console.log("Calling Synchronise ...");
-
         return this.synchronize()
             .then(synced => {
-                this._hasSynced = true;
-                console.log("Synchronised!");
+                this._hasSynced = synced;
                 return this._hasSynced;
             });
     }
-
 
     public get initialised(): boolean {
         return this._hasInitialised;
@@ -116,8 +112,6 @@ export class ComapiChatLogic {
     public get synced(): boolean {
         return this._hasSynced;
     }
-
-
 
     /**
      * 
@@ -230,7 +224,9 @@ export class ComapiChatLogic {
                     return Utils.eachSeries(syncSet, (conversation: IChatConversation) => {
                         return this.synchronizeConversation(conversation);
                     });
-
+                })
+                .then(() => {
+                    return true;
                 });
         });
 
@@ -494,9 +490,6 @@ export class ComapiChatLogic {
                 }
 
                 conversation.continuationToken = getMessagesResult.continuationToken;
-
-                console.log("getMessages()", conversation, messages);
-
                 return this._store.updateConversation(conversation);
             });
     }
@@ -593,20 +586,16 @@ export class ComapiChatLogic {
         let _events: IConversationMessageEvent[];
 
         let _getPageOfEventsFunc: DoUntilOperationFunction = function (conv: IChatConversation): Promise<any> {
-            console.log("--> DoUntilOperationFunction()", conv);
 
             return self._foundation.services.appMessaging.getConversationEvents(conv.id, conv.latestLocalEventId + 1, self._eventPageSize)
                 .then(events => {
                     _events = events;
-                    console.log("getConversationEvents() returned", events);
                     return Utils.eachSeries(events, (event: IConversationMessageEvent) => {
                         return self.applyConversationMessageEvent(event);
                         // result of the last operation flows int the then below...
                     }).then((result) => {
-
                         // want the eventId of the last one
                         conv.latestLocalEventId = _events[_events.length - 1].conversationEventId;
-                        console.log("<-- DoUntilOperationFunction()", conv);
                         return conv;
                     });
                 })
@@ -617,13 +606,11 @@ export class ComapiChatLogic {
         };
 
         let _compareFunc: DoUntilTestFunction = function (conv: IChatConversation): boolean {
-
             if (_events) {
                 return _events.length === self._eventPageSize;
             } else {
                 return false;
             }
-
         };
 
         return Utils.doUntil(_getPageOfEventsFunc, _compareFunc, conversation)
@@ -639,7 +626,6 @@ export class ComapiChatLogic {
      * @param {IChatConversation} conversation
      */
     private synchronizeConversation(conversation: IChatConversation): Promise<boolean> {
-        console.log("updateConversation", conversation);
 
         // no messages yet
         if (conversation.latestRemoteEventId === undefined) {
@@ -657,8 +643,28 @@ export class ComapiChatLogic {
             console.log(`Conversation ${conversation.id} already up to date ...`);
             return Promise.resolve(false);
         } else {
+            let gap = conversation.latestRemoteEventId - (conversation.latestLocalEventId + 1);
+
             // get events and apply
-            return this.updateConversationWithEvents(conversation);
+            if (gap < this._maxEventGap) {
+                console.log(`Updating Conversation ${conversation.id} with events ...`);
+                return this.updateConversationWithEvents(conversation);
+            } else {
+                // ReloadConversation
+                console.log(`Conversation ${conversation.id} too out of date, reloading last page of messages ...`);
+                return this._store.deleteConversationMessages(conversation.id)
+                    .then(result => {
+
+                        conversation.continuationToken = -1;
+                        conversation.earliestLocalEventId = undefined;
+                        conversation.latestLocalEventId = undefined;
+
+                        return this._store.updateConversation(conversation);
+                    })
+                    .then(result => {
+                        return this.getMessages(conversation);
+                    });
+            }
         }
     }
 
@@ -683,7 +689,6 @@ export class ComapiChatLogic {
                     sentOn: messageSentPayload.context && messageSentPayload.context.sentOn || undefined,
                 };
 
-                console.log("--> createMessage()", message);
                 return this._store.createMessage(message);
 
             case "conversationMessage.delivered":
@@ -691,7 +696,6 @@ export class ComapiChatLogic {
                 let splitResult = event.name.split(".");
                 let statusUpdate = <IMessageStatusUpdatePayload>event.payload;
 
-                console.log("--> updateMessageStatus()", statusUpdate, splitResult[1]);
                 return this._store.updateMessageStatus(statusUpdate.conversationId,
                     statusUpdate.messageId,
                     statusUpdate.profileId,

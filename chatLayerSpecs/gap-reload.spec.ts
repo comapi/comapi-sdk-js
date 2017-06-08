@@ -6,6 +6,9 @@ import {
     EventManager
 } from "../src/eventManager";
 
+import { ComapiChatConfig } from "../chatLayer/src/chatConfig"
+
+
 import {
     IFoundation, IConversationDetails, IConversationDetails2, IConversationParticipant, ConversationScope, IConversationMessageEvent, IConversationMessage, ISendMessageResult, IMessageStatus,
     ISession, IServices, IAppMessaging, IProfile, IDevice, IChannels, IGetMessagesResponse, IComapiConfig
@@ -160,13 +163,11 @@ describe("Chat Logic tests", () => {
 
         spyOn(store, "deleteConversationMessages").and.callThrough();
 
-        let chatConfig: IComapiChatConfig = {
-            conversationStore: store,
-            eventPageSize: 10,
-            messagePageSize: 10,
-            lazyLoadThreshold: 10
-        };
-
+        let chatConfig = new ComapiChatConfig()
+            .withStore(store)
+            .withEventPageSize(10)
+            .withMessagePageSize(10)
+            .withLazyLoadThreshold(10)
 
         // populate store with some conversations and some messages ...           
 

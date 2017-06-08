@@ -31,7 +31,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {string} id - the api space id 
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withApiSpace(id: string): ComapiConfig {
+    public withApiSpace(id: string) {
         this.apiSpaceId = id;
         return this;
     }
@@ -42,7 +42,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {number} hours - the log retention time in hours
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withLogRetentionTime(hours: number): ComapiConfig {
+    public withLogRetentionTime(hours: number) {
         this.logRetentionHours = hours;
         return this;
     }
@@ -53,7 +53,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {IAuthChallenge} authChallenge - the authentication challenge
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withAuthChallenge(authChallenge: IAuthChallenge): ComapiConfig {
+    public withAuthChallenge(authChallenge: IAuthChallenge) {
         this.authChallenge = authChallenge;
         return this;
     }
@@ -64,7 +64,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {string} urlBase - the url base
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withUrlBase(urlBase: string): ComapiConfig {
+    public withUrlBase(urlBase: string) {
         this.urlBase = urlBase;
         return this;
     }
@@ -75,7 +75,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {string} webSocketBase - the web socket base
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withWebSocketBase(webSocketBase: string): ComapiConfig {
+    public withWebSocketBase(webSocketBase: string) {
         this.webSocketBase = webSocketBase;
         return this;
     }
@@ -86,7 +86,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {LogLevels} withLogLevel - the logLevel
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withLogLevel(logLevel: LogLevels): ComapiConfig {
+    public withLogLevel(logLevel: LogLevels) {
         this.logLevel = logLevel;
         return this;
     }
@@ -97,7 +97,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {LogPersistences} logPersistence - the logPersistence
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withLogPersistence(logPersistence: LogPersistences): ComapiConfig {
+    public withLogPersistence(logPersistence: LogPersistences) {
         this.logPersistence = logPersistence;
         return this;
     }

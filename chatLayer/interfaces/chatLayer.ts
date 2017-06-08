@@ -1,5 +1,6 @@
 import {
     IMessagePart,
+    IComapiConfig,
     IConversationParticipant
 } from "../../src/interfaces";
 
@@ -60,7 +61,7 @@ export interface IChatInfo {
 /**
  * 
  */
-export interface IComapiChatConfig {
+export interface IComapiChatConfig extends IComapiConfig {
     conversationStore: IConversationStore;
     eventPageSize: number;
     messagePageSize: number;

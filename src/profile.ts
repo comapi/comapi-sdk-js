@@ -1,10 +1,11 @@
 import {
     ILocalStorageData,
+    IProfile,
     IProfileManager,
     INetworkManager
 } from "./interfaces";
 
-export class Profile {
+export class Profile implements IProfile {
 
     /**        
      * Profile class constructor.

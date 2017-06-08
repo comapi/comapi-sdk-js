@@ -9,6 +9,9 @@ import {
 } from "../src/interfaces";
 import { IComapiChatConfig, IConversationStore, IChatConversation, IChatMessage } from "../chatLayer/interfaces/chatLayer";
 
+import { ComapiChatConfig } from "../chatLayer/src/chatConfig"
+
+
 import {
     MemoryConversationStore
 } from "../chatLayer/src/memoryStore";
@@ -142,12 +145,11 @@ describe("Chat Logic tests", () => {
 
         let chatLogic = new ComapiChatLogic(foundation);
 
-        let chatConfig: IComapiChatConfig = {
-            conversationStore: new MemoryConversationStore(),
-            eventPageSize: 10,
-            messagePageSize: 10,
-            lazyLoadThreshold: 10
-        };
+        let chatConfig = new ComapiChatConfig()
+            .withStore(new MemoryConversationStore())
+            .withEventPageSize(10)
+            .withMessagePageSize(10)
+            .withLazyLoadThreshold(10)
 
         chatLogic.initialise(chatConfig)
             .then(result => {

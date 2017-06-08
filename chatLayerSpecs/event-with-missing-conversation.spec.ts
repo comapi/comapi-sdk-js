@@ -9,6 +9,8 @@ import {
     ISession, IServices, IAppMessaging, IProfile, IDevice, IChannels, IGetMessagesResponse, IComapiConfig
 } from "../src/interfaces";
 
+import { ComapiChatConfig } from "../chatLayer/src/chatConfig"
+
 
 import {
     EventManager
@@ -148,12 +150,11 @@ describe("Chat Logic tests", () => {
 
         let store = new MemoryConversationStore();
 
-        let chatConfig: IComapiChatConfig = {
-            conversationStore: store,
-            eventPageSize: 10,
-            messagePageSize: 10,
-            lazyLoadThreshold: 10
-        };
+        let chatConfig = new ComapiChatConfig()
+            .withStore(store)
+            .withEventPageSize(10)
+            .withMessagePageSize(10)
+            .withLazyLoadThreshold(10)
 
         return chatLogic.initialise(chatConfig)
             .then(result => {

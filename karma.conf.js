@@ -11,9 +11,9 @@ module.exports = function (config) {
             "src/**/*.ts",
             // "specs/**/*.ts",
             "chatLayer/**/*.ts",
-            "chatLayerSpecs/**/*.spec.ts",
+            // "chatLayerSpecs/**/*.spec.ts",
             // "chatLayerSpecs/conversation-crud.spec.ts",
-            // "chatLayerSpecs/mutex.spec.ts",
+            "chatLayerSpecs/config.spec.ts",
         ],
 
         preprocessors: {

@@ -78,4 +78,26 @@ export class ProfileManager implements IProfileManager {
         return this._restClient.put(url, headers, data);
     }
 
+
+    /**
+     * Function to patch a profile
+     * @method ProfileManager#updateProfile    
+     * @param {string} id
+     * @param {Object} profile 
+     * @returns {Promise} 
+     */
+    public patchProfile(id: string, profile: Object): Promise<any> {
+
+        // take a copy of it prior to messing with it ...
+        let data = Utils.clone(profile);
+
+        if (data.id === undefined) {
+            data.id = id;
+        }
+
+        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/profiles/${id}`;
+
+        return this._restClient.patch(url, {}, data);
+    }
+
 }

@@ -59,6 +59,19 @@ export class RestClient implements IRestClient {
     }
 
     /**
+     * Method to make a PATCH request 
+     * @method RestClient#patch
+     * @param  {string} url
+     * @param  {any} headers
+     * @param  {any} data
+     * @returns {Promise} - returns a promise
+     */
+    public patch(url: string, headers: any, data: any): Promise<IRestClientResult> {
+        return this.makeRequest("PATCH", url, headers, data);
+    }
+
+
+    /**
      * Method to make a DELETE request
      * @method RestClient#delete
      * @param  {string} url

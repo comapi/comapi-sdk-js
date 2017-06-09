@@ -7,7 +7,7 @@ import {
 
 export class Profile implements IProfile {
 
-    /**        
+    /**
      * Profile class constructor.
      * @class Profile
      * @classdesc Class that implements Profile.
@@ -60,6 +60,20 @@ export class Profile implements IProfile {
     }
 
     /**
+     * Function to patch a profile
+     * @method Profile#updateProfile    
+     * @param {string} profileId - the id of the profile to update
+     * @param {any} profile - the profile to patch
+     * @returns {Promise} 
+     */
+    public patchProfile(profileId: string, profile: Object): Promise<any> {
+        return this._networkManager.ensureSessionAndSocket()
+            .then((sessionInfo) => {
+                return this._profileManager.patchProfile(profileId, profile);
+            });
+    }
+
+    /**
      * Get current user's profile
      * @method Profile#getMyProfile
      * @param {boolean} [useEtag=true] - Whether to use eTags to maintain consistency of profile data (defaults to true)
@@ -98,6 +112,19 @@ export class Profile implements IProfile {
                         return Promise.resolve(result.response);
                     });
             });
-
     }
+
+    /**
+     * Patch current user's profile
+     * @method Profile#patchMyProfile
+     * @param {any} profile - the profile of the logged in user to update
+     * @returns {Promise} - returns a Promise  
+     */
+    public patchMyProfile(profile: any): Promise<any> {
+        return this._networkManager.ensureSessionAndSocket()
+            .then((sessionInfo) => {
+                return this._profileManager.patchProfile(sessionInfo.session.profileId, profile);
+            });
+    }
+
 }

@@ -13,6 +13,7 @@ import {
     IParticipantRemovedEventData,
     IGetMessagesResponse
 } from "../../src/interfaces";
+
 import { Mutex } from "./mutex";
 
 interface IConversationSyncInfo {

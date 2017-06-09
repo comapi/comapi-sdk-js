@@ -49,6 +49,23 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
     }
 
     /**
+     * Method to make a PATCH request  
+     * @method AuthenticatedRestClient#patch
+     * @param  {string} url
+     * @param  {any} data
+     * @param  {any} headers
+     * @returns {Promise} - returns a promise
+     */
+    public patch(url: string, headers: any, data: any): Promise<IRestClientResult> {
+        return this.networkManager.getValidToken()
+            .then(token => {
+                headers.authorization = this.constructAUthHeader(token);
+                return super.patch(url, headers, data);
+            });
+    }
+
+
+    /**
      * Method to make a PUT request 
      * @method AuthenticatedRestClient#put
      * @param  {string} url

@@ -197,8 +197,6 @@ function getConversationEtagValue(conversationInfo) {
 }
 
 
-
-
 /**
  * UPDATE
  */
@@ -235,9 +233,15 @@ app.put('/apispaces/:appSpaceId/profiles/:id', function (req, res, next) {
     } else {
         res.sendStatus(401);
     }
+});
 
+/**
+ * PATCH
+ */
+app.patch('/apispaces/:appSpaceId/profiles/:id', function (req, res, next) {
 
 });
+
 
 
 /**

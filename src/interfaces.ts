@@ -83,6 +83,7 @@ export interface IRestClient {
     get(url: string, headers?: any): Promise<IRestClientResult>;
     post(url: string, headers: any, data: any): Promise<IRestClientResult>;
     put(url: string, headers: any, data: any): Promise<IRestClientResult>;
+    patch(url: string, headers: any, data: any): Promise<IRestClientResult>;
     delete(url: string, headers: any): Promise<IRestClientResult>;
 }
 
@@ -268,6 +269,7 @@ export interface IComapiConfig {
 export interface IProfileManager {
     getProfile(id: string): Promise<any>;
     updateProfile(id: string, profile: Object, eTag?: string): Promise<any>;
+    patchProfile(id: string, profile: Object): Promise<any>;
     queryProfiles(query: string): Promise<any>;
 }
 
@@ -628,8 +630,10 @@ export interface IProfile {
     getProfile(profileId: string): Promise<any>;
     queryProfiles(query?: string): Promise<any>;
     updateProfile(profileId: string, profile: any, eTag?: string): Promise<any>;
+    patchProfile(id: string, profile: Object): Promise<any>;
     getMyProfile(useEtag?: boolean): Promise<any>;
     updateMyProfile(profile: any, useEtag?: boolean): Promise<any>;
+    patchMyProfile(profile: any): Promise<any>;
 }
 
 export interface IServices {

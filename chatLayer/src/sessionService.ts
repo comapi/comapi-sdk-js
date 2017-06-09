@@ -1,4 +1,4 @@
-import { IFoundation } from "../../src/interfaces";
+import { IFoundation, ISession } from "../../src/interfaces";
 import { IComapiChatConfig } from "../interfaces/chatLayer";
 
 
@@ -6,20 +6,28 @@ export class SessionService {
 
     constructor(private _foundation: IFoundation, private _config: IComapiChatConfig) { }
 
-
-    public startSession() {
-        return this._foundation ? this._foundation.startSession() : Promise.reject({ message: "No Foundation interface" });
+    /**
+     * 
+     */
+    public startSession(): Promise<ISession> {
+        return this._foundation.startSession();
     }
 
-    public endSession() {
-        return this._foundation ? this._foundation.endSession()
+    /**
+     * 
+     */
+    public get session(): ISession {
+        return this._foundation.session;
+    }
+
+    /**
+     * 
+     */
+    public endSession(): Promise<boolean> {
+        return this._foundation.endSession()
             .then(() => {
                 return this._config.conversationStore.reset();
-            }).then(reset => {
-                //  this._hasSynced = false;
-                return reset;
-            }) : Promise.reject({ message: "No Foundation interface" });
-
+            });
     }
 
 }

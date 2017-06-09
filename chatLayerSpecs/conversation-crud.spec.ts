@@ -124,17 +124,8 @@ describe("Chat Logic tests", () => {
     class MockFoundation implements IFoundation {
 
         constructor(private _eventManager: EventManager) {
-        }
 
-        services: IServices = {
-            appMessaging: new MockAppMessaging(this._eventManager),
-            profile: null
-        };
-        device: IDevice;
-        channels: IChannels;
-        session: ISession;
-        startSession(): Promise<ISession> {
-            return Promise.resolve({
+            this.session = {
                 createdOn: new Date().toISOString(),
                 deviceId: "2ED8EA5F-19B8-45AA-9CD1-32C517B1553B",
                 expiresOn: new Date().toISOString(),
@@ -146,7 +137,18 @@ describe("Chat Logic tests", () => {
                 sdkType: "SDK",
                 sdkVersion: "1.2.3",
                 sourceIp: "127.0.0.1",
-            });
+            };
+        }
+
+        services: IServices = {
+            appMessaging: new MockAppMessaging(this._eventManager),
+            profile: null
+        };
+        device: IDevice;
+        channels: IChannels;
+        session: ISession;
+        startSession(): Promise<ISession> {
+            return Promise.resolve(this.session);
         }
         endSession(): Promise<boolean> {
             throw new Error("Method not implemented.");

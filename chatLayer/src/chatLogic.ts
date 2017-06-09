@@ -16,7 +16,6 @@ import {
 
 import { Mutex } from "./mutex";
 
-
 interface IConversationSyncInfo {
     // conversations that have been remotely deleted an need local clean up 
     deleteArray: string[];
@@ -32,8 +31,6 @@ interface IConversationSyncInfo {
 export class ComapiChatLogic {
 
     private _mutex: Mutex = new Mutex();
-
-    private _profileId: string;
 
     /**
      * 
@@ -61,34 +58,9 @@ export class ComapiChatLogic {
     }
 
     /**
-     * 
-     */
-    public startSession() {
-        return this._foundation ? this._foundation.startSession() : Promise.reject({ message: "No Foundation interface" });
-    }
-
-    /**
-     * End the current session and reset the store
-     */
-    public endSession() {
-        return this._foundation ? this._foundation.endSession()
-            .then(() => {
-                return this._config.conversationStore.reset();
-            }) : Promise.reject({ message: "No Foundation interface" });
-    }
-
-    public getMyProfile(): Promise<any> {
-        return this._foundation.services.profile.getMyProfile();
-    }
-
-    /**
      * Synchronise Chat layer
      */
     public synchronize(): Promise<boolean> {
-
-        if (!this._foundation) {
-            return Promise.reject<boolean>({ message: "No Foundation interface" });
-        }
 
         return this._mutex.runExclusive(() => {
 
@@ -102,7 +74,6 @@ export class ComapiChatLogic {
 
             return this._foundation.startSession()
                 .then(session => {
-                    this._profileId = session.profileId;
                     return this._foundation.services.appMessaging.getConversations();
                 })
                 // 1) get list of conversations from comapi
@@ -174,7 +145,6 @@ export class ComapiChatLogic {
                     return true;
                 });
         });
-
     }
 
 
@@ -188,17 +158,12 @@ export class ComapiChatLogic {
      */
     public getPreviousMessages(conversationId: string): Promise<boolean> {
 
-        if (!this._foundation) {
-            return Promise.reject<boolean>({ message: "No Foundation interface" });
-        }
-
         return this._mutex.runExclusive(() => {
             return this._config.conversationStore.getConversation(conversationId)
                 .then(conversation => {
                     return this.getMessages(conversation);
                 });
         });
-
     }
 
     /**
@@ -251,14 +216,10 @@ export class ComapiChatLogic {
                     };
                 });
         });
-
     }
 
     // returns massageId as string ...
     public sendMessage(conversationId: string, text: string): Promise<boolean> {
-        if (!this._foundation) {
-            return Promise.reject<boolean>({ message: "No Foundation interface" });
-        }
 
         return this._mutex.runExclusive(() => {
 
@@ -271,7 +232,7 @@ export class ComapiChatLogic {
                         id: result.id,
                         metadata: message.metadata,
                         parts: message.parts,
-                        senderId: this._profileId,
+                        senderId: this._foundation.session && this._foundation.session.profileId || undefined,
                         sentEventId: result.eventId,
                         sentOn: new Date().toISOString(),
                         statusUpdates: {}
@@ -279,7 +240,6 @@ export class ComapiChatLogic {
                     return this._config.conversationStore.createMessage(m);
                 });
         });
-
     }
 
     /**
@@ -293,7 +253,6 @@ export class ComapiChatLogic {
             return this._foundation.services.appMessaging.sendMessageStatusUpdates(conversationId, [statuses]);
         });
     }
-
 
     /**
      * Go through all the messages we have in the store and mark them as read if necessary
@@ -322,11 +281,11 @@ export class ComapiChatLogic {
      * @param profileId 
      */
     public isMessageRead(message: IChatMessage, profileId?: string): boolean {
-
+        let currentUser = this._foundation.session && this._foundation.session.profileId || undefined;
         // look at status updates ...
-        let _profileId = profileId ? profileId : this._profileId;
+        let _profileId = profileId ? profileId : currentUser;
 
-        if (message.senderId !== this._profileId) {
+        if (message.senderId !== currentUser) {
             return message.statusUpdates && message.statusUpdates[_profileId] && message.statusUpdates[_profileId].status === "read";
         } else {
             return true;
@@ -334,10 +293,6 @@ export class ComapiChatLogic {
     }
 
     public createConversation(conversation: IChatConversation): Promise<boolean> {
-        if (!this._foundation) {
-            return Promise.reject<boolean>({ message: "No Foundation interface" });
-        }
-
         return this._mutex.runExclusive(() => {
             return this._foundation.services.appMessaging.createConversation(conversation)
                 .then(result => {
@@ -347,10 +302,6 @@ export class ComapiChatLogic {
     }
 
     public updateConversation(conversation: IChatConversation): Promise<boolean> {
-        if (!this._foundation) {
-            return Promise.reject<boolean>({ message: "No Foundation interface" });
-        }
-
         return this._mutex.runExclusive(() => {
             // conversation updated event will trigger the store to update ...
             return this._foundation.services.appMessaging.updateConversation(conversation)
@@ -358,14 +309,9 @@ export class ComapiChatLogic {
                     return true;
                 });
         });
-
     }
 
     public deleteConversation(conversationId: string): Promise<boolean> {
-        if (!this._foundation) {
-            return Promise.reject<boolean>({ message: "No Foundation interface" });
-        }
-
         return this._mutex.runExclusive(() => {
             return this._foundation.services.appMessaging.deleteConversation(conversationId)
                 .then(() => {
@@ -648,10 +594,8 @@ export class ComapiChatLogic {
                     statusUpdate.timestamp);
             default:
                 return Promise.reject<boolean>({ message: `Unknown option ${event.name}` });
-
         }
     }
-
 
     /**
      * Method to apply an event to the conversation store, also updating the IChatConversation
@@ -701,29 +645,21 @@ export class ComapiChatLogic {
             });
     }
 
-
-
-
     /**
      * handle the event if we are idle (and listening), otherwise cache it ...
      */
     private onConversationMessageEvent(event: IConversationMessageEvent) {
-
         return this._mutex.runExclusive(() => {
-
             // check for a gap ...
             return this._config.conversationStore.getConversation(event.conversationId)
                 .then(conversation => {
-
                     if (conversation !== null) {
                         let gap = event.conversationEventId - (conversation.latestLocalEventId + 1);
                         if (gap > 0) {
                             // gap needs filling 
                             if (gap < this._config.maxEventGap) {
                                 // FillGap
-                                // NOTE Need to set latestRemoteEventId to info.event.conversationEventId otherwise it wont sync ...
                                 return this.updateConversationWithEvents(conversation);
-
                             } else {
                                 // ReloadConversation
                                 return this._config.conversationStore.deleteConversationMessages(event.conversationId)
@@ -740,19 +676,15 @@ export class ComapiChatLogic {
                                         return this.getMessages(conversation);
                                     });
                             }
-
                         } else {
                             // ApplyEvent
                             return this._onConversationMessageEvent(event);
                         }
-
                     } else {
                         // ApplyEvent
                         return this._onConversationMessageEvent(event);
                     }
-
                 });
-
         });
     }
 
@@ -766,8 +698,10 @@ export class ComapiChatLogic {
             .then(updated => {
 
                 let payload: IMessageSentPayload = (<IMessageSentPayload>event.payload);
+                let currentUser = this._foundation.session && this._foundation.session.profileId || undefined;
+
                 // if it was a message sent, send a delivered (unless I sent it!) ...
-                if (event.name === "conversationMessage.sent" && payload.context && payload.context.from && payload.context.from.id !== this._profileId) {
+                if (event.name === "conversationMessage.sent" && payload.context && payload.context.from && payload.context.from.id !== currentUser) {
                     let status = new MessageStatusBuilder().deliveredStatusUpdate(event.payload.messageId);
                     this._foundation.services.appMessaging.sendMessageStatusUpdates(event.conversationId, [status]);
                 }
@@ -809,7 +743,6 @@ export class ComapiChatLogic {
                 });
         });
     }
-
 
     /**
      * Get a conversation from rest api and load in last page of messages
@@ -857,8 +790,10 @@ export class ComapiChatLogic {
         return this._mutex.runExclusive(() => {
             console.log("onParticipantAdded");
 
+            let currentUser = this._foundation.session && this._foundation.session.profileId || undefined;
+
             // if this is me, need to add the conversation ...
-            if (event.profileId === this._profileId) {
+            if (event.profileId === currentUser) {
 
                 // If this client created the conversation, we will have already stored it off the back of the rest call.
                 // check it isn't in the store already and if not initialise it
@@ -886,8 +821,10 @@ export class ComapiChatLogic {
         return this._mutex.runExclusive(() => {
             console.log("onParticipantRemoved");
 
+            let currentUser = this._foundation.session && this._foundation.session.profileId || undefined;
+
             // if this is me, need to add the conversation ...
-            if (event.profileId === this._profileId) {
+            if (event.profileId === currentUser) {
                 return this._config.conversationStore.deleteConversation(event.conversationId);
             } else {
                 return Promise.resolve(false);
@@ -895,5 +832,4 @@ export class ComapiChatLogic {
         });
 
     }
-
 }

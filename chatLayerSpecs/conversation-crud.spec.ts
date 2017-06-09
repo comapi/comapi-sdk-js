@@ -1,7 +1,6 @@
 import {
-    ComapiChatLogic
-} from "../chatLayer/src/chatLogic";
-
+    ComapiChatClient
+} from "../chatLayer/src/comapiChatClient";
 
 import {
     IFoundation, IConversationDetails, IConversationDetails2, IConversationParticipant, ConversationScope, IConversationMessageEvent, IConversationMessage, ISendMessageResult, IMessageStatus,
@@ -124,7 +123,6 @@ describe("Chat Logic tests", () => {
     class MockFoundation implements IFoundation {
 
         constructor(private _eventManager: EventManager) {
-
             this.session = {
                 createdOn: new Date().toISOString(),
                 deviceId: "2ED8EA5F-19B8-45AA-9CD1-32C517B1553B",
@@ -183,17 +181,17 @@ describe("Chat Logic tests", () => {
             .withMessagePageSize(10)
             .withLazyLoadThreshold(10)
 
-        let chatLogic = new ComapiChatLogic(foundation, chatConfig);
+        let chatClient = new ComapiChatClient();
 
-        return chatLogic.initialise(chatConfig)
+        return chatClient._initialise(foundation, chatConfig)
             .then(result => {
                 expect(result).toBeDefined();
-                return chatLogic.getConversations();
+                return chatClient.messaging.getConversations();
             })
             .then(result => {
                 expect(result).toBeDefined();
 
-                return chatLogic.createConversation({
+                return chatClient.messaging.createConversation({
                     id: "51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3",
                     name: "Crud Test",
                     roles: undefined,
@@ -210,7 +208,7 @@ describe("Chat Logic tests", () => {
                 expect(storeConv.latestLocalEventId).not.toBeDefined();
                 expect(storeConv.continuationToken).not.toBeDefined();
                 expect(storeConv.latestRemoteEventId).not.toBeDefined();
-                return chatLogic.sendMessage("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3", "hello");
+                return chatClient.messaging.sendMessage("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3", "hello");
             })
             .then(rslt => {
                 expect(rslt).toBeTruthy();
@@ -222,7 +220,7 @@ describe("Chat Logic tests", () => {
                 expect(messages[0].parts).toBeDefined();
                 expect(messages[0].parts.length).toBe(1);
                 expect(messages[0].parts[0].data).toBe("hello");
-                return chatLogic.deleteConversation("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
+                return chatClient.messaging.deleteConversation("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");
             })
             .then(rslt => {
                 return store.getConversation("51E4CF4A-F6FC-4343-A6AF-F7DCD01BE3A3");

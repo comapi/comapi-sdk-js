@@ -54,7 +54,6 @@ export class ComapiChatConfig extends ComapiConfig implements IComapiChatConfig 
         return this;
     }
 
-
     /**
      * Function to set the lazy load threshold
      * @method ComapiChatConfig#withLazyLoadThreshold
@@ -76,5 +75,4 @@ export class ComapiChatConfig extends ComapiConfig implements IComapiChatConfig 
         this.maxEventGap = maxEventGap;
         return this;
     }
-
 }

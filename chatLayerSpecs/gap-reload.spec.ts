@@ -1,6 +1,6 @@
 import {
-    ComapiChatLogic
-} from "../chatLayer/src/chatLogic";
+    ComapiChatClient
+} from "../chatLayer/src/comapiChatClient";
 
 import {
     EventManager
@@ -171,7 +171,7 @@ describe("Chat Logic tests", () => {
             .withMessagePageSize(10)
             .withLazyLoadThreshold(10)
 
-        let chatLogic = new ComapiChatLogic(foundation, chatConfig);
+        let chatClient = new ComapiChatClient();
 
         // populate store with some conversations and some messages ...           
 
@@ -196,7 +196,7 @@ describe("Chat Logic tests", () => {
                 });
             })
             .then(created => {
-                return chatLogic.initialise(chatConfig);
+                return chatClient._initialise(foundation, chatConfig)
             })
             .then(result => {
                 expect(result).toBeDefined();

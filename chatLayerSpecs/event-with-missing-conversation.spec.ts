@@ -1,7 +1,6 @@
-// TODO: If a conversationMessage is received for a conversation that is not stored locally, sdk must not crashimport {
 import {
-    ComapiChatLogic
-} from "../chatLayer/src/chatLogic";
+    ComapiChatClient
+} from "../chatLayer/src/comapiChatClient";
 
 
 import {
@@ -159,12 +158,12 @@ describe("Chat Logic tests", () => {
             .withMessagePageSize(10)
             .withLazyLoadThreshold(10)
 
-        let chatLogic = new ComapiChatLogic(foundation, chatConfig);
+        let chatClient = new ComapiChatClient();
 
-        return chatLogic.initialise(chatConfig)
+        return chatClient._initialise(foundation, chatConfig)
             .then(result => {
                 expect(result).toBeDefined();
-                return chatLogic.getConversations();
+                return chatClient.messaging.getConversations();
             })
             .then(conversations => {
                 expect(conversations).toBeDefined();

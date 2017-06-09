@@ -28,6 +28,10 @@ export class ComapiChatClient {
         return this._messagingService;
     }
 
+    /**
+     * 
+     * @param comapiChatConfig 
+     */
     public initialise(comapiChatConfig: IComapiChatConfig): Promise<boolean> {
 
         this._comapiChatConfig = comapiChatConfig;
@@ -35,12 +39,27 @@ export class ComapiChatClient {
         return Foundation.initialise(comapiChatConfig)
             .then((foundation) => {
                 this._foundation = foundation;
-
                 this._sessionService = new SessionService(foundation, comapiChatConfig);
                 this._profileService = new ProfileService(foundation, comapiChatConfig);
                 this._messagingService = new MessagingService(foundation, comapiChatConfig);
 
-                return true;
+                return this._messagingService.initialise(comapiChatConfig);
             });
+    }
+
+    /**
+     * 
+     * @param foundation 
+     * @param comapiChatConfig 
+     */
+    public _initialise(foundation: IFoundation, comapiChatConfig: IComapiChatConfig): Promise<boolean> {
+
+        this._comapiChatConfig = comapiChatConfig;
+        this._foundation = foundation;
+        this._sessionService = new SessionService(foundation, comapiChatConfig);
+        this._profileService = new ProfileService(foundation, comapiChatConfig);
+        this._messagingService = new MessagingService(foundation, comapiChatConfig);
+
+        return this._messagingService.initialise(comapiChatConfig);
     }
 }

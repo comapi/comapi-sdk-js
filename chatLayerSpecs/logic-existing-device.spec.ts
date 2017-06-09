@@ -1,6 +1,6 @@
 import {
-    ComapiChatLogic
-} from "../chatLayer/src/chatLogic";
+    ComapiChatClient
+} from "../chatLayer/src/comapiChatClient";
 
 
 import {
@@ -157,7 +157,7 @@ describe("Chat Logic tests", () => {
             .withMessagePageSize(10)
             .withLazyLoadThreshold(10)
 
-        let chatLogic = new ComapiChatLogic(foundation, chatConfig);
+        let chatClient = new ComapiChatClient();
 
         // populate store with some conversations and some messages ...           
 
@@ -189,20 +189,20 @@ describe("Chat Logic tests", () => {
                 });
             })
             .then(created => {
-                return chatLogic.initialise(chatConfig);
+                return chatClient._initialise(foundation, chatConfig)
             })
             .then(result => {
                 expect(result).toBeDefined();
-                return chatLogic.getConversations();
+                return chatClient.messaging.getConversations();
             })
             .then(result => {
                 expect(result).toBeDefined();
                 expect(result.length).toBe(2);
-                return chatLogic.getConversationInfo("F2695C92-6FCA-4464-ABF1-C16EDB06B2F3");
+                return chatClient.messaging.getConversationInfo("F2695C92-6FCA-4464-ABF1-C16EDB06B2F3");
             })
             .then(result => {
                 expect(result).toBeDefined();
-                return chatLogic.getPreviousMessages("F2695C92-6FCA-4464-ABF1-C16EDB06B2F3");
+                return chatClient.messaging.getPreviousMessages("F2695C92-6FCA-4464-ABF1-C16EDB06B2F3");
             })
             .then(result => {
                 expect(result).toBeDefined();

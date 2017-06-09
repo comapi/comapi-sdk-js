@@ -240,6 +240,36 @@ app.put('/apispaces/:appSpaceId/profiles/:id', function (req, res, next) {
  */
 app.patch('/apispaces/:appSpaceId/profiles/:id', function (req, res, next) {
 
+    var id = req.params.id;
+
+    if (profiles[id] !== undefined) {
+        var ifMatchHeader = req.headers['if-match'];
+
+        if (ifMatchHeader) {
+
+            var storedEtag = etag(JSON.stringify(profiles[id]));
+
+            if (storedEtag != ifMatchHeader) {
+                console.log("There was a concurrency issue updating a profile please refresh and try again");
+                res.status(412).send("There was a concurrency issue updating a profile please refresh and try again");
+                return;
+            }
+        }
+
+        let patched = Object.assign(profiles[req.body.id], req.body);
+        setEtagHeader(res, patched);
+        var response = clone(patched);
+
+        // TODO: see if we need this
+        response.id = req.body.id,
+            response._createdOn = "2016-04-22T12:08:29.534Z";
+        response._updatedOn = "2016-04-22T12:08:29.534Z";
+
+        res.status(201).json(response);
+
+    } else {
+        res.sendStatus(401);
+    }
 });
 
 

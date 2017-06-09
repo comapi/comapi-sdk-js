@@ -84,9 +84,10 @@ export class ProfileManager implements IProfileManager {
      * @method ProfileManager#updateProfile    
      * @param {string} id
      * @param {Object} profile 
+     * @param {string} [eTag] 
      * @returns {Promise} 
      */
-    public patchProfile(id: string, profile: Object): Promise<any> {
+    public patchProfile(id: string, profile: Object, eTag?: string): Promise<any> {
 
         // take a copy of it prior to messing with it ...
         let data = Utils.clone(profile);

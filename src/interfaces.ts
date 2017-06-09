@@ -269,7 +269,7 @@ export interface IComapiConfig {
 export interface IProfileManager {
     getProfile(id: string): Promise<any>;
     updateProfile(id: string, profile: Object, eTag?: string): Promise<any>;
-    patchProfile(id: string, profile: Object): Promise<any>;
+    patchProfile(id: string, profile: Object, eTag?: string): Promise<any>;
     queryProfiles(query: string): Promise<any>;
 }
 
@@ -630,10 +630,10 @@ export interface IProfile {
     getProfile(profileId: string): Promise<any>;
     queryProfiles(query?: string): Promise<any>;
     updateProfile(profileId: string, profile: any, eTag?: string): Promise<any>;
-    patchProfile(id: string, profile: Object): Promise<any>;
+    patchProfile(id: string, profile: Object, eTag?: string): Promise<any>;
     getMyProfile(useEtag?: boolean): Promise<any>;
     updateMyProfile(profile: any, useEtag?: boolean): Promise<any>;
-    patchMyProfile(profile: any): Promise<any>;
+    patchMyProfile(profile: any, useEtag?: boolean): Promise<any>;
 }
 
 export interface IServices {

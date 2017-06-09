@@ -85,6 +85,31 @@ describe("Profile Tests", () => {
 
     });
 
+
+    it("should patch my profile", done => {
+
+        foundation.services.profile.getMyProfile()
+            .then(profile => {
+                return foundation.services.profile.patchMyProfile({
+                    patchKey1: 1,
+                    patchKey2: 2,
+                    patchKey3: 3,
+                });
+            })
+            .then(patched => {
+                expect(patched).toBeDefined();
+                expect(patched.patchKey1).toBe(1);
+                expect(patched.patchKey2).toBe(2);
+                expect(patched.patchKey3).toBe(3);
+                done();
+            });
+
+    });
+
+
+
+
+
     /**
      * 
      */

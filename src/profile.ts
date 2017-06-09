@@ -82,14 +82,15 @@ export class Profile implements IProfile {
     public getMyProfile(useEtag: boolean = true): Promise<any> {
         return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
-                return this._profileManager.getProfile(sessionInfo.session.profileId)
-                    .then(result => {
-                        if (useEtag) {
-                            this._localStorage.setString("MyProfileETag", result.headers.ETag);
-                        }
-                        return Promise.resolve(result.response);
-                    });
+                return this._profileManager.getProfile(sessionInfo.session.profileId);
+            })
+            .then(result => {
+                if (useEtag) {
+                    this._localStorage.setString("MyProfileETag", result.headers.ETag);
+                }
+                return Promise.resolve(result.response);
             });
+
     }
 
     /**
@@ -104,13 +105,13 @@ export class Profile implements IProfile {
             .then((sessionInfo) => {
                 return this._profileManager.updateProfile(sessionInfo.session.profileId,
                     profile,
-                    useEtag ? this._localStorage.getString("MyProfileETag") : undefined)
-                    .then(result => {
-                        if (useEtag) {
-                            this._localStorage.setString("MyProfileETag", result.headers.ETag);
-                        }
-                        return Promise.resolve(result.response);
-                    });
+                    useEtag ? this._localStorage.getString("MyProfileETag") : undefined);
+            })
+            .then(result => {
+                if (useEtag) {
+                    this._localStorage.setString("MyProfileETag", result.headers.ETag);
+                }
+                return Promise.resolve(result.response);
             });
     }
 
@@ -120,11 +121,18 @@ export class Profile implements IProfile {
      * @param {any} profile - the profile of the logged in user to update
      * @returns {Promise} - returns a Promise  
      */
-    public patchMyProfile(profile: any): Promise<any> {
+    public patchMyProfile(profile: any, useEtag: boolean): Promise<any> {
         return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
-                return this._profileManager.patchProfile(sessionInfo.session.profileId, profile);
+                return this._profileManager.patchProfile(sessionInfo.session.profileId,
+                    profile,
+                    useEtag ? this._localStorage.getString("MyProfileETag") : undefined);
+            })
+            .then(result => {
+                if (useEtag) {
+                    this._localStorage.setString("MyProfileETag", result.headers.ETag);
+                }
+                return Promise.resolve(result.response);
             });
     }
-
 }

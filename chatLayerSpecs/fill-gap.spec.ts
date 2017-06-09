@@ -198,17 +198,19 @@ describe("Chat Logic tests", () => {
 
         let foundation = new MockFoundation(_eventManager, _appMessaging);
 
-        let chatLogic = new ComapiChatLogic(foundation);
-
         let store = new MemoryConversationStore();
-
-        spyOn(_appMessaging, "getConversationEvents").and.callThrough();;
 
         let chatConfig = new ComapiChatConfig()
             .withStore(store)
             .withEventPageSize(10)
             .withMessagePageSize(10)
             .withLazyLoadThreshold(10)
+
+        let chatLogic = new ComapiChatLogic(foundation, chatConfig);
+
+
+        spyOn(_appMessaging, "getConversationEvents").and.callThrough();;
+
 
         // populate store with some conversations and some messages ...           
 

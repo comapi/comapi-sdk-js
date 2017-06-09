@@ -66,6 +66,7 @@ export interface IComapiChatConfig extends IComapiConfig {
     eventPageSize: number;
     messagePageSize: number;
     lazyLoadThreshold: number;
+    maxEventGap: number;
     getConversationSleepTimeout?: number;
     getConversationMaxRetry?: number;
 }

@@ -144,8 +144,6 @@ describe("Chat Logic tests", () => {
 
         let foundation = new MockFoundation();
 
-        let chatLogic = new ComapiChatLogic(foundation);
-
         let store = new MemoryConversationStore();
 
         let chatConfig = new ComapiChatConfig()
@@ -154,6 +152,7 @@ describe("Chat Logic tests", () => {
             .withMessagePageSize(10)
             .withLazyLoadThreshold(10)
 
+        let chatLogic = new ComapiChatLogic(foundation, chatConfig);
 
         // populate store with some conversations and some messages ...           
 

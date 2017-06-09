@@ -143,13 +143,13 @@ describe("Chat Logic tests", () => {
 
         let foundation = new MockFoundation();
 
-        let chatLogic = new ComapiChatLogic(foundation);
-
         let chatConfig = new ComapiChatConfig()
             .withStore(new MemoryConversationStore())
             .withEventPageSize(10)
             .withMessagePageSize(10)
             .withLazyLoadThreshold(10)
+
+        let chatLogic = new ComapiChatLogic(foundation, chatConfig);
 
         chatLogic.initialise(chatConfig)
             .then(result => {

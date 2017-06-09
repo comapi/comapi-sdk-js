@@ -1,5 +1,5 @@
-import { ComapiConfig } from "../../src/comapiConfig"
-import { IComapiChatConfig, IConversationStore } from "../interfaces/chatLayer"
+import { ComapiConfig } from "../../src/comapiConfig";
+import { IComapiChatConfig, IConversationStore } from "../interfaces/chatLayer";
 
 export class ComapiChatConfig extends ComapiConfig implements IComapiChatConfig {
 
@@ -9,6 +9,7 @@ export class ComapiChatConfig extends ComapiConfig implements IComapiChatConfig 
     public lazyLoadThreshold: number = 1;
     public getConversationSleepTimeout: number = 1000;
     public getConversationMaxRetry: number = 3;
+    public maxEventGap: number = 100;
 
     /**
      * ComapiChatConfig class constructor.
@@ -65,5 +66,15 @@ export class ComapiChatConfig extends ComapiConfig implements IComapiChatConfig 
         return this;
     }
 
+    /**
+     * Function to set the max Event Gap
+     * @method ComapiChatConfig#withMaxEventGap
+     * @param {number} maxEventGap - The max Event Gap
+     * @returns {ComapiChatConfig} - Returns reference to itself so methods can be chained
+     */
+    public withMaxEventGap(maxEventGap: number) {
+        this.maxEventGap = maxEventGap;
+        return this;
+    }
 
 }

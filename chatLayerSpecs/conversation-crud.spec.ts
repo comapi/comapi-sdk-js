@@ -171,10 +171,7 @@ describe("Chat Logic tests", () => {
 
         let eventManager = new EventManager();
 
-
         let foundation = new MockFoundation(eventManager);
-
-        let chatLogic = new ComapiChatLogic(foundation);
 
         let store = new MemoryConversationStore();
 
@@ -183,6 +180,8 @@ describe("Chat Logic tests", () => {
             .withEventPageSize(10)
             .withMessagePageSize(10)
             .withLazyLoadThreshold(10)
+
+        let chatLogic = new ComapiChatLogic(foundation, chatConfig);
 
         return chatLogic.initialise(chatConfig)
             .then(result => {

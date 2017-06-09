@@ -157,8 +157,6 @@ describe("Chat Logic tests", () => {
 
         let foundation = new MockFoundation();
 
-        let chatLogic = new ComapiChatLogic(foundation);
-
         let store = new MemoryConversationStore();
 
         spyOn(store, "deleteConversationMessages").and.callThrough();
@@ -169,8 +167,9 @@ describe("Chat Logic tests", () => {
             .withMessagePageSize(10)
             .withLazyLoadThreshold(10)
 
-        // populate store with some conversations and some messages ...           
+        let chatLogic = new ComapiChatLogic(foundation, chatConfig);
 
+        // populate store with some conversations and some messages ...           
 
         store.createConversation({
             id: "D35A13DF-6876-4CC8-BA70-841B45A0003C",

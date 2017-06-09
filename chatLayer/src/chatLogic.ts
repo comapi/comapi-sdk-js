@@ -1,6 +1,6 @@
 import { MessageStatusBuilder, MessageBuilder } from "../../src/foundation";
 import { Utils, DoUntilOperationFunction, DoUntilTestFunction } from "../../src/utils";
-import { IComapiChatConfig, IConversationStore, IChatConversation, IChatMessage, IChatInfo } from "../interfaces/chatLayer";
+import { IComapiChatConfig, IChatConversation, IChatMessage, IChatInfo } from "../interfaces/chatLayer";
 
 import { IFoundation, IMessageSentPayload, IMessageStatusUpdatePayload, IConversationParticipant } from "../../src/interfaces";
 
@@ -26,39 +26,19 @@ interface IConversationSyncInfo {
     updateArray: IChatConversation[];
 }
 
-
 /**
  *
  */
 export class ComapiChatLogic {
 
-    private _hasInitialised: boolean = false;
-
-    private _hasSynced: boolean = false;
-
-    private _store: IConversationStore;
-
     private _mutex: Mutex = new Mutex();
-
-    private _eventPageSize: number = 10;
-
-    private _messagePageSize: number = 10;
-
-    private _lazyLoadThreshold: number = 1;
-
-    private _getConversationSleepTimeout: number = 1000;
-
-    private _getConversationMaxRetry: number = 3;
-
-    // if a gap is detected greater than this, we will scrap what we have and just load in the last _messagePageSize messages
-    private _maxEventGap: number = 100;
 
     private _profileId: string;
 
     /**
      * 
      */
-    constructor(private _foundation: IFoundation) { }
+    constructor(private _foundation: IFoundation, private _config: IComapiChatConfig) { }
 
     /**
      * Initialise Chat Layer
@@ -71,46 +51,13 @@ export class ComapiChatLogic {
 
         console.log(`initialise(${config})`);
 
-        if (config.eventPageSize !== undefined) {
-            this._eventPageSize = config.eventPageSize;
-        }
-        if (config.messagePageSize !== undefined) {
-            this._messagePageSize = config.messagePageSize;
-        }
-        if (config.lazyLoadThreshold !== undefined) {
-            this._lazyLoadThreshold = config.lazyLoadThreshold;
-        }
-
-        if (config.getConversationSleepTimeout !== undefined) {
-            this._getConversationSleepTimeout = config.getConversationSleepTimeout;
-        }
-
-        if (config.getConversationMaxRetry !== undefined) {
-            this._getConversationMaxRetry = config.getConversationMaxRetry;
-        }
-
         this._foundation.on("conversationMessageEvent", event => { this.onConversationMessageEvent(event); });
         this._foundation.on("conversationDeleted", event => { this.onConversationDeleted(event); });
         this._foundation.on("conversationUpdated", event => { this.onConversationUpdated(event); });
         this._foundation.on("participantAdded", event => { this.onParticipantAdded(event); });
         this._foundation.on("participantRemoved", event => { this.onParticipantRemoved(event); });
 
-        this._hasInitialised = true;
-        this._store = config.conversationStore;
-
-        return this.synchronize()
-            .then(synced => {
-                this._hasSynced = synced;
-                return this._hasSynced;
-            });
-    }
-
-    public get initialised(): boolean {
-        return this._hasInitialised;
-    }
-
-    public get synced(): boolean {
-        return this._hasSynced;
+        return this.synchronize();
     }
 
     /**
@@ -126,9 +73,7 @@ export class ComapiChatLogic {
     public endSession() {
         return this._foundation ? this._foundation.endSession()
             .then(() => {
-                return this._store.reset();
-            }).then(reset => {
-                this._hasSynced = false;
+                return this._config.conversationStore.reset();
             }) : Promise.reject({ message: "No Foundation interface" });
     }
 
@@ -166,7 +111,7 @@ export class ComapiChatLogic {
                     remoteConversations = conversations;
 
                     // 2) get list from IConversationStore
-                    return this._store.getConversations();
+                    return this._config.conversationStore.getConversations();
                 })
                 .then(conversations => {
                     // take a copy of this as we don't want it getting modified when we add/remove using the store ;-)
@@ -177,7 +122,7 @@ export class ComapiChatLogic {
 
                     return Utils.eachSeries(syncInfo.deleteArray, (conversationId: string) => {
 
-                        return this._store.deleteConversation(conversationId)
+                        return this._config.conversationStore.deleteConversation(conversationId)
                             .then(deleted => {
                                 // Remove the conversation from from localConversations
                                 for (let i = localConversations.length - 1; i >= 0; i--) {
@@ -193,13 +138,13 @@ export class ComapiChatLogic {
                 .then((result) => {
                     // 3) Add new ones
                     return Utils.eachSeries(syncInfo.addArray, (conversation: IChatConversation) => {
-                        return this._store.createConversation(conversation);
+                        return this._config.conversationStore.createConversation(conversation);
                     });
                 })
                 .then((result) => {
                     // 4) Update existing ones that have changed
                     return Utils.eachSeries(syncInfo.updateArray, (conversation: IChatConversation) => {
-                        return this._store.updateConversation(conversation);
+                        return this._config.conversationStore.updateConversation(conversation);
                     });
                 })
                 .then((result) => {
@@ -218,7 +163,7 @@ export class ComapiChatLogic {
                     });
 
                     // we will just pick the first _lazyLoadThreshold from the ordered array to synchronise
-                    let syncSet = localConversations.slice(0, this._lazyLoadThreshold);
+                    let syncSet = localConversations.slice(0, this._config.lazyLoadThreshold);
 
                     // 4) Sync conversation messages 
                     return Utils.eachSeries(syncSet, (conversation: IChatConversation) => {
@@ -248,7 +193,7 @@ export class ComapiChatLogic {
         }
 
         return this._mutex.runExclusive(() => {
-            return this._store.getConversation(conversationId)
+            return this._config.conversationStore.getConversation(conversationId)
                 .then(conversation => {
                     return this.getMessages(conversation);
                 });
@@ -261,7 +206,7 @@ export class ComapiChatLogic {
      */
     public getConversations(): Promise<IChatConversation[]> {
         return this._mutex.runExclusive(() => {
-            return this._store.getConversations();
+            return this._config.conversationStore.getConversations();
         });
     }
 
@@ -276,7 +221,7 @@ export class ComapiChatLogic {
             let _messages: IChatMessage[];
             let _participants: IConversationParticipant[];
 
-            return this._store.getConversation(conversationId)
+            return this._config.conversationStore.getConversation(conversationId)
                 .then(conversation => {
                     _conversation = conversation;
 
@@ -290,7 +235,7 @@ export class ComapiChatLogic {
                     }
                 })
                 .then(() => {
-                    return this._store.getMessages(conversationId);
+                    return this._config.conversationStore.getMessages(conversationId);
                 })
                 .then(messages => {
                     _messages = messages;
@@ -331,7 +276,7 @@ export class ComapiChatLogic {
                         sentOn: new Date().toISOString(),
                         statusUpdates: {}
                     };
-                    return this._store.createMessage(m);
+                    return this._config.conversationStore.createMessage(m);
                 });
         });
 
@@ -357,7 +302,7 @@ export class ComapiChatLogic {
     public markAllMessagesAsRead(conversationId: string): Promise<boolean> {
         return this._mutex.runExclusive(() => {
             let unreadIds: string[] = [];
-            return this._store.getMessages(conversationId)
+            return this._config.conversationStore.getMessages(conversationId)
                 .then(messages => {
 
                     for (let message of messages) {
@@ -396,7 +341,7 @@ export class ComapiChatLogic {
         return this._mutex.runExclusive(() => {
             return this._foundation.services.appMessaging.createConversation(conversation)
                 .then(result => {
-                    return this._store.createConversation(this.mapConversation(result));
+                    return this._config.conversationStore.createConversation(this.mapConversation(result));
                 });
         });
     }
@@ -424,10 +369,10 @@ export class ComapiChatLogic {
         return this._mutex.runExclusive(() => {
             return this._foundation.services.appMessaging.deleteConversation(conversationId)
                 .then(() => {
-                    return this._store.deleteConversation(conversationId);
+                    return this._config.conversationStore.deleteConversation(conversationId);
                 })
                 .then(() => {
-                    return this._store.deleteConversationMessages(conversationId);
+                    return this._config.conversationStore.deleteConversationMessages(conversationId);
                 });
         });
     }
@@ -455,7 +400,7 @@ export class ComapiChatLogic {
 
         let messages: IChatMessage[];
 
-        return this._foundation.services.appMessaging.getMessages(conversation.id, this._messagePageSize, conversation.continuationToken)
+        return this._foundation.services.appMessaging.getMessages(conversation.id, this._config.messagePageSize, conversation.continuationToken)
             .then(result => {
                 getMessagesResult = result;
                 // update conversation object
@@ -477,7 +422,7 @@ export class ComapiChatLogic {
 
                 // we dont care about the order ... that is not our problem
                 return Utils.eachSeries(messages, (message: IChatMessage) => {
-                    return this._store.createMessage(message);
+                    return this._config.conversationStore.createMessage(message);
                 });
             })
             .then(() => {
@@ -490,7 +435,7 @@ export class ComapiChatLogic {
                 }
 
                 conversation.continuationToken = getMessagesResult.continuationToken;
-                return this._store.updateConversation(conversation);
+                return this._config.conversationStore.updateConversation(conversation);
             });
     }
 
@@ -587,7 +532,7 @@ export class ComapiChatLogic {
 
         let _getPageOfEventsFunc: DoUntilOperationFunction = function (conv: IChatConversation): Promise<any> {
 
-            return self._foundation.services.appMessaging.getConversationEvents(conv.id, conv.latestLocalEventId + 1, self._eventPageSize)
+            return self._foundation.services.appMessaging.getConversationEvents(conv.id, conv.latestLocalEventId + 1, self._config.eventPageSize)
                 .then(events => {
                     _events = events;
                     return Utils.eachSeries(events, (event: IConversationMessageEvent) => {
@@ -607,7 +552,7 @@ export class ComapiChatLogic {
 
         let _compareFunc: DoUntilTestFunction = function (conv: IChatConversation): boolean {
             if (_events) {
-                return _events.length === self._eventPageSize;
+                return _events.length === self._config.eventPageSize;
             } else {
                 return false;
             }
@@ -615,7 +560,7 @@ export class ComapiChatLogic {
 
         return Utils.doUntil(_getPageOfEventsFunc, _compareFunc, conversation)
             .then((conv: IChatConversation) => {
-                return this._store.updateConversation(conv);
+                return this._config.conversationStore.updateConversation(conv);
             });
     }
 
@@ -646,20 +591,20 @@ export class ComapiChatLogic {
             let gap = conversation.latestRemoteEventId - (conversation.latestLocalEventId + 1);
 
             // get events and apply
-            if (gap < this._maxEventGap) {
+            if (gap < this._config.maxEventGap) {
                 console.log(`Updating Conversation ${conversation.id} with events ...`);
                 return this.updateConversationWithEvents(conversation);
             } else {
                 // ReloadConversation
                 console.log(`Conversation ${conversation.id} too out of date, reloading last page of messages ...`);
-                return this._store.deleteConversationMessages(conversation.id)
+                return this._config.conversationStore.deleteConversationMessages(conversation.id)
                     .then(result => {
 
                         conversation.continuationToken = -1;
                         conversation.earliestLocalEventId = undefined;
                         conversation.latestLocalEventId = undefined;
 
-                        return this._store.updateConversation(conversation);
+                        return this._config.conversationStore.updateConversation(conversation);
                     })
                     .then(result => {
                         return this.getMessages(conversation);
@@ -689,14 +634,14 @@ export class ComapiChatLogic {
                     sentOn: messageSentPayload.context && messageSentPayload.context.sentOn || undefined,
                 };
 
-                return this._store.createMessage(message);
+                return this._config.conversationStore.createMessage(message);
 
             case "conversationMessage.delivered":
             case "conversationMessage.read":
                 let splitResult = event.name.split(".");
                 let statusUpdate = <IMessageStatusUpdatePayload>event.payload;
 
-                return this._store.updateMessageStatus(statusUpdate.conversationId,
+                return this._config.conversationStore.updateMessageStatus(statusUpdate.conversationId,
                     statusUpdate.messageId,
                     statusUpdate.profileId,
                     splitResult[1], // ["delivered"|"read"]
@@ -717,7 +662,7 @@ export class ComapiChatLogic {
 
         let _chatConversation: IChatConversation;
 
-        return this._store.getConversation(event.conversationId)
+        return this._config.conversationStore.getConversation(event.conversationId)
             .then(chatConversation => {
 
                 // is there a conversation ?
@@ -752,7 +697,7 @@ export class ComapiChatLogic {
                     _chatConversation.latestLocalEventId = event.conversationEventId;
                 }
 
-                return this._store.updateConversation(_chatConversation);
+                return this._config.conversationStore.updateConversation(_chatConversation);
             });
     }
 
@@ -767,21 +712,21 @@ export class ComapiChatLogic {
         return this._mutex.runExclusive(() => {
 
             // check for a gap ...
-            return this._store.getConversation(event.conversationId)
+            return this._config.conversationStore.getConversation(event.conversationId)
                 .then(conversation => {
 
                     if (conversation !== null) {
                         let gap = event.conversationEventId - (conversation.latestLocalEventId + 1);
                         if (gap > 0) {
                             // gap needs filling 
-                            if (gap < this._maxEventGap) {
+                            if (gap < this._config.maxEventGap) {
                                 // FillGap
                                 // NOTE Need to set latestRemoteEventId to info.event.conversationEventId otherwise it wont sync ...
                                 return this.updateConversationWithEvents(conversation);
 
                             } else {
                                 // ReloadConversation
-                                return this._store.deleteConversationMessages(event.conversationId)
+                                return this._config.conversationStore.deleteConversationMessages(event.conversationId)
                                     .then(result => {
 
                                         conversation.continuationToken = -1;
@@ -789,7 +734,7 @@ export class ComapiChatLogic {
                                         conversation.latestLocalEventId = undefined;
                                         conversation.latestRemoteEventId = event.conversationEventId;
 
-                                        return this._store.updateConversation(conversation);
+                                        return this._config.conversationStore.updateConversation(conversation);
                                     })
                                     .then(result => {
                                         return this.getMessages(conversation);
@@ -837,7 +782,7 @@ export class ComapiChatLogic {
     private onConversationDeleted(event: IConversationDeletedEventData): Promise<boolean> {
         return this._mutex.runExclusive(() => {
             console.log("onConversationDeleted");
-            return this._store.deleteConversation(event.conversationId);
+            return this._config.conversationStore.deleteConversation(event.conversationId);
         });
     }
 
@@ -849,7 +794,7 @@ export class ComapiChatLogic {
         return this._mutex.runExclusive(() => {
             console.log("onConversationUpdated");
 
-            return this._store.getConversation(event.conversationId)
+            return this._config.conversationStore.getConversation(event.conversationId)
                 .then(conversation => {
 
                     conversation.name = event.name;
@@ -860,7 +805,7 @@ export class ComapiChatLogic {
                     // TODO: not sure this is correct ...
                     conversation.lastMessageTimestamp = event.timestamp;
 
-                    return this._store.updateConversation(conversation);
+                    return this._config.conversationStore.updateConversation(conversation);
                 });
         });
     }
@@ -878,7 +823,7 @@ export class ComapiChatLogic {
         return this._foundation.services.appMessaging.getConversation(conversationId)
             .then(remoteConversation => {
                 _conversation = this.mapConversation(remoteConversation);
-                return this._store.createConversation(_conversation);
+                return this._config.conversationStore.createConversation(_conversation);
             })
             .then(result => {
                 return this.getMessages(_conversation);
@@ -888,11 +833,11 @@ export class ComapiChatLogic {
             })
             .catch(error => {
                 // TODO: Consider moving this functionality into foundation ...
-                if (error.statusCode === 404 && depth < this._getConversationMaxRetry) {
+                if (error.statusCode === 404 && depth < this._config.getConversationMaxRetry) {
                     // sleep and recurse configurable 
 
                     return new Promise((resolve, reject) => {
-                        setTimeout(function () { resolve(); }, this._getConversationSleepTimeout);
+                        setTimeout(function () { resolve(); }, this._config.getConversationSleepTimeout);
                     })
                         .then(() => {
                             return this.initialiseConversation(conversationId, ++depth);
@@ -917,7 +862,7 @@ export class ComapiChatLogic {
 
                 // If this client created the conversation, we will have already stored it off the back of the rest call.
                 // check it isn't in the store already and if not initialise it
-                return this._store.getConversation(event.conversationId)
+                return this._config.conversationStore.getConversation(event.conversationId)
                     .then(conversation => {
                         return conversation === null ?
                             this.initialiseConversation(event.conversationId)
@@ -943,7 +888,7 @@ export class ComapiChatLogic {
 
             // if this is me, need to add the conversation ...
             if (event.profileId === this._profileId) {
-                return this._store.deleteConversation(event.conversationId);
+                return this._config.conversationStore.deleteConversation(event.conversationId);
             } else {
                 return Promise.resolve(false);
             }

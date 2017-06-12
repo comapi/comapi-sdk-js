@@ -19,8 +19,7 @@ module.exports = function (grunt) {
             src: {
                 src: [
                     'typings/index.d.ts',
-                    'build/src/*.ts',
-                    'build/chatLayer/*.ts',
+                    'build/src/*.ts'
                 ],
                 dest: './build/output/',
                 options: {
@@ -37,7 +36,7 @@ module.exports = function (grunt) {
                 configuration: "tslint.json"
             },
             files: {
-                src: ['src/**/*.ts', 'chatLayer/**/*.ts', 'specs/**/*.ts'],
+                src: ['src/**/*.ts', 'specs/**/*.ts'],
             }
         },
         /**

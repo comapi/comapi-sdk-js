@@ -10,10 +10,10 @@ describe("Foundation tests", () => {
     let comapiConfig: IComapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
+        logPersistence: LogPersistences.IndexedDB,
         logRetentionHours: 1,
         urlBase: Config.getUrlBase(),
         webSocketBase: Config.getWebSocketBase(),
-        logPersistence: LogPersistences.IndexedDB
     };
 
     beforeEach(done => {

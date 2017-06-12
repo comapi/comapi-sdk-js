@@ -9,11 +9,7 @@ module.exports = function (config) {
             'lib/es5-promise-polyfill.js',
             'lib/array-find-polyfill.js',
             "src/**/*.ts",
-            "specs/**/*.ts",
-            "chatLayer/**/*.ts",
-            "chatLayerSpecs/**/*.spec.ts",
-            // "chatLayerSpecs/conversation-crud.spec.ts",
-            // "chatLayerSpecs/config.spec.ts",
+            "specs/**/*.ts"
         ],
 
         preprocessors: {

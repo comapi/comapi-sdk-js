@@ -7,6 +7,9 @@ import { IRestClient, IAuthChallengeOptions, IApiSpaceAuthInfo, IApiSpaceManager
  */
 export class Config {
 
+
+    public static testUserProfileId: string = "testUser";
+
     /**
      * Url base for all Comapi REST API calls
      * "http://192.168.99.100:8000"
@@ -58,9 +61,9 @@ export class Config {
                 audience: "*",
                 issuer: "https://sitf.co.uk",
                 nonce: options.nonce,
-                password: "stev111",
+                password: "Passw0rd!",
                 sharedSecret: "205BD61A-B86E-4A3D-9023-F2B1880A0F8F",
-                username: "stevanl",
+                username: Config.testUserProfileId,
             }).then(result => {
                 console.log(JSON.stringify(result));
                 answerAuthenticationChallenge(result.response.jwt);

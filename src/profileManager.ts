@@ -88,6 +88,11 @@ export class ProfileManager implements IProfileManager {
      * @returns {Promise} 
      */
     public patchProfile(id: string, profile: Object, eTag?: string): Promise<any> {
+        let headers = {};
+
+        if (eTag) {
+            headers["If-Match"] = eTag;
+        }
 
         // take a copy of it prior to messing with it ...
         let data = Utils.clone(profile);
@@ -98,7 +103,7 @@ export class ProfileManager implements IProfileManager {
 
         let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/profiles/${id}`;
 
-        return this._restClient.patch(url, {}, data);
+        return this._restClient.patch(url, headers, data);
     }
 
 }

@@ -94,7 +94,7 @@ app.post('/testServerError', function (req, res, next) {
     res.sendStatus(500);
 });
 
-var profileId = "1375DD09-F19E-4A5B-A14F-6F71B5CF52DF";
+// var profileId = "1375DD09-F19E-4A5B-A14F-6F71B5CF52DF";
 
 Date.prototype.addDays = function (days) {
     var dat = new Date(this.valueOf());
@@ -110,11 +110,15 @@ app.post('/apispaces/:appSpaceId/sessions', function (req, res, next) {
 
     if (req.body.authenticationId !== undefined && req.body.authenticationToken !== undefined) {
 
+
+        var verified = njwt.verify(req.body.authenticationToken, signingKey);
+
+
         // some garbage claims ...
         var claims = {
-            iss: "issuer",
-            sub: "username",
-            aud: "audience"
+            iss: verified.body.iss,
+            sub: verified.body.sub,
+            aud: verified.body.aud
         }
 
         var jwt = njwt.create(claims, signingKey);
@@ -123,7 +127,7 @@ app.post('/apispaces/:appSpaceId/sessions', function (req, res, next) {
             "token": jwt.compact(),
             "session": {
                 "id": "56D3B29F-B783-4873-9B8E-DEE28A68CB98",
-                "profileId": profileId,
+                "profileId": verified.body.sub,
                 "deviceId": req.body.deviceId,
                 "platform": req.body.platform,
                 "platformVersion": req.body.platformVersion,
@@ -137,8 +141,8 @@ app.post('/apispaces/:appSpaceId/sessions', function (req, res, next) {
         };
 
 
-        profiles[profileId] = {
-            id: profileId
+        profiles[verified.body.sub] = {
+            id: verified.body.sub
         };
 
         res.status(200).json(sessionInfo);
@@ -306,7 +310,11 @@ app.get('/apispaces/:appSpaceId/profiles', function (req, res, next) {
 
     console.log("query: ", query);
 
-    var response = [profiles[profileId]];
+    var response = [];
+    for (var profileId in profiles) {
+        response.push(profiles[profileId]);
+    }
+
 
     res.status(200).json(response);
 });

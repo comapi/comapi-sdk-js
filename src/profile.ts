@@ -64,12 +64,13 @@ export class Profile implements IProfile {
      * @method Profile#updateProfile    
      * @param {string} profileId - the id of the profile to update
      * @param {any} profile - the profile to patch
+     * @param {string} [eTag] - the eTag (returned in headers from getProfile())
      * @returns {Promise} 
      */
-    public patchProfile(profileId: string, profile: Object): Promise<any> {
+    public patchProfile(profileId: string, profile: Object, eTag?: string): Promise<any> {
         return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
-                return this._profileManager.patchProfile(profileId, profile);
+                return this._profileManager.patchProfile(profileId, profile, eTag);
             });
     }
 

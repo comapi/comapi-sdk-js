@@ -16,7 +16,7 @@ sdk.profile.getMyProfile()
 ```
 
 ## Updating the user's profile
-
+Note, this will overwrite the existing profile - if you want to modify a subset of the user's profile, please used the patch function.
 ```javascript
 sdk.services.profile.updateMyProfile(profile)
     .then(function (updatedProfile) {
@@ -26,6 +26,21 @@ sdk.services.profile.updateMyProfile(profile)
         console.error("updateMyProfile() failed", error);
     });
 ```
+
+## Patching the user's profile
+Patching has the effect of merging the existing profile with the data supplied in the patch call.
+
+```javascript
+sdk.services.profile.patchMyProfile(data)
+    .then(function (updatedProfile) {
+        console.error("patchMyProfile() succeeded", updatedProfile);
+    })
+    .catch(function (error) {
+        console.error("patchMyProfile() failed", error);
+    });
+```
+
+
 
 ## eTags
 

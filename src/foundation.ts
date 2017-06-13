@@ -291,6 +291,16 @@ export class Foundation implements IFoundation {
     }
 
     /**
+     * Method to get the logger
+     * @method Foundation#logger
+     * @returns {ILogger} - Returns an ILogger interface
+     */
+    public get logger(): ILogger {
+        return this._logger;
+    }
+
+
+    /**
      * Subscribes the caller to a comapi event.
      * @method Foundation#on
      * @param {string} eventType - The type of event to subscribe to

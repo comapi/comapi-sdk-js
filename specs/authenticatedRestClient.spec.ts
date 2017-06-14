@@ -8,6 +8,7 @@ import { NetworkManager } from "../src/networkManager";
 import { EventManager } from "../src/eventManager";
 import { LocalStorageData } from "../src/localStorageData";
 import { RestClient } from "../src/restClient";
+import { FoundationRestUrls } from "../src/urlConfig";
 
 /**
  * 
@@ -42,6 +43,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
         logRetentionHours: 1,
         urlBase: Config.getUrlBase(),
         webSocketBase: Config.getWebSocketBase(),
+        foundationRestUrls: new FoundationRestUrls()
     };
 
     let authenticatedRestClient: AuthenticatedRestClient;

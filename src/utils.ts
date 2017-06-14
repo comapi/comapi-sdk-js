@@ -109,6 +109,29 @@ export class Utils {
             });
     }
 
+
+    /**
+     * Mustache/handlebars style formatting ...
+     * @param {string} content 
+     * @param {Object} tags 
+     */
+    public static format(content: string, tags: Object) {
+
+        return (<any>content).replace(/{{(.*?)}}/g, (tag, key) => {
+            let replacement = false;
+
+            if (typeof tags[key] === "string") {
+                replacement = tags[key];
+            }
+
+            if (typeof replacement === "string") {
+                return replacement;
+            } else {
+                return tag;
+            }
+        });
+    }
+
     /**
      * @class Utils
      * @ignore

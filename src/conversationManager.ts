@@ -11,6 +11,7 @@ import {
     IComapiConfig
 } from "./interfaces";
 
+import { Utils } from "./utils";
 export class ConversationManager implements IConversationManager {
 
     //  This object is an in-memory dictionary of last sent timestamps (conversationId: timestamp) ...
@@ -45,7 +46,12 @@ export class ConversationManager implements IConversationManager {
      */
     public createConversation(conversationDetails: IConversationDetails): Promise<IConversationDetails2> {
 
-        return this._restClient.post(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations`, {}, conversationDetails)
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.conversations, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.post(url, {}, conversationDetails)
             .then(function (result) {
                 result.response._etag = result.headers.ETag;
                 return Promise.resolve<IConversationDetails2>(result.response);
@@ -73,7 +79,13 @@ export class ConversationManager implements IConversationManager {
             roles: conversationDetails.roles,
         };
 
-        return this._restClient.put(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationDetails.id}`, headers, args)
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.conversation, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationDetails.id,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.put(url, headers, args)
             .then(function (result) {
                 result.response._etag = result.headers.ETag;
                 return Promise.resolve<IConversationDetails2>(result.response);
@@ -88,7 +100,14 @@ export class ConversationManager implements IConversationManager {
      * @returns {Promise} 
      */
     public getConversation(conversationId: string): Promise<IConversationDetails2> {
-        return this._restClient.get(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}`)
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.conversation, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.get(url)
             .then(function (result) {
                 result.response._etag = result.headers.ETag;
                 return Promise.resolve<IConversationDetails2>(result.response);
@@ -103,7 +122,14 @@ export class ConversationManager implements IConversationManager {
      * @returns {Promise} 
      */
     public deleteConversation(conversationId: string): Promise<boolean> {
-        return this._restClient.delete(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}`, {})
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.conversation, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.delete(url, {})
             .then(function (result) {
                 return Promise.resolve(true);
             });
@@ -117,7 +143,14 @@ export class ConversationManager implements IConversationManager {
      * @returns {Promise} 
      */
     public addParticipantsToConversation(conversationId: string, participants: IConversationParticipant[]): Promise<boolean> {
-        return this._restClient.post(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/participants`, {}, participants)
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.participants, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.post(url, {}, participants)
             .then(function (result) {
                 return Promise.resolve(true);
             });
@@ -137,7 +170,13 @@ export class ConversationManager implements IConversationManager {
             query += (i === 0 ? "?id=" + participants[i] : "&id=" + participants[i]);
         }
 
-        return this._restClient.delete(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/participants` + query, {})
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.participants, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.delete(url + query, {})
             .then(function (result) {
                 return Promise.resolve(true);
             });
@@ -151,7 +190,13 @@ export class ConversationManager implements IConversationManager {
      */
     public getParticipantsInConversation(conversationId: string): Promise<IConversationParticipant[]> {
 
-        return this._restClient.get(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/participants`)
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.participants, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.get(url)
             .then(function (result) {
                 return Promise.resolve<IConversationParticipant[]>(result.response);
             });
@@ -164,7 +209,11 @@ export class ConversationManager implements IConversationManager {
      * @returns {Promise} 
      */
     public getConversations(scope?: ConversationScope, profileId?: string): Promise<IConversationDetails2[]> {
-        let url: string = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations`;
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.conversations, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         if (scope || profileId) {
 
@@ -208,7 +257,11 @@ export class ConversationManager implements IConversationManager {
             }
         }
 
-        let url: string = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/typing`;
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.typing, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         return this._restClient.post(url, {}, {})
             .then(result => {
@@ -238,7 +291,11 @@ export class ConversationManager implements IConversationManager {
             }
         }
 
-        let url: string = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/typing`;
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.typing, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         return this._restClient.delete(url, {})
             .then(result => {

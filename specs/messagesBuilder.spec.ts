@@ -30,7 +30,6 @@ describe("Messaging tests", () => {
         logRetentionHours: 1,
         urlBase: Config.getUrlBase(),
         webSocketBase: Config.getWebSocketBase(),
-
     };
 
     beforeAll(done => {

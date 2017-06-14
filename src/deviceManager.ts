@@ -7,8 +7,7 @@ import {
     IRestClient,
 } from "./interfaces";
 
-// import { Utils } from "./utils";
-
+import { Utils } from "./utils";
 export class DeviceManager implements IDeviceManager {
 
     // private _deviceId: string;
@@ -105,7 +104,11 @@ export class DeviceManager implements IDeviceManager {
      * @returns {string}   
      */
     private getPushUrl(sessionId): string {
-        return `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/sessions/${sessionId}/push`;
-    }
 
+        return Utils.format(this._comapiConfig.foundationRestUrls.push, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            sessionId: sessionId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+    }
 }

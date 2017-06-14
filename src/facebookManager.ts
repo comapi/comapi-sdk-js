@@ -4,6 +4,7 @@ import {
     IFacebookManager
 } from "./interfaces";
 
+import { Utils } from "./utils";
 export class FacebookManager implements IFacebookManager {
 
     /**        
@@ -22,7 +23,12 @@ export class FacebookManager implements IFacebookManager {
      * @param {any} [data] - the data to post
      */
     public createSendToMessengerState(data?: any): Promise<any> {
-        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/channels/facebook/state`;
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.facebook, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
         return this._restClient.post(url, {}, data || {});
     }
 }

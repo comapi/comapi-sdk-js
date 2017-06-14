@@ -248,6 +248,23 @@ export interface IAuthChallenge {
     (options: IAuthChallengeOptions, answerAuthenticationChallenge: Function): void;
 };
 
+export interface IFoundationRestUrls {
+    conversations: string;
+    conversation: string;
+    participants: string;
+    typing: string;
+    push: string;
+    facebook: string;
+    events: string;
+    messages: string;
+    statusUpdates: string;
+    profiles: string;
+    profile: string;
+    sessions: string;
+    sessionStart: string;
+    session: string;
+}
+
 /**
  * Comapi options to be passed in on startup 
  */
@@ -261,6 +278,7 @@ export interface IComapiConfig {
     logPersistence?: LogPersistences;
     isTypingTimeout?: number;
     isTypingOffTimeout?: number;
+    foundationRestUrls?: IFoundationRestUrls;
 };
 
 /**

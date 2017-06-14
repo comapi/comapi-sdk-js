@@ -194,7 +194,12 @@ export class SessionManager implements ISessionManager {
             sdkVersion: "_SDK_VERSION_"
         };
 
-        return this._restClient.post(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/sessions`, {}, data)
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.sessions, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.post(url, {}, data)
             .then(function (result) {
                 return Promise.resolve(<ISessionInfo>result.response);
             });
@@ -205,7 +210,13 @@ export class SessionManager implements ISessionManager {
      * @returns {Promise} - Returns a promise
      */
     private _startAuth(): Promise<ISessionStartResponse> {
-        return this._restClient.get(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/sessions/start`)
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.sessionStart, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.get(url)
             .then(result => {
                 return Promise.resolve(<ISessionStartResponse>result.response);
             });
@@ -222,7 +233,12 @@ export class SessionManager implements ISessionManager {
             "authorization": this.getAuthHeader(),
         };
 
-        return this._restClient.delete(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/sessions/${this._sessionInfo.session.id}`, headers)
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.session, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.delete(url, headers)
             .then(result => {
                 return Promise.resolve(true);
             });

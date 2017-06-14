@@ -16,6 +16,8 @@ import {
     IComapiConfig
 } from "./interfaces";
 
+import { Utils } from "./utils";
+
 export class MessageManager implements IMessageManager {
 
     /**
@@ -47,7 +49,11 @@ export class MessageManager implements IMessageManager {
      */
     public getConversationEvents(conversationId: string, from: number, limit: number): Promise<IConversationMessageEvent[]> {
 
-        let url: string = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/events`;
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.events, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         url += "?from=" + from;
         url += "&limit=" + limit;
@@ -67,7 +73,11 @@ export class MessageManager implements IMessageManager {
      */
     public getConversationMessages(conversationId: string, limit: number, from?: number): Promise<IConversationMessagesResult> {
 
-        let url: string = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/messages`;
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.messages, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         url += `?limit=${limit}`;
 
@@ -98,7 +108,13 @@ export class MessageManager implements IMessageManager {
             parts: parts,
         };
 
-        return this._restClient.post(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/messages`, {}, request)
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.messages, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.post(url, {}, request)
             .then(function (result) {
                 return Promise.resolve(<ISendMessageResult>result.response);
             });
@@ -110,7 +126,14 @@ export class MessageManager implements IMessageManager {
      * @parameter {IConversationMessage} message 
      */
     public sendMessageToConversation(conversationId: string, message: IConversationMessage): Promise<ISendMessageResult> {
-        return this._restClient.post(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/messages`, {}, message)
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.messages, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.post(url, {}, message)
             .then(function (result) {
                 return Promise.resolve(<ISendMessageResult>result.response);
             });
@@ -127,7 +150,13 @@ export class MessageManager implements IMessageManager {
             "Content-Type": "application/json",
         };
 
-        return this._restClient.post(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/conversations/${conversationId}/messages/statusupdates`, headers, statuses)
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.statusUpdates, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            conversationId: conversationId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.post(url, headers, statuses)
             .then(function (result) {
                 return Promise.resolve(result.response);
             });

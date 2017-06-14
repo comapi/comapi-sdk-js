@@ -48,6 +48,7 @@ import { Services } from "./services";
 import { Device } from "./device";
 import { Channels } from "./channels";
 import { NetworkManager } from "./networkManager";
+import { FoundationRestUrls } from "./urlConfig";
 
 /*
  * Exports to be added to COMAPI namespace
@@ -119,6 +120,10 @@ export class Foundation implements IFoundation {
 
         if (doSingleton && Foundation._foundation) {
             return Promise.resolve(Foundation._foundation);
+        }
+
+        if (comapiConfig.foundationRestUrls === undefined) {
+            comapiConfig.foundationRestUrls = new FoundationRestUrls();
         }
 
         if (comapiConfig.logPersistence &&

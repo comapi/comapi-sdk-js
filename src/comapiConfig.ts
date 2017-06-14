@@ -2,8 +2,11 @@ import {
     IComapiConfig,
     IAuthChallenge,
     LogLevels,
-    LogPersistences
+    LogPersistences,
+    IFoundationRestUrls
 } from "./interfaces";
+
+import { FoundationRestUrls } from "./urlConfig";
 
 
 export class ComapiConfig implements IComapiConfig {
@@ -17,6 +20,7 @@ export class ComapiConfig implements IComapiConfig {
     public logPersistence: LogPersistences = LogPersistences.LocalStorage;
     public isTypingTimeout: number = 10;
     public isTypingOffTimeout: number = 10;
+    public foundationRestUrls: IFoundationRestUrls = new FoundationRestUrls();
 
     /**
      * ComapiConfig class constructor.
@@ -99,6 +103,17 @@ export class ComapiConfig implements IComapiConfig {
      */
     public withLogPersistence(logPersistence: LogPersistences) {
         this.logPersistence = logPersistence;
+        return this;
+    }
+
+    /**
+     * Function to override foundationRestUrls 
+     * @method ComapiConfig#withFoundationRestUrls
+     * @param {IFoundationRestUrls} foundationRestUrls - the foundationRestUrls
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+    public withFoundationRestUrls(foundationRestUrls: IFoundationRestUrls) {
+        this.foundationRestUrls = foundationRestUrls;
         return this;
     }
 

@@ -2,7 +2,6 @@
 import { IProfileManager, ISessionManager, ILogger, IRestClient, ILocalStorageData, IComapiConfig } from "./interfaces";
 
 import { Utils } from "./utils";
-
 export class ProfileManager implements IProfileManager {
 
     /**        
@@ -29,7 +28,12 @@ export class ProfileManager implements IProfileManager {
      * @returns {Promise} 
      */
     public getProfile(id: string): Promise<any> {
-        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/profiles/${id}`;
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.profile, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            profileId: id,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         return this._restClient.get(url);
     }
@@ -42,7 +46,10 @@ export class ProfileManager implements IProfileManager {
      */
     public queryProfiles(query?: string): Promise<any> {
 
-        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/profiles`;
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.profiles, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         if (query) {
             url += ("?" + query);
@@ -73,7 +80,11 @@ export class ProfileManager implements IProfileManager {
             data.id = id;
         }
 
-        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/profiles/${id}`;
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.profile, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            profileId: id,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         return this._restClient.put(url, headers, data);
     }
@@ -101,7 +112,11 @@ export class ProfileManager implements IProfileManager {
             data.id = id;
         }
 
-        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/profiles/${id}`;
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.profile, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            profileId: id,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         return this._restClient.patch(url, headers, data);
     }

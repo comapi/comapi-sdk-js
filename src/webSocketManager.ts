@@ -29,7 +29,7 @@ export class WebSocketManager implements IWebSocketManager {
 
     private webSocket: WebSocket;
     private manuallyClosed: boolean = false;
-    // current state of socket connetcion
+    // current state of socket connection
     private connected: boolean = false;
     // whether socket ever connected - set to true on first connect and used to determine whether to reconnect on close if not a manual close
     private didConnect: boolean = false;
@@ -267,12 +267,61 @@ export class WebSocketManager implements IWebSocketManager {
         }
     }
 
+
+    /**
+     * 
+     * @param name 
+     */
+    private mapEventName(name): string {
+
+        // // TODO: make this configurable
+        // let eventAliasInfo: IEventMapping = {
+        //     conversation: ["conversation", "chat"],
+        //     conversationMessage: ["conversationMessage", "chatMessage"],
+        //     profile: ["profile"]
+        // };
+
+        if (this._comapiConfig.eventMapping) {
+            if (name) {
+
+                let split = name.split(".");
+
+                // for conversation.delete, category is conversation, type is delete
+                let category = split[0];
+                let type = split[1];
+
+
+                for (let eventCategory in this._comapiConfig.eventMapping) {
+
+                    if (this._comapiConfig.eventMapping.hasOwnProperty(eventCategory)) {
+
+                        // propertyName is what you want
+                        // you can get the value like this: myObject[propertyName]
+
+                        let aliases = this._comapiConfig.eventMapping[eventCategory];
+
+                        // go through the
+                        for (let val of aliases) {
+                            if (val === category) {
+                                return eventCategory + "." + type;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return name;
+    }
+
     /**
      * Map internal event structure to a defined interface ...
      */
     private publishWebsocketEvent(event): void {
 
-        switch (event.name) {
+        let mappedName = this.mapEventName(event.name);
+
+        switch (mappedName) {
 
             case "conversation.delete":
                 {

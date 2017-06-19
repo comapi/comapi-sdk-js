@@ -265,6 +265,13 @@ export interface IFoundationRestUrls {
     session: string;
 }
 
+
+export interface IEventMapping {
+    [category: string]: string[];
+}
+
+
+
 /**
  * Comapi options to be passed in on startup 
  */
@@ -279,6 +286,7 @@ export interface IComapiConfig {
     isTypingTimeout?: number;
     isTypingOffTimeout?: number;
     foundationRestUrls?: IFoundationRestUrls;
+    eventMapping?: IEventMapping;
 };
 
 /**

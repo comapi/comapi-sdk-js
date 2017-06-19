@@ -3,7 +3,8 @@ import {
     IAuthChallenge,
     LogLevels,
     LogPersistences,
-    IFoundationRestUrls
+    IFoundationRestUrls,
+    IEventMapping
 } from "./interfaces";
 
 import { FoundationRestUrls } from "./urlConfig";
@@ -21,6 +22,7 @@ export class ComapiConfig implements IComapiConfig {
     public isTypingTimeout: number = 10;
     public isTypingOffTimeout: number = 10;
     public foundationRestUrls: IFoundationRestUrls = new FoundationRestUrls();
+    public eventMapping: IEventMapping;
 
     /**
      * ComapiConfig class constructor.
@@ -114,6 +116,17 @@ export class ComapiConfig implements IComapiConfig {
      */
     public withFoundationRestUrls(foundationRestUrls: IFoundationRestUrls) {
         this.foundationRestUrls = foundationRestUrls;
+        return this;
+    }
+
+    /**
+     * Function to override eventMapping 
+     * @method ComapiConfig#withEventMapping
+     * @param {IEventMapping} eventMapping - the eventMapping
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+    public withEventMapping(eventMapping: IEventMapping) {
+        this.eventMapping = eventMapping;
         return this;
     }
 

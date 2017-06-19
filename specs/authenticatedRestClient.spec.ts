@@ -40,10 +40,10 @@ describe("AUTHENTICATED REST API TESTS", () => {
     let comapiConfig: IComapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
+        foundationRestUrls: new FoundationRestUrls(),
         logRetentionHours: 1,
         urlBase: Config.getUrlBase(),
         webSocketBase: Config.getWebSocketBase(),
-        foundationRestUrls: new FoundationRestUrls()
     };
 
     let authenticatedRestClient: AuthenticatedRestClient;

@@ -14,7 +14,6 @@
   "dependencies": {
     "@types/jasmine": "^2.5.35",
     "grunt-ts": "^6.0.0-beta.16",
-    "inversify": "^4.1.1",
     "jasmine-core": "^2.4.1",
     "karma": "^1.5.0",
     "karma-chrome-launcher": "^2.0.0",
@@ -23,7 +22,6 @@
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-teamcity-reporter": "^1.0.0",
     "karma-typescript": "3.0.4",
-    "reflect-metadata": "^0.1.10",
     "typescript": "latest"
   },
   "devDependencies": {
@@ -50,6 +48,6 @@
     "webpack": "^1.13.3",
     "ws": "^1.1.1"
   },
-  "build": "92",
+  "build": "93",
   "license": "MIT"
 }

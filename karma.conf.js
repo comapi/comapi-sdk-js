@@ -42,15 +42,25 @@ module.exports = function (config) {
             },/*
             coverageOptions: {
                 instrumentation: false
-            },
+            },*/
             compilerOptions: {
                 emitDecoratorMetadata: true,
                 experimentalDecorators: true,
-                jsx: "react",
                 module: "commonjs",
-                sourceMap: false,
-                target: "ES5"
-            }*/
+                sourceMap: true,
+                "moduleResolution": "node",                
+                target: "ES5",
+                "lib": [
+                    "es6",
+                    "dom"
+                ],
+                "types": [
+                    "jasmine",
+                    "reflect-metadata"
+                ]
+                
+                
+            }
         }
     });
 };

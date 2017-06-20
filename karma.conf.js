@@ -8,8 +8,9 @@ module.exports = function (config) {
         files: [
             'lib/es5-promise-polyfill.js',
             'lib/array-find-polyfill.js',
-            "src/**/*.ts",
-            "specs/**/*.ts"
+            // "src/**/*.ts",
+            // "specs/**/*.ts"
+            "specs/container.spec.ts"
         ],
 
         preprocessors: {

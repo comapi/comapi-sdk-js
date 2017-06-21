@@ -20,12 +20,12 @@ import {
     IOrphanedEventManager
 } from "./interfaces";
 
-import { EventManager } from "./eventManager";
+// import { EventManager } from "./eventManager";
 import { Logger } from "./logger";
 import { RestClient } from "./restClient";
 import { AuthenticatedRestClient } from "./authenticatedRestClient";
 import { IndexedDBLogger } from "./indexedDBLogger";
-import { LocalStorageData } from "./localStorageData";
+// import { LocalStorageData } from "./localStorageData";
 import { SessionManager } from "./sessionManager";
 import { DeviceManager } from "./deviceManager";
 import { FacebookManager } from "./facebookManager";
@@ -49,6 +49,9 @@ import { Device } from "./device";
 import { Channels } from "./channels";
 import { NetworkManager } from "./networkManager";
 import { FoundationRestUrls } from "./urlConfig";
+
+import { container } from "./inversify.config";
+
 
 /*
  * Exports to be added to COMAPI namespace
@@ -152,16 +155,20 @@ export class Foundation implements IFoundation {
         }
 
         function foundationFactory(config: IComapiConfig, indexedDBLogger?: IndexedDBLogger) {
-            let eventManager: IEventManager = new EventManager();
 
-            let localStorageData: ILocalStorageData = new LocalStorageData();
+            let eventManager: IEventManager = container.get<IEventManager>("EventManager");
 
-            let logger: ILogger = new Logger(eventManager, config.logPersistence === LogPersistences.LocalStorage ? localStorageData : undefined, indexedDBLogger);
+            let localStorageData: ILocalStorageData = container.get<ILocalStorageData>("LocalStorageData");
+
+            let logger: ILogger = container.get<ILogger>("Logger");
+            //  let logger: ILogger = new Logger(eventManager, config.logPersistence === LogPersistences.LocalStorage ? localStorageData : undefined, indexedDBLogger);
 
             if (config.logLevel) {
                 logger.logLevel = config.logLevel;
             }
 
+            // Error: Circular dependency found: RestClient -> Logger -> EventManager -> LocalStorageData -> IndexedDBLogger -> NetworkManager -> SessionManager -> Logger
+            // let restClient: IRestClient = container.get<IRestClient>("RestClient");
             let restClient: IRestClient = new RestClient(logger);
 
             let sessionManager: ISessionManager = new SessionManager(logger, restClient, localStorageData, config);

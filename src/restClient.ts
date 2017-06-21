@@ -1,6 +1,11 @@
+import { injectable, inject, optional } from "inversify";
 import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./interfaces";
 
+@injectable()
 export class RestClient implements IRestClient {
+
+    // TODO: Needs review ... this generates a circular dependency ...
+    // protected networkManager: INetworkManager;
 
 
     private _readyStates: string[] = [
@@ -19,7 +24,8 @@ export class RestClient implements IRestClient {
      * @param {ILogger} [logger] - the logger 
      * @param {INetworkManager} [networkManager] - the network Manager 
      */
-    constructor(protected logger?: ILogger, protected networkManager?: INetworkManager) { }
+    constructor( @inject("Logger") @optional() protected logger?: ILogger,
+        @inject("NetworkManager") @optional() protected networkManager?: INetworkManager) { }
 
 
 

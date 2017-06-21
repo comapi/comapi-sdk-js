@@ -23,16 +23,18 @@ module.exports = function (grunt) {
                 "lib": [
                     "es6",
                     "dom"
-                ],                
+                ],
                 module: 'commonjs',                 // target javascript module style. [amd (default) | commonjs]
                 sourceMap: true,               // generate a source map for every output js file. [true (default) | false]                                                                    // Both html templates accept the ext and filename parameters.
                 noImplicitAny: false,          // set to true to pass --noImplicitAny to the compiler. [true | false (default)]
                 fast: "watch",                  // see https://github.com/TypeStrong/grunt-ts/blob/master/docs/fast.md ["watch" (default) | "always" | "never"]
-                rootDir: "build/src/", 
-            },            
+                rootDir: "build/src/",
+                "experimentalDecorators": true,
+                "emitDecoratorMetadata": true,
+            },
             default: {
                 src: ["build/src/**/*.ts"],
-                outDir: "build/output/", 
+                outDir: "build/output/",
 
             }
         },

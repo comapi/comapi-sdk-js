@@ -1,3 +1,5 @@
+import "reflect-metadata";
+
 import { INetworkManager, ISessionInfo, ISession } from "../src/interfaces";
 import { RestClient } from "../src/restClient";
 import { Logger } from "../src/logger";

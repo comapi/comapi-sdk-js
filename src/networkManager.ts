@@ -1,4 +1,4 @@
-
+import { injectable, inject, optional } from "inversify";
 
 import {
     ISessionManager,
@@ -9,6 +9,7 @@ import {
 } from "./interfaces";
 
 
+@injectable()
 export class NetworkManager implements INetworkManager {
 
     /**        
@@ -19,7 +20,7 @@ export class NetworkManager implements INetworkManager {
      * @parameter {ISessionManager} _sessionManager 
      * @parameter {IWebSocketManager} _webSocketManager 
      */
-    constructor(private _sessionManager: ISessionManager, private _webSocketManager: IWebSocketManager) { }
+    constructor( @inject("SessionManager") private _sessionManager: ISessionManager, @inject("WebSocketManager") private _webSocketManager: IWebSocketManager) { }
 
 
     /**

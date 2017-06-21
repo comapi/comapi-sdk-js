@@ -8,9 +8,13 @@ module.exports = function (config) {
         files: [
             'lib/es5-promise-polyfill.js',
             'lib/array-find-polyfill.js',
-            // "src/**/*.ts",
-            // "specs/**/*.ts"
-            "specs/container.spec.ts"
+            //            'lib/es6-map-shim.js',
+            "src/inversify.config.ts",
+            "src/**/*.ts",
+            // "specs/container.spec.ts"
+            "specs/config.ts",
+            // "specs/**/*.spec.ts",
+            "specs/auth.spec.ts"
         ],
 
         preprocessors: {
@@ -40,16 +44,16 @@ module.exports = function (config) {
                 "html": "coverage",
                 "text-summary": "",
                 "teamcity": ""
-            },/*
+            },
             coverageOptions: {
                 instrumentation: false
-            },*/
+            },
             compilerOptions: {
                 emitDecoratorMetadata: true,
                 experimentalDecorators: true,
                 module: "commonjs",
                 sourceMap: true,
-                "moduleResolution": "node",                
+                "moduleResolution": "node",
                 target: "ES5",
                 "lib": [
                     "es6",
@@ -59,8 +63,8 @@ module.exports = function (config) {
                     "jasmine",
                     "reflect-metadata"
                 ]
-                
-                
+
+
             }
         }
     });

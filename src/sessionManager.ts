@@ -1,3 +1,5 @@
+import { injectable, inject, optional } from "inversify";
+
 import {
     IAuthChallengeOptions,
     ISessionManager,
@@ -10,7 +12,7 @@ import {
 } from "./interfaces";
 
 import { Utils } from "./utils";
-
+@injectable()
 export class SessionManager implements ISessionManager {
 
     private _deviceId: string;
@@ -30,10 +32,10 @@ export class SessionManager implements ISessionManager {
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IComapiConfig} comapiConfig 
      */
-    constructor(private _logger: ILogger,
-        private _restClient: IRestClient,
-        private _localStorageData: ILocalStorageData,
-        private _comapiConfig: IComapiConfig) {
+    constructor( @inject("Logger") private _logger: ILogger,
+        @inject("RestClient") private _restClient: IRestClient,
+        @inject("LocalStorageData") private _localStorageData: ILocalStorageData,
+        @inject("ComapiConfig") private _comapiConfig: IComapiConfig) {
 
         this._deviceId = _localStorageData.getString("deviceId");
 

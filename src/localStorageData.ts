@@ -1,9 +1,11 @@
+import { injectable } from "inversify";
 import { ILocalStorageData } from "./interfaces";
 
+@injectable()
 export class LocalStorageData implements ILocalStorageData {
 
 
-    private _prefix: string = "comapi.";
+    private _prefix: string;
 
     /**
      * LocalStorageData class constructor.
@@ -12,10 +14,17 @@ export class LocalStorageData implements ILocalStorageData {
      * @classdesc Class that implements Local storage access.
      * @param  {string} [prefix]
      */
-    constructor(prefix?: string) {
-        if (prefix) {
-            this._prefix = prefix;
-        }
+    constructor() {
+        this._prefix = "comapi.";
+    }
+
+    /**
+     * Setter to set the prefix 
+     * @method LocalStorageData#prefix
+     * @param {string} prefix - the prefix
+     */
+    set prefix(prefix: string) {
+        this._prefix = prefix;
     }
 
 

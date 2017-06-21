@@ -34,7 +34,7 @@ describe("IOC tests", () => {
   it("Should fill in all dependencies", () => {
 
     interface ILogger {
-      log(string): void;
+      log(text): void;
     }
 
     @injectable()
@@ -85,7 +85,7 @@ describe("IOC tests", () => {
   it("Should fill in all dependencies", () => {
 
     interface ILogger {
-      log(string): void;
+      log(text): void;
     }
 
     @injectable()
@@ -130,7 +130,7 @@ describe("IOC tests", () => {
   it("Should fill in dynamic dependencies", () => {
 
     interface ILogger {
-      log(string): void;
+      log(text): void;
     }
 
     class Logger implements ILogger {

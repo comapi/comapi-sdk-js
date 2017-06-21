@@ -5,6 +5,7 @@ import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./inte
 @injectable()
 export class AuthenticatedRestClient implements IRestClient {
 
+    private retryCount: number = 3;
     /**        
      * AuthenticatedRestClient class constructor.
      * @class AuthenticatedRestClient
@@ -18,6 +19,23 @@ export class AuthenticatedRestClient implements IRestClient {
         @inject("RestClient") private restClient: IRestClient,
         @inject("NetworkManager") private networkManager: INetworkManager) { }
 
+
+    private makeRequestWithRetry(count: number, verb: Function, url: string, headers?: any, data?: any) {
+
+        return verb(url, headers, data)
+            .catch(result => {
+                if (count < this.retryCount && result.statusCode === 401 && this.networkManager) {
+                    return this.networkManager.restartSession()
+                        .then(sessionInfo => {
+                            headers.authorization = this.constructAUthHeader(sessionInfo.token);
+                            return this.makeRequestWithRetry(++count, verb, url, headers, data);
+                        });
+                }
+                throw result;
+            });
+    }
+
+
     /**
      * Method to make a GET request 
      * @method AuthenticatedRestClient#get
@@ -27,10 +45,12 @@ export class AuthenticatedRestClient implements IRestClient {
      */
     public get(url: string, headers?: any): Promise<IRestClientResult> {
         headers = headers || {};
+        let self = this;
+
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return this.restClient.get(url, headers);
+                return this.makeRequestWithRetry(0, this.restClient.get.bind(this.restClient), url, headers);
             });
     }
 
@@ -43,10 +63,12 @@ export class AuthenticatedRestClient implements IRestClient {
      * @returns {Promise} - returns a promise
      */
     public post(url: string, headers: any, data: any): Promise<IRestClientResult> {
+        let self = this;
+
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return this.restClient.post(url, headers, data);
+                return this.makeRequestWithRetry(0, this.restClient.post.bind(this.restClient), url, headers, data);
             });
     }
 
@@ -62,7 +84,7 @@ export class AuthenticatedRestClient implements IRestClient {
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return this.restClient.patch(url, headers, data);
+                return this.makeRequestWithRetry(0, this.restClient.patch.bind(this.restClient), url, headers, data);
             });
     }
 
@@ -79,7 +101,7 @@ export class AuthenticatedRestClient implements IRestClient {
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return this.restClient.put(url, headers, data);
+                return this.makeRequestWithRetry(0, this.restClient.put.bind(this.restClient), url, headers, data);
             });
     }
 
@@ -94,7 +116,7 @@ export class AuthenticatedRestClient implements IRestClient {
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return this.restClient.delete(url, headers);
+                return this.makeRequestWithRetry(0, this.restClient.delete.bind(this.restClient), url, headers);
             });
     }
 

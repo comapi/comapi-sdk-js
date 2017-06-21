@@ -161,8 +161,21 @@ export class RestClient implements IRestClient {
      * @param  {any} [data]
      * @returns {Promise} - returns a promise
      */
-    private _makeRequest(method: string, url: string, headers?: any, data?: any) {
+    private makeRequest(method: string, url: string, headers?: any, data?: any) {
+
         return new Promise((resolve, reject) => {
+
+            headers = headers || {};
+
+            // We want this as a default default ...
+            if (!headers["Content-Type"]) {
+                headers["Content-Type"] = "application/json";
+            }
+
+            // Edge wants to cache requests by default ...
+            if (!headers["Cache-Control"]) {
+                headers["Cache-Control"] = "no-cache";
+            }
 
             if (this.logger) {
                 this.logger.log(`${method}'ing ${url}  ...`);
@@ -257,50 +270,5 @@ export class RestClient implements IRestClient {
                 this.logger.log("send data", data);
             }
         });
-
-    }
-
-    /**
-     * @param  {string} method (GET,POST,PUT,DELETE)
-     * @param  {string} url
-     * @param  {any} [headers]
-     * @param  {any} [data]
-     * @returns {Promise} - returns a promise
-     */
-    private makeRequest(method: string, url: string, headers?: any, data?: any): Promise<IRestClientResult> {
-        let self = this;
-
-        headers = headers || {};
-
-        // We want this as a default default ...
-        if (!headers["Content-Type"]) {
-            headers["Content-Type"] = "application/json";
-        }
-
-        // Edge wants to cache requests by default ...
-        if (!headers["Cache-Control"]) {
-            headers["Cache-Control"] = "no-cache";
-        }
-
-        function recurse(i) {
-            return self._makeRequest(method, url, headers, data)
-                .catch(function (result) {
-                    // TODO: refactor max retry count into some config ...
-                    if (i < 3 && result.statusCode === 401 && self.networkManager) {
-
-                        // the old session is just dead so ending it is not reuired ...
-                        //  - the old websocket will still be connected and needs to be cleanly disconnected 
-
-                        // TODO: add a restartSession()which encapsuates this logic ?
-                        return self.networkManager.restartSession()
-                            .then(sessionInfo => {
-                                headers.authorization = `Bearer ${sessionInfo.token}`;
-                                return recurse(++i);
-                            });
-                    }
-                    throw result;
-                });
-        }
-        return recurse(0);
     }
 }

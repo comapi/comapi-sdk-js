@@ -8,13 +8,13 @@ module.exports = function (config) {
         files: [
             'lib/es5-promise-polyfill.js',
             'lib/array-find-polyfill.js',
-            //            'lib/es6-map-shim.js',
+            'lib/es6-map-shim.js',
             "src/inversify.config.ts",
             "src/**/*.ts",
             // "specs/container.spec.ts"
             "specs/config.ts",
             "specs/**/*.spec.ts",
-            //"specs/auth.spec.ts"
+            // "specs/401_retry.spec.ts"
         ],
 
         preprocessors: {
@@ -44,10 +44,10 @@ module.exports = function (config) {
                 "html": "coverage",
                 "text-summary": "",
                 "teamcity": ""
-            },
+            },/*
             coverageOptions: {
                 instrumentation: false
-            },
+            },*/
             compilerOptions: {
                 emitDecoratorMetadata: true,
                 experimentalDecorators: true,

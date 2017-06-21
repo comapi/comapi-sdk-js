@@ -65,7 +65,7 @@ app.post('/testBadRequest', function (req, res, next) {
     res.status(400).json(req.body);
 });
 
-app.post('/testUnauthorized', function (req, res, next) {
+function testUnauthorized(req, res) {
 
     if (req.headers.authorization) {
         // don't really care what it is set to ;-)
@@ -88,6 +88,13 @@ app.post('/testUnauthorized', function (req, res, next) {
         console.log("testUnauthorized no jwt");
         res.sendStatus(401);
     }
+}
+app.get('/testUnauthorized', function (req, res, next) {
+    testUnauthorized(req, res);
+});
+
+app.post('/testUnauthorized', function (req, res, next) {
+    testUnauthorized(req, res);
 });
 
 app.post('/testServerError', function (req, res, next) {

@@ -159,7 +159,10 @@ module.exports = function (grunt) {
         webpack: {
             build: {
 
-                entry: './build/output/foundation.js',
+                entry: [
+                    './node_modules/reflect-metadata/Reflect.js',
+                    './build/output/foundation.js'
+                ],
                 output: {
                     path: './build/bundle',
                     filename: "comapi-foundation.js",

@@ -1,4 +1,4 @@
-import { injectable, inject, optional } from "inversify";
+import { injectable, inject } from "inversify";
 
 import {
     IAuthChallengeOptions,

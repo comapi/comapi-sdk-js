@@ -1,9 +1,9 @@
+import { injectable, inject } from "inversify";
+
 import {
     IEventManager,
     ILogger,
-    IRestClient,
     ILocalStorageData,
-    ISessionManager,
     ISession,
     IDeviceManager,
     IFacebookManager,
@@ -11,7 +11,6 @@ import {
     IProfileManager,
     IMessageManager,
     IComapiConfig,
-    IWebSocketManager,
     LogPersistences,
     IServices,
     IDevice,
@@ -21,20 +20,8 @@ import {
     INetworkManager
 } from "./interfaces";
 
-// import { EventManager } from "./eventManager";
-import { Logger } from "./logger";
-import { RestClient } from "./restClient";
-import { AuthenticatedRestClient } from "./authenticatedRestClient";
 import { IndexedDBLogger } from "./indexedDBLogger";
-// import { LocalStorageData } from "./localStorageData";
-import { SessionManager } from "./sessionManager";
-import { DeviceManager } from "./deviceManager";
-import { FacebookManager } from "./facebookManager";
-import { ProfileManager } from "./profileManager";
-import { MessageManager } from "./messageManager";
 import { MessagePager } from "./messagePager";
-import { ConversationManager } from "./conversationManager";
-import { WebSocketManager } from "./webSocketManager";
 import { ConversationBuilder } from "./conversationBuilder";
 import { MessageBuilder } from "./messageBuilder";
 import { MessageStatusBuilder } from "./messageStatusBuilder";
@@ -48,7 +35,6 @@ import { Profile } from "./profile";
 import { Services } from "./services";
 import { Device } from "./device";
 import { Channels } from "./channels";
-import { NetworkManager } from "./networkManager";
 import { FoundationRestUrls } from "./urlConfig";
 
 import { container } from "./inversify.config";
@@ -59,12 +45,13 @@ import { container } from "./inversify.config";
  */
 export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder }
 
+@injectable()
 export class Foundation implements IFoundation {
 
     /**
      * Singleton Foundation instance
      */
-    private static _foundation: Foundation;
+    private static _foundation: IFoundation;
 
     /**
      * @name Foundation#_services
@@ -122,8 +109,6 @@ export class Foundation implements IFoundation {
      */
     private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
 
-        let _comapiConfig = comapiConfig;
-
         if (container.isBound("ComapiConfig")) {
             container.unbind("ComapiConfig");
         }
@@ -155,52 +140,14 @@ export class Foundation implements IFoundation {
                     return indexedDBLogger.purge(purgeDate);
                 })
                 .then(function () {
-                    let foundation: Foundation = foundationFactory(comapiConfig, indexedDBLogger);
+                    let foundation: IFoundation = container.get<IFoundation>("Foundation");
                     if (doSingleton) { Foundation._foundation = foundation; }
                     return Promise.resolve(foundation);
                 });
         } else {
-            let foundation: Foundation = foundationFactory(comapiConfig);
+            let foundation: IFoundation = container.get<IFoundation>("Foundation");
             if (doSingleton) { Foundation._foundation = foundation; }
             return Promise.resolve(foundation);
-        }
-
-        function foundationFactory(config: IComapiConfig, indexedDBLogger?: IndexedDBLogger) {
-
-            let eventManager: IEventManager = container.get<IEventManager>("EventManager");
-
-            let localStorageData: ILocalStorageData = container.get<ILocalStorageData>("LocalStorageData");
-
-            let logger: ILogger = container.get<ILogger>("Logger");
-            //  let logger: ILogger = new Logger(eventManager, config.logPersistence === LogPersistences.LocalStorage ? localStorageData : undefined, indexedDBLogger);
-
-            if (config.logLevel) {
-                logger.logLevel = config.logLevel;
-            }
-
-            let restClient: IRestClient = container.get<IRestClient>("RestClient");
-            let sessionManager: ISessionManager = container.get<ISessionManager>("SessionManager");
-            let webSocketManager: IWebSocketManager = container.get<IWebSocketManager>("WebSocketManager");
-            let networkManager: INetworkManager = container.get<INetworkManager>("NetworkManager");
-            let authenticatedRestClient: IRestClient = container.get<IRestClient>("AuthenticatedRestClient");
-            let deviceManager: IDeviceManager = container.get<IDeviceManager>("DeviceManager");
-            let facebookManager: IFacebookManager = container.get<IFacebookManager>("FacebookManager");
-            let conversationManager: IConversationManager = container.get<IConversationManager>("ConversationManager");
-            let profileManager: IProfileManager = container.get<IProfileManager>("ProfileManager");
-            let messageManager: IMessageManager = container.get<IMessageManager>("MessageManager");
-
-            let foundation = new Foundation(eventManager,
-                logger,
-                localStorageData,
-                networkManager,
-                deviceManager,
-                facebookManager,
-                conversationManager,
-                profileManager,
-                messageManager,
-                config);
-
-            return foundation;
         }
     }
 
@@ -209,17 +156,16 @@ export class Foundation implements IFoundation {
      * @class Foundation
      * @classdesc Class that implements Comapi foundation functionality.
      */
-    constructor(private _eventManager: IEventManager,
-        private _logger: ILogger,
-        /*private*/ _localStorageData: ILocalStorageData,
-        private _networkManager: INetworkManager,
-        /*private*/ _deviceManager: IDeviceManager,
-        /*private*/ _facebookManager: IFacebookManager,
-        /*private*/ _conversationManager: IConversationManager,
-        /*private*/ _profileManager: IProfileManager,
-        /*private*/ _messageManager: IMessageManager,
-        /*private*/ _comapiConfig: IComapiConfig) {
-
+    constructor( @inject("EventManager") private _eventManager: IEventManager,
+        @inject("Logger") private _logger: ILogger,
+        @inject("LocalStorageData") /*private*/ _localStorageData: ILocalStorageData,
+        @inject("NetworkManager") private _networkManager: INetworkManager,
+        @inject("DeviceManager") /*private*/ _deviceManager: IDeviceManager,
+        @inject("FacebookManager") /*private*/ _facebookManager: IFacebookManager,
+        @inject("ConversationManager") /*private*/ _conversationManager: IConversationManager,
+        @inject("ProfileManager") /*private*/ _profileManager: IProfileManager,
+        @inject("MessageManager") /*private*/ _messageManager: IMessageManager,
+        @inject("ComapiConfig") /*private*/ _comapiConfig: IComapiConfig) {
 
         let dbSupported: boolean = "indexedDB" in window;
         let orphanedEventManager: IOrphanedEventManager;

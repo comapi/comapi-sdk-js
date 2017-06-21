@@ -1,6 +1,5 @@
 import { injectable, inject } from "inversify";
 import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./interfaces";
-import { RestClient } from "./restClient";
 
 
 @injectable()

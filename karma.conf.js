@@ -13,8 +13,8 @@ module.exports = function (config) {
             "src/**/*.ts",
             // "specs/container.spec.ts"
             "specs/config.ts",
-            // "specs/**/*.spec.ts",
-            "specs/auth.spec.ts"
+            "specs/**/*.spec.ts",
+            //"specs/auth.spec.ts"
         ],
 
         preprocessors: {

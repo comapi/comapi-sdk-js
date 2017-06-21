@@ -65,8 +65,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
 
         let networkManager = new NetworkManager(sessionManager, webSocketManager);
 
-
-        authenticatedRestClient = new AuthenticatedRestClient(logger, networkManager);
+        authenticatedRestClient = new AuthenticatedRestClient(logger, restClient, networkManager);
 
         sessionManager.startSession()
             .then(sessionInfo => {

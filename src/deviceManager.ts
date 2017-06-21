@@ -1,3 +1,5 @@
+import { injectable, inject } from "inversify";
+
 import {
     IDeviceManager,
     ILogger,
@@ -8,6 +10,7 @@ import {
 } from "./interfaces";
 
 import { Utils } from "./utils";
+@injectable()
 export class DeviceManager implements IDeviceManager {
 
     // private _deviceId: string;
@@ -22,10 +25,10 @@ export class DeviceManager implements IDeviceManager {
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IComapiConfig} ComapiConfig 
      */
-    constructor(private _logger: ILogger,
-        private _restClient: IRestClient,
-        private _localStorageData: ILocalStorageData,
-        private _comapiConfig: IComapiConfig) {
+    constructor( @inject("Logger") private _logger: ILogger,
+        @inject("AuthenticatedRestClient") private _restClient: IRestClient,
+        @inject("LocalStorageData") private _localStorageData: ILocalStorageData,
+        @inject("ComapiConfig") private _comapiConfig: IComapiConfig) {
 
         // this._deviceId = _localStorageData.getString("deviceId");
 

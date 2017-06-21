@@ -1,3 +1,4 @@
+import { injectable, inject } from "inversify";
 
 import {
     IMessageManager,
@@ -18,6 +19,7 @@ import {
 
 import { Utils } from "./utils";
 
+@injectable()
 export class MessageManager implements IMessageManager {
 
     /**
@@ -32,12 +34,12 @@ export class MessageManager implements IMessageManager {
      * @parameter {ISessionManager} sessionManager
      * @parameter {IChannelManager} channelManager                    
      */
-    constructor(private _logger: ILogger,
-        private _restClient: IRestClient,
-        private _localStorageData: ILocalStorageData,
-        private _comapiConfig: IComapiConfig,
-        private _sessionManager: ISessionManager,
-        private _conversationManager: IConversationManager) { }
+    constructor( @inject("Logger") private _logger: ILogger,
+        @inject("AuthenticatedRestClient") private _restClient: IRestClient,
+        @inject("LocalStorageData") private _localStorageData: ILocalStorageData,
+        @inject("ComapiConfig") private _comapiConfig: IComapiConfig,
+        @inject("SessionManager") private _sessionManager: ISessionManager,
+        @inject("ConversationManager") private _conversationManager: IConversationManager) { }
 
 
     /**

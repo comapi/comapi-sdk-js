@@ -1,8 +1,10 @@
+import { injectable, inject } from "inversify";
 import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./interfaces";
 import { RestClient } from "./restClient";
 
 
-export class AuthenticatedRestClient extends RestClient implements IRestClient {
+@injectable()
+export class AuthenticatedRestClient implements IRestClient {
 
     /**        
      * AuthenticatedRestClient class constructor.
@@ -10,11 +12,12 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
      * @ignore
      * @classdesc Class that implements an Authenticated RestClient.
      * @param {ILogger} logger - the logger 
+     * @param {IRestClient} restClient - the restClient 
      * @param {INetworkManager} networkManager - the Network Manager 
      */
-    constructor(logger: ILogger, networkManager: INetworkManager) {
-        super(logger, networkManager);
-    }
+    constructor( @inject("Logger") private logger: ILogger,
+        @inject("RestClient") private restClient: IRestClient,
+        @inject("NetworkManager") private networkManager: INetworkManager) { }
 
     /**
      * Method to make a GET request 
@@ -28,7 +31,7 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return super.get(url, headers);
+                return this.restClient.get(url, headers);
             });
     }
 
@@ -44,7 +47,7 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return super.post(url, headers, data);
+                return this.restClient.post(url, headers, data);
             });
     }
 
@@ -60,7 +63,7 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return super.patch(url, headers, data);
+                return this.restClient.patch(url, headers, data);
             });
     }
 
@@ -77,7 +80,7 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return super.put(url, headers, data);
+                return this.restClient.put(url, headers, data);
             });
     }
 
@@ -92,7 +95,7 @@ export class AuthenticatedRestClient extends RestClient implements IRestClient {
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
-                return super.delete(url, headers);
+                return this.restClient.delete(url, headers);
             });
     }
 

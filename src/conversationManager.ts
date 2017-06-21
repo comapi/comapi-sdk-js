@@ -1,3 +1,5 @@
+import { injectable, inject } from "inversify";
+
 import {
     IConversationManager,
     IConversationParticipant,
@@ -12,6 +14,7 @@ import {
 } from "./interfaces";
 
 import { Utils } from "./utils";
+@injectable()
 export class ConversationManager implements IConversationManager {
 
     //  This object is an in-memory dictionary of last sent timestamps (conversationId: timestamp) ...
@@ -31,11 +34,11 @@ export class ConversationManager implements IConversationManager {
      * @parameter {IComapiConfig} ComapiConfig 
      * @parameter {ISessionManager} sessionManager 
      */
-    constructor(private _logger: ILogger,
-        private _restClient: IRestClient,
-        private _localStorageData: ILocalStorageData,
-        private _comapiConfig: IComapiConfig,
-        private _sessionManager: ISessionManager) { }
+    constructor( @inject("Logger") private _logger: ILogger,
+        @inject("AuthenticatedRestClient") private _restClient: IRestClient,
+        @inject("LocalStorageData") private _localStorageData: ILocalStorageData,
+        @inject("ComapiConfig") private _comapiConfig: IComapiConfig,
+        @inject("SessionManager") private _sessionManager: ISessionManager) { }
 
 
     /**

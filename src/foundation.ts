@@ -17,7 +17,8 @@ import {
     IDevice,
     IChannels,
     IFoundation,
-    IOrphanedEventManager
+    IOrphanedEventManager,
+    INetworkManager
 } from "./interfaces";
 
 // import { EventManager } from "./eventManager";
@@ -121,6 +122,16 @@ export class Foundation implements IFoundation {
      */
     private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
 
+        let _comapiConfig = comapiConfig;
+
+        if (container.isBound("ComapiConfig")) {
+            container.unbind("ComapiConfig");
+        }
+
+        container.bind<IComapiConfig>("ComapiConfig").toDynamicValue((context) => {
+            return comapiConfig;
+        });
+
         if (doSingleton && Foundation._foundation) {
             return Promise.resolve(Foundation._foundation);
         }
@@ -167,28 +178,16 @@ export class Foundation implements IFoundation {
                 logger.logLevel = config.logLevel;
             }
 
-            // Error: Circular dependency found: RestClient -> Logger -> EventManager -> LocalStorageData -> IndexedDBLogger -> NetworkManager -> SessionManager -> Logger
-            // let restClient: IRestClient = container.get<IRestClient>("RestClient");
-            let restClient: IRestClient = new RestClient(logger);
-
-            let sessionManager: ISessionManager = new SessionManager(logger, restClient, localStorageData, config);
-
-            let webSocketManager: IWebSocketManager = new WebSocketManager(logger, localStorageData, config, sessionManager, eventManager);
-
-            let networkManager = new NetworkManager(sessionManager, webSocketManager);
-
-            let authenticatedRestClient: IRestClient = new AuthenticatedRestClient(logger, networkManager);
-
-            let deviceManager: IDeviceManager = new DeviceManager(logger, authenticatedRestClient, localStorageData, config);
-
-            let facebookManager: IFacebookManager = new FacebookManager(authenticatedRestClient, config);
-
-            let conversationManager: IConversationManager = new ConversationManager(logger, authenticatedRestClient, localStorageData, config, sessionManager);
-
-            let profileManager: IProfileManager = new ProfileManager(logger, authenticatedRestClient, localStorageData, config, sessionManager);
-
-            let messageManager: IMessageManager = new MessageManager(logger, authenticatedRestClient, localStorageData, config, sessionManager, conversationManager);
-
+            let restClient: IRestClient = container.get<IRestClient>("RestClient");
+            let sessionManager: ISessionManager = container.get<ISessionManager>("SessionManager");
+            let webSocketManager: IWebSocketManager = container.get<IWebSocketManager>("WebSocketManager");
+            let networkManager: INetworkManager = container.get<INetworkManager>("NetworkManager");
+            let authenticatedRestClient: IRestClient = container.get<IRestClient>("AuthenticatedRestClient");
+            let deviceManager: IDeviceManager = container.get<IDeviceManager>("DeviceManager");
+            let facebookManager: IFacebookManager = container.get<IFacebookManager>("FacebookManager");
+            let conversationManager: IConversationManager = container.get<IConversationManager>("ConversationManager");
+            let profileManager: IProfileManager = container.get<IProfileManager>("ProfileManager");
+            let messageManager: IMessageManager = container.get<IMessageManager>("MessageManager");
 
             let foundation = new Foundation(eventManager,
                 logger,
@@ -213,7 +212,7 @@ export class Foundation implements IFoundation {
     constructor(private _eventManager: IEventManager,
         private _logger: ILogger,
         /*private*/ _localStorageData: ILocalStorageData,
-        private _networkManager: NetworkManager,
+        private _networkManager: INetworkManager,
         /*private*/ _deviceManager: IDeviceManager,
         /*private*/ _facebookManager: IFacebookManager,
         /*private*/ _conversationManager: IConversationManager,

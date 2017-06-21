@@ -1,3 +1,5 @@
+import { injectable, inject } from "inversify";
+
 import {
     IComapiConfig,
     IRestClient,
@@ -5,6 +7,7 @@ import {
 } from "./interfaces";
 
 import { Utils } from "./utils";
+@injectable()
 export class FacebookManager implements IFacebookManager {
 
     /**        
@@ -15,8 +18,8 @@ export class FacebookManager implements IFacebookManager {
      * @parameter {IRestClient} restClient 
      * @parameter {IComapiConfig} comapiConfig 
      */
-    constructor(private _restClient: IRestClient,
-        private _comapiConfig: IComapiConfig) {
+    constructor( @inject("AuthenticatedRestClient") private _restClient: IRestClient,
+        @inject("ComapiConfig") private _comapiConfig: IComapiConfig) {
     }
 
     /**

@@ -1,3 +1,5 @@
+import { injectable, inject, optional } from "inversify";
+
 import {
     IConversationDeletedEventData,
     IConversationUndeletedEventData,
@@ -17,6 +19,7 @@ import {
 } from "./interfaces";
 
 // https://gist.github.com/strife25/9310539
+@injectable()
 export class WebSocketManager implements IWebSocketManager {
 
     // ready state code mapping ...
@@ -50,11 +53,11 @@ export class WebSocketManager implements IWebSocketManager {
      * @param {ISessionManager} _sessionManager 
      * @param {IEventManager} _eventManager 
      */
-    constructor(private _logger: ILogger,
-        private _localStorageData: ILocalStorageData,
-        private _comapiConfig: IComapiConfig,
-        private _sessionManager: ISessionManager,
-        private _eventManager: IEventManager) {
+    constructor( @inject("Logger") private _logger: ILogger,
+        @inject("LocalStorageData") private _localStorageData: ILocalStorageData,
+        @inject("ComapiConfig") private _comapiConfig: IComapiConfig,
+        @inject("SessionManager") private _sessionManager: ISessionManager,
+        @inject("EventManager") private _eventManager: IEventManager) {
     }
 
     /**

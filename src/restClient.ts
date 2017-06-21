@@ -5,7 +5,7 @@ import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./inte
 export class RestClient implements IRestClient {
 
     // TODO: Needs review ... this generates a circular dependency ...
-    // protected networkManager: INetworkManager;
+    protected networkManager: INetworkManager;
 
 
     private _readyStates: string[] = [
@@ -25,7 +25,7 @@ export class RestClient implements IRestClient {
      * @param {INetworkManager} [networkManager] - the network Manager 
      */
     constructor( @inject("Logger") @optional() protected logger?: ILogger,
-        @inject("NetworkManager") @optional() protected networkManager?: INetworkManager) { }
+        /*@inject("NetworkManager") @optional() protected networkManager?: INetworkManager*/) { }
 
 
 

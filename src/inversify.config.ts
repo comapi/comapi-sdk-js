@@ -15,7 +15,6 @@ import {
     IConversationManager,
     IProfileManager,
     IMessageManager,
-    IFoundation
 } from "./interfaces";
 
 import { EventManager } from "./eventManager";
@@ -31,7 +30,6 @@ import { FacebookManager } from "./facebookManager";
 import { ConversationManager } from "./conversationManager";
 import { ProfileManager } from "./profileManager";
 import { MessageManager } from "./messageManager";
-import { Foundation } from "./foundation";
 
 let container = new Container();
 
@@ -48,7 +46,6 @@ container.bind<IFacebookManager>("FacebookManager").to(FacebookManager);
 container.bind<IConversationManager>("ConversationManager").to(ConversationManager);
 container.bind<IProfileManager>("ProfileManager").to(ProfileManager);
 container.bind<IMessageManager>("MessageManager").to(MessageManager);
-container.bind<IFoundation>("Foundation").to(Foundation);
 
 
 

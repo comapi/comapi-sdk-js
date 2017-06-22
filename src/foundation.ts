@@ -140,15 +140,51 @@ export class Foundation implements IFoundation {
                     return indexedDBLogger.purge(purgeDate);
                 })
                 .then(function () {
-                    let foundation: IFoundation = container.get<IFoundation>("Foundation");
+                    let foundation: Foundation = foundationFactory(comapiConfig, indexedDBLogger);
+                    // let foundation: IFoundation = container.get<IFoundation>("Foundation");
                     if (doSingleton) { Foundation._foundation = foundation; }
                     return Promise.resolve(foundation);
                 });
         } else {
-            let foundation: IFoundation = container.get<IFoundation>("Foundation");
+            let foundation: Foundation = foundationFactory(comapiConfig);
+            // let foundation: IFoundation = container.get<IFoundation>("Foundation");
             if (doSingleton) { Foundation._foundation = foundation; }
             return Promise.resolve(foundation);
         }
+
+        function foundationFactory(config: IComapiConfig, indexedDBLogger?: IndexedDBLogger) {
+
+            let eventManager: IEventManager = container.get<IEventManager>("EventManager");
+
+            let localStorageData: ILocalStorageData = container.get<ILocalStorageData>("LocalStorageData");
+
+            let logger: ILogger = container.get<ILogger>("Logger");
+
+            if (config.logLevel) {
+                logger.logLevel = config.logLevel;
+            }
+
+            let networkManager: INetworkManager = container.get<INetworkManager>("NetworkManager");
+            let deviceManager: IDeviceManager = container.get<IDeviceManager>("DeviceManager");
+            let facebookManager: IFacebookManager = container.get<IFacebookManager>("FacebookManager");
+            let conversationManager: IConversationManager = container.get<IConversationManager>("ConversationManager");
+            let profileManager: IProfileManager = container.get<IProfileManager>("ProfileManager");
+            let messageManager: IMessageManager = container.get<IMessageManager>("MessageManager");
+
+            let foundation = new Foundation(eventManager,
+                logger,
+                localStorageData,
+                networkManager,
+                deviceManager,
+                facebookManager,
+                conversationManager,
+                profileManager,
+                messageManager,
+                config);
+
+            return foundation;
+        }
+
     }
 
     /**

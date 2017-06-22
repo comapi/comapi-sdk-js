@@ -10,6 +10,8 @@ import {
 } from "./interfaces";
 
 import { Utils } from "./utils";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
 @injectable()
 export class DeviceManager implements IDeviceManager {
 
@@ -25,10 +27,10 @@ export class DeviceManager implements IDeviceManager {
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IComapiConfig} ComapiConfig 
      */
-    constructor( @inject("Logger") private _logger: ILogger,
-        @inject("AuthenticatedRestClient") private _restClient: IRestClient,
-        @inject("LocalStorageData") private _localStorageData: ILocalStorageData,
-        @inject("ComapiConfig") private _comapiConfig: IComapiConfig) {
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.AuthenticatedRestClient) private _restClient: IRestClient,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig) {
 
         // this._deviceId = _localStorageData.getString("deviceId");
 

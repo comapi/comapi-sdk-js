@@ -12,6 +12,8 @@ import {
 } from "./interfaces";
 
 import { Utils } from "./utils";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
 @injectable()
 export class SessionManager implements ISessionManager {
 
@@ -32,10 +34,10 @@ export class SessionManager implements ISessionManager {
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IComapiConfig} comapiConfig 
      */
-    constructor( @inject("Logger") private _logger: ILogger,
-        @inject("RestClient") private _restClient: IRestClient,
-        @inject("LocalStorageData") private _localStorageData: ILocalStorageData,
-        @inject("ComapiConfig") private _comapiConfig: IComapiConfig) {
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.RestClient) private _restClient: IRestClient,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig) {
 
         this._deviceId = _localStorageData.getString("deviceId");
 

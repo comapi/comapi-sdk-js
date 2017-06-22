@@ -1,5 +1,6 @@
 import { injectable, inject, optional } from "inversify";
 import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./interfaces";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
 @injectable()
 export class RestClient implements IRestClient {
@@ -24,7 +25,7 @@ export class RestClient implements IRestClient {
      * @param {ILogger} [logger] - the logger 
      * @param {INetworkManager} [networkManager] - the network Manager 
      */
-    constructor( @inject("Logger") @optional() protected logger?: ILogger,
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) @optional() protected logger?: ILogger,
         /*@inject("NetworkManager") @optional() protected networkManager?: INetworkManager*/) { }
 
 

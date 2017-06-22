@@ -2,6 +2,7 @@ import { injectable, inject, optional } from "inversify";
 import { ILogger, LogLevels, ILogEvent, IEventManager, ILocalStorageData } from "./interfaces";
 
 import { IndexedDBLogger } from "./indexedDBLogger";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 @injectable()
 export class Logger implements ILogger {
 
@@ -13,7 +14,6 @@ export class Logger implements ILogger {
     private _maxLocalStorageLogSize: number = 1024;
     private _localStorageKey: string = "rollingLogfile";
 
-
     /**        
      * Logger class constructor.
      * @class Logger
@@ -23,9 +23,9 @@ export class Logger implements ILogger {
      * @param {ILocalStorageData} [localStorageData] - local storage interface  - for publishing log events 
      * @param {IndexedDB} [indexedDB] - indexedDB interface - assumed to be open and ready to go 
      */
-    constructor( @inject("EventManager") private _eventManager?: IEventManager,
-        @inject("LocalStorageData") private _localStorageData?: ILocalStorageData,
-        @inject("IndexedDBLogger") @optional() private _indexedDB?: IndexedDBLogger) { }
+    constructor( @inject(INTERFACE_SYMBOLS.EventManager) private _eventManager?: IEventManager,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData?: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.IndexedDBLogger) @optional() private _indexedDB?: IndexedDBLogger) { }
 
     /**
      * Getter to get the log level

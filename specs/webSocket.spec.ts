@@ -31,9 +31,9 @@ describe("webSocket Manager tests", () => {
     let eventManager: IEventManager;
     let webSocketManager: WebSocketManager;
     /**
-     * Mock MockSessionmanager - we just need getValidAuthHeader
+     * Mock SessionManager - we just need getValidAuthHeader
      */
-    class MockSessionmanager implements ISessionManager {
+    class MockSessionManager implements ISessionManager {
 
         private _sessionInfo: any = {
             token: "1.2.3"
@@ -67,7 +67,7 @@ describe("webSocket Manager tests", () => {
 
         let data = new LocalStorageData();
         let logger = new Logger(eventManager, data);
-        let sessionManager = new MockSessionmanager();
+        let sessionManager = new MockSessionManager();
 
         webSocketManager = new WebSocketManager(logger, data, comapiConfig, sessionManager, eventManager);
         console.log("created new websocket for test");
@@ -138,7 +138,7 @@ describe("webSocket Manager tests", () => {
 
         let seenEvent = false;
 
-        // wire up an event handler - the "socket service" will send some data on conection         
+        // wire up an event handler - the "socket service" will send some data on connection         
         eventManager.subscribeToLocalEvent("webSocketEvent", event => {
             seenEvent = true;
             console.log("got webSocketEvent");

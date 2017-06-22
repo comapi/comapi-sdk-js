@@ -1,5 +1,6 @@
 import { injectable, inject } from "inversify";
 import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./interfaces";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
 
 @injectable()
@@ -15,9 +16,9 @@ export class AuthenticatedRestClient implements IRestClient {
      * @param {IRestClient} restClient - the restClient 
      * @param {INetworkManager} networkManager - the Network Manager 
      */
-    constructor( @inject("Logger") private logger: ILogger,
-        @inject("RestClient") private restClient: IRestClient,
-        @inject("NetworkManager") private networkManager: INetworkManager) { }
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) private logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.RestClient) private restClient: IRestClient,
+        @inject(INTERFACE_SYMBOLS.NetworkManager) private networkManager: INetworkManager) { }
 
     /**
      * Method to make a GET request 

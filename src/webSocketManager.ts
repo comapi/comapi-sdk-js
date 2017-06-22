@@ -17,6 +17,7 @@ import {
     ILocalStorageData,
     IComapiConfig
 } from "./interfaces";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
 // https://gist.github.com/strife25/9310539
 @injectable()
@@ -53,11 +54,11 @@ export class WebSocketManager implements IWebSocketManager {
      * @param {ISessionManager} _sessionManager 
      * @param {IEventManager} _eventManager 
      */
-    constructor( @inject("Logger") private _logger: ILogger,
-        @inject("LocalStorageData") private _localStorageData: ILocalStorageData,
-        @inject("ComapiConfig") private _comapiConfig: IComapiConfig,
-        @inject("SessionManager") private _sessionManager: ISessionManager,
-        @inject("EventManager") private _eventManager: IEventManager) {
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig,
+        @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
+        @inject(INTERFACE_SYMBOLS.EventManager) private _eventManager: IEventManager) {
     }
 
     /**

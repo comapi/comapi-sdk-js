@@ -31,21 +31,24 @@ import { ConversationManager } from "./conversationManager";
 import { ProfileManager } from "./profileManager";
 import { MessageManager } from "./messageManager";
 
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
+
 let container = new Container();
 
-container.bind<IEventManager>("EventManager").to(EventManager).inSingletonScope();
-container.bind<ILocalStorageData>("LocalStorageData").to(LocalStorageData);
-container.bind<ILogger>("Logger").to(Logger);
-container.bind<IRestClient>("RestClient").to(RestClient);
-container.bind<ISessionManager>("SessionManager").to(SessionManager).inSingletonScope();
-container.bind<IWebSocketManager>("WebSocketManager").to(WebSocketManager);
-container.bind<INetworkManager>("NetworkManager").to(NetworkManager);
-container.bind<IRestClient>("AuthenticatedRestClient").to(AuthenticatedRestClient);
-container.bind<IDeviceManager>("DeviceManager").to(DeviceManager);
-container.bind<IFacebookManager>("FacebookManager").to(FacebookManager);
-container.bind<IConversationManager>("ConversationManager").to(ConversationManager);
-container.bind<IProfileManager>("ProfileManager").to(ProfileManager);
-container.bind<IMessageManager>("MessageManager").to(MessageManager);
+container.bind<IEventManager>(INTERFACE_SYMBOLS.EventManager).to(EventManager).inSingletonScope();
+container.bind<ILocalStorageData>(INTERFACE_SYMBOLS.LocalStorageData).to(LocalStorageData);
+container.bind<ILogger>(INTERFACE_SYMBOLS.Logger).to(Logger);
+container.bind<IRestClient>(INTERFACE_SYMBOLS.RestClient).to(RestClient);
+container.bind<ISessionManager>(INTERFACE_SYMBOLS.SessionManager).to(SessionManager).inSingletonScope();
+container.bind<IWebSocketManager>(INTERFACE_SYMBOLS.WebSocketManager).to(WebSocketManager);
+container.bind<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager).to(NetworkManager);
+container.bind<IRestClient>(INTERFACE_SYMBOLS.AuthenticatedRestClient).to(AuthenticatedRestClient);
+container.bind<IDeviceManager>(INTERFACE_SYMBOLS.DeviceManager).to(DeviceManager);
+container.bind<IFacebookManager>(INTERFACE_SYMBOLS.FacebookManager).to(FacebookManager);
+container.bind<IConversationManager>(INTERFACE_SYMBOLS.ConversationManager).to(ConversationManager);
+container.bind<IProfileManager>(INTERFACE_SYMBOLS.ProfileManager).to(ProfileManager);
+container.bind<IMessageManager>(INTERFACE_SYMBOLS.MessageManager).to(MessageManager);
 
 
 

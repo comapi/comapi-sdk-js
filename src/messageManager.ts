@@ -18,6 +18,8 @@ import {
 } from "./interfaces";
 
 import { Utils } from "./utils";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
 
 @injectable()
 export class MessageManager implements IMessageManager {
@@ -34,12 +36,12 @@ export class MessageManager implements IMessageManager {
      * @parameter {ISessionManager} sessionManager
      * @parameter {IChannelManager} channelManager                    
      */
-    constructor( @inject("Logger") private _logger: ILogger,
-        @inject("AuthenticatedRestClient") private _restClient: IRestClient,
-        @inject("LocalStorageData") private _localStorageData: ILocalStorageData,
-        @inject("ComapiConfig") private _comapiConfig: IComapiConfig,
-        @inject("SessionManager") private _sessionManager: ISessionManager,
-        @inject("ConversationManager") private _conversationManager: IConversationManager) { }
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.AuthenticatedRestClient) private _restClient: IRestClient,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig,
+        @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
+        @inject(INTERFACE_SYMBOLS.ConversationManager) private _conversationManager: IConversationManager) { }
 
 
     /**

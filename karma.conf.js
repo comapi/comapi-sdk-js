@@ -11,10 +11,9 @@ module.exports = function (config) {
             'lib/es6-map-shim.js',
             "src/inversify.config.ts",
             "src/**/*.ts",
-            // "specs/container.spec.ts"
             "specs/config.ts",
-            "specs/**/*.spec.ts",
-            // "specs/401_retry.spec.ts"
+            // "specs/**/*.spec.ts",
+            "specs/interfaceManager.spec.ts"
         ],
 
         preprocessors: {
@@ -44,10 +43,10 @@ module.exports = function (config) {
                 "html": "coverage",
                 "text-summary": "",
                 "teamcity": ""
-            },/*
+            },
             coverageOptions: {
                 instrumentation: false
-            },*/
+            },
             compilerOptions: {
                 emitDecoratorMetadata: true,
                 experimentalDecorators: true,
@@ -63,8 +62,6 @@ module.exports = function (config) {
                     "jasmine",
                     "reflect-metadata"
                 ]
-
-
             }
         }
     });

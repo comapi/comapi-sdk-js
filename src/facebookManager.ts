@@ -7,6 +7,8 @@ import {
 } from "./interfaces";
 
 import { Utils } from "./utils";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
 @injectable()
 export class FacebookManager implements IFacebookManager {
 
@@ -18,8 +20,8 @@ export class FacebookManager implements IFacebookManager {
      * @parameter {IRestClient} restClient 
      * @parameter {IComapiConfig} comapiConfig 
      */
-    constructor( @inject("AuthenticatedRestClient") private _restClient: IRestClient,
-        @inject("ComapiConfig") private _comapiConfig: IComapiConfig) {
+    constructor( @inject(INTERFACE_SYMBOLS.AuthenticatedRestClient) private _restClient: IRestClient,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig) {
     }
 
     /**

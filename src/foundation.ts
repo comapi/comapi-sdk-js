@@ -37,13 +37,15 @@ import { Device } from "./device";
 import { Channels } from "./channels";
 import { FoundationRestUrls } from "./urlConfig";
 
+import { InterfaceManager } from "./interfaceManager";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 import { container } from "./inversify.config";
 
 
 /*
  * Exports to be added to COMAPI namespace
  */
-export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder }
+export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, InterfaceManager, INTERFACE_SYMBOLS }
 
 @injectable()
 export class Foundation implements IFoundation {
@@ -109,11 +111,11 @@ export class Foundation implements IFoundation {
      */
     private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
 
-        if (container.isBound("ComapiConfig")) {
-            container.unbind("ComapiConfig");
+        if (container.isBound(INTERFACE_SYMBOLS.ComapiConfig)) {
+            container.unbind(INTERFACE_SYMBOLS.ComapiConfig);
         }
 
-        container.bind<IComapiConfig>("ComapiConfig").toDynamicValue((context) => {
+        container.bind<IComapiConfig>(INTERFACE_SYMBOLS.ComapiConfig).toDynamicValue((context) => {
             return comapiConfig;
         });
 
@@ -154,22 +156,22 @@ export class Foundation implements IFoundation {
 
         function foundationFactory(config: IComapiConfig, indexedDBLogger?: IndexedDBLogger) {
 
-            let eventManager: IEventManager = container.get<IEventManager>("EventManager");
+            let eventManager: IEventManager = container.get<IEventManager>(INTERFACE_SYMBOLS.EventManager);
 
-            let localStorageData: ILocalStorageData = container.get<ILocalStorageData>("LocalStorageData");
+            let localStorageData: ILocalStorageData = container.get<ILocalStorageData>(INTERFACE_SYMBOLS.LocalStorageData);
 
-            let logger: ILogger = container.get<ILogger>("Logger");
+            let logger: ILogger = container.get<ILogger>(INTERFACE_SYMBOLS.Logger);
 
             if (config.logLevel) {
                 logger.logLevel = config.logLevel;
             }
 
-            let networkManager: INetworkManager = container.get<INetworkManager>("NetworkManager");
-            let deviceManager: IDeviceManager = container.get<IDeviceManager>("DeviceManager");
-            let facebookManager: IFacebookManager = container.get<IFacebookManager>("FacebookManager");
-            let conversationManager: IConversationManager = container.get<IConversationManager>("ConversationManager");
-            let profileManager: IProfileManager = container.get<IProfileManager>("ProfileManager");
-            let messageManager: IMessageManager = container.get<IMessageManager>("MessageManager");
+            let networkManager: INetworkManager = container.get<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
+            let deviceManager: IDeviceManager = container.get<IDeviceManager>(INTERFACE_SYMBOLS.DeviceManager);
+            let facebookManager: IFacebookManager = container.get<IFacebookManager>(INTERFACE_SYMBOLS.FacebookManager);
+            let conversationManager: IConversationManager = container.get<IConversationManager>(INTERFACE_SYMBOLS.ConversationManager);
+            let profileManager: IProfileManager = container.get<IProfileManager>(INTERFACE_SYMBOLS.ProfileManager);
+            let messageManager: IMessageManager = container.get<IMessageManager>(INTERFACE_SYMBOLS.MessageManager);
 
             let foundation = new Foundation(eventManager,
                 logger,
@@ -192,16 +194,16 @@ export class Foundation implements IFoundation {
      * @class Foundation
      * @classdesc Class that implements Comapi foundation functionality.
      */
-    constructor( @inject("EventManager") private _eventManager: IEventManager,
-        @inject("Logger") private _logger: ILogger,
-        @inject("LocalStorageData") /*private*/ _localStorageData: ILocalStorageData,
-        @inject("NetworkManager") private _networkManager: INetworkManager,
-        @inject("DeviceManager") /*private*/ _deviceManager: IDeviceManager,
-        @inject("FacebookManager") /*private*/ _facebookManager: IFacebookManager,
-        @inject("ConversationManager") /*private*/ _conversationManager: IConversationManager,
-        @inject("ProfileManager") /*private*/ _profileManager: IProfileManager,
-        @inject("MessageManager") /*private*/ _messageManager: IMessageManager,
-        @inject("ComapiConfig") /*private*/ _comapiConfig: IComapiConfig) {
+    constructor( @inject(INTERFACE_SYMBOLS.EventManager) private _eventManager: IEventManager,
+        @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) /*private*/ _localStorageData: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
+        @inject(INTERFACE_SYMBOLS.DeviceManager) /*private*/ _deviceManager: IDeviceManager,
+        @inject(INTERFACE_SYMBOLS.FacebookManager) /*private*/ _facebookManager: IFacebookManager,
+        @inject(INTERFACE_SYMBOLS.ConversationManager) /*private*/ _conversationManager: IConversationManager,
+        @inject(INTERFACE_SYMBOLS.ProfileManager) /*private*/ _profileManager: IProfileManager,
+        @inject(INTERFACE_SYMBOLS.MessageManager) /*private*/ _messageManager: IMessageManager,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) /*private*/ _comapiConfig: IComapiConfig) {
 
         let dbSupported: boolean = "indexedDB" in window;
         let orphanedEventManager: IOrphanedEventManager;

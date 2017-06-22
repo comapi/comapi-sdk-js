@@ -19,23 +19,6 @@ export class AuthenticatedRestClient implements IRestClient {
         @inject("RestClient") private restClient: IRestClient,
         @inject("NetworkManager") private networkManager: INetworkManager) { }
 
-
-    private makeRequestWithRetry(count: number, verb: Function, url: string, headers?: any, data?: any) {
-
-        return verb(url, headers, data)
-            .catch(result => {
-                if (count < this.retryCount && result.statusCode === 401 && this.networkManager) {
-                    return this.networkManager.restartSession()
-                        .then(sessionInfo => {
-                            headers.authorization = this.constructAUthHeader(sessionInfo.token);
-                            return this.makeRequestWithRetry(++count, verb, url, headers, data);
-                        });
-                }
-                throw result;
-            });
-    }
-
-
     /**
      * Method to make a GET request 
      * @method AuthenticatedRestClient#get
@@ -45,8 +28,6 @@ export class AuthenticatedRestClient implements IRestClient {
      */
     public get(url: string, headers?: any): Promise<IRestClientResult> {
         headers = headers || {};
-        let self = this;
-
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
@@ -63,8 +44,6 @@ export class AuthenticatedRestClient implements IRestClient {
      * @returns {Promise} - returns a promise
      */
     public post(url: string, headers: any, data: any): Promise<IRestClientResult> {
-        let self = this;
-
         return this.networkManager.getValidToken()
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
@@ -117,6 +96,30 @@ export class AuthenticatedRestClient implements IRestClient {
             .then(token => {
                 headers.authorization = this.constructAUthHeader(token);
                 return this.makeRequestWithRetry(0, this.restClient.delete.bind(this.restClient), url, headers);
+            });
+    }
+
+
+    /**
+     * Method to check token prior to making a rest call and retry on 401 if necessary ...
+     * @param {number} count - The number of retries (this function is called recursively)
+     * @param {Function} verb  - The actual rest method to call 
+     * @param {string} url  - The url
+     * @param {any} [headers] - The headers
+     * @param {any} [data]  - The data
+     */
+    private makeRequestWithRetry(count: number, verb: Function, url: string, headers?: any, data?: any) {
+
+        return verb(url, headers, data)
+            .catch(result => {
+                if (count < this.retryCount && result.statusCode === 401 && this.networkManager) {
+                    return this.networkManager.restartSession()
+                        .then(sessionInfo => {
+                            headers.authorization = this.constructAUthHeader(sessionInfo.token);
+                            return this.makeRequestWithRetry(++count, verb, url, headers, data);
+                        });
+                }
+                throw result;
             });
     }
 

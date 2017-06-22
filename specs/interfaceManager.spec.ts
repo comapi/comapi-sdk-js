@@ -3,6 +3,8 @@ import { IComapiConfig, LogPersistences, ISessionManager, ISessionInfo, ILogger,
 import { Config } from "./config";
 import { InterfaceManager } from "../src/interfaceManager";
 
+import { initInterfaces } from "../src/inversify.config";
+
 describe("Foundation tests", () => {
 
     let foundation: Foundation;
@@ -15,6 +17,11 @@ describe("Foundation tests", () => {
         urlBase: Config.getUrlBase(),
         webSocketBase: Config.getWebSocketBase(),
     };
+
+
+    afterEach(() => {
+        initInterfaces();
+    });
 
     /**
      * 

@@ -12,8 +12,8 @@ module.exports = function (config) {
             "src/inversify.config.ts",
             "src/**/*.ts",
             "specs/config.ts",
-            // "specs/**/*.spec.ts",
-            "specs/interfaceManager.spec.ts"
+            "specs/**/*.spec.ts",
+            // "specs/interfaceManager.spec.ts"
         ],
 
         preprocessors: {

@@ -21,11 +21,11 @@ export class InterfaceManager {
 
     private static interfaces = {};
 
-    private static getInterface(serviceIdentifier: symbol): any {
+    private static getInterface(serviceIdentifier: string): any {
         return container.get(serviceIdentifier);
     }
 
-    private static setInterface(serviceIdentifier: symbol, instance: any) {
+    private static setInterface(serviceIdentifier: string, instance: any) {
 
         // unbind existing interface
         if (container.isBound(serviceIdentifier)) {

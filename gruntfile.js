@@ -31,6 +31,7 @@ module.exports = function (grunt) {
                 rootDir: "build/src/",
                 "experimentalDecorators": true,
                 "emitDecoratorMetadata": true,
+                declaration: true,
             },
             default: {
                 src: ["build/src/**/*.ts"],

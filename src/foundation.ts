@@ -45,7 +45,7 @@ import { container } from "./inversify.config";
 /*
  * Exports to be added to COMAPI namespace
  */
-export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, InterfaceManager, INTERFACE_SYMBOLS }
+export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, InterfaceManager }
 
 @injectable()
 export class Foundation implements IFoundation {
@@ -156,6 +156,12 @@ export class Foundation implements IFoundation {
 
         function foundationFactory(config: IComapiConfig, indexedDBLogger?: IndexedDBLogger) {
 
+            if (indexedDBLogger) {
+                container.bind<IndexedDBLogger>(INTERFACE_SYMBOLS.IndexedDBLogger).toDynamicValue((context) => {
+                    return indexedDBLogger;
+                });
+            }
+
             let eventManager: IEventManager = container.get<IEventManager>(INTERFACE_SYMBOLS.EventManager);
 
             let localStorageData: ILocalStorageData = container.get<ILocalStorageData>(INTERFACE_SYMBOLS.LocalStorageData);
@@ -186,7 +192,6 @@ export class Foundation implements IFoundation {
 
             return foundation;
         }
-
     }
 
     /**

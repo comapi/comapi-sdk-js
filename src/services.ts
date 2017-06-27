@@ -1,5 +1,10 @@
+import { injectable, inject } from "inversify";
+
 import { IServices, IAppMessaging, IProfile } from "./interfaces";
 
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
+@injectable()
 export class Services implements IServices {
 
     /**          
@@ -9,7 +14,8 @@ export class Services implements IServices {
      * @parameter {AppMessaging} _appMessaging 
      * @parameter {Profile} _profile 
      */
-    constructor(private _appMessaging: IAppMessaging, private _profile: IProfile) {
+    constructor( @inject(INTERFACE_SYMBOLS.AppMessaging) private _appMessaging: IAppMessaging,
+        @inject(INTERFACE_SYMBOLS.Profile) private _profile: IProfile) {
     }
 
     /**

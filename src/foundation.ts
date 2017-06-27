@@ -1,40 +1,23 @@
-import { injectable, inject } from "inversify";
-
 import {
     IEventManager,
     ILogger,
-    ILocalStorageData,
     ISession,
-    IDeviceManager,
-    IFacebookManager,
-    IConversationManager,
-    IProfileManager,
-    IMessageManager,
     IComapiConfig,
     LogPersistences,
     IServices,
     IDevice,
     IChannels,
     IFoundation,
-    IOrphanedEventManager,
-    INetworkManager
+    INetworkManager,
 } from "./interfaces";
 
 import { IndexedDBLogger } from "./indexedDBLogger";
-import { MessagePager } from "./messagePager";
 import { ConversationBuilder } from "./conversationBuilder";
 import { MessageBuilder } from "./messageBuilder";
 import { MessageStatusBuilder } from "./messageStatusBuilder";
-import { IndexedDBOrphanedEventManager } from "./indexedDBOrphanedEventManager";
-import { LocalStorageOrphanedEventManager } from "./localStorageOrphanedEventManager";
 
 import { ComapiConfig } from "./comapiConfig";
 
-import { AppMessaging } from "./appMessaging";
-import { Profile } from "./profile";
-import { Services } from "./services";
-import { Device } from "./device";
-import { Channels } from "./channels";
 import { FoundationRestUrls } from "./urlConfig";
 
 import { InterfaceManager } from "./interfaceManager";
@@ -47,7 +30,6 @@ import { container } from "./inversify.config";
  */
 export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, InterfaceManager }
 
-@injectable()
 export class Foundation implements IFoundation {
 
     /**
@@ -101,7 +83,7 @@ export class Foundation implements IFoundation {
      * @method Foundation#version
      */
     public static get version(): string {
-        return "_SDK_VERSION_";
+        return "1.0.2.121";
     }
 
     /**
@@ -164,8 +146,6 @@ export class Foundation implements IFoundation {
 
             let eventManager: IEventManager = container.get<IEventManager>(INTERFACE_SYMBOLS.EventManager);
 
-            let localStorageData: ILocalStorageData = container.get<ILocalStorageData>(INTERFACE_SYMBOLS.LocalStorageData);
-
             let logger: ILogger = container.get<ILogger>(INTERFACE_SYMBOLS.Logger);
 
             if (config.logLevel) {
@@ -173,64 +153,34 @@ export class Foundation implements IFoundation {
             }
 
             let networkManager: INetworkManager = container.get<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
-            let deviceManager: IDeviceManager = container.get<IDeviceManager>(INTERFACE_SYMBOLS.DeviceManager);
-            let facebookManager: IFacebookManager = container.get<IFacebookManager>(INTERFACE_SYMBOLS.FacebookManager);
-            let conversationManager: IConversationManager = container.get<IConversationManager>(INTERFACE_SYMBOLS.ConversationManager);
-            let profileManager: IProfileManager = container.get<IProfileManager>(INTERFACE_SYMBOLS.ProfileManager);
-            let messageManager: IMessageManager = container.get<IMessageManager>(INTERFACE_SYMBOLS.MessageManager);
 
-            let foundation = new Foundation(eventManager,
-                logger,
-                localStorageData,
-                networkManager,
-                deviceManager,
-                facebookManager,
-                conversationManager,
-                profileManager,
-                messageManager,
-                config);
+            let services = container.get<IServices>(INTERFACE_SYMBOLS.Services);
+            let device = container.get<IDevice>(INTERFACE_SYMBOLS.Device);
+            let channels = container.get<IChannels>(INTERFACE_SYMBOLS.Channels);
+
+            let foundation = new Foundation(eventManager, logger, networkManager, services, device, channels);
 
             return foundation;
         }
     }
+
 
     /**
      * Foundation class constructor.
      * @class Foundation
      * @classdesc Class that implements Comapi foundation functionality.
      */
-    constructor( @inject(INTERFACE_SYMBOLS.EventManager) private _eventManager: IEventManager,
-        @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
-        @inject(INTERFACE_SYMBOLS.LocalStorageData) /*private*/ _localStorageData: ILocalStorageData,
-        @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
-        @inject(INTERFACE_SYMBOLS.DeviceManager) /*private*/ _deviceManager: IDeviceManager,
-        @inject(INTERFACE_SYMBOLS.FacebookManager) /*private*/ _facebookManager: IFacebookManager,
-        @inject(INTERFACE_SYMBOLS.ConversationManager) /*private*/ _conversationManager: IConversationManager,
-        @inject(INTERFACE_SYMBOLS.ProfileManager) /*private*/ _profileManager: IProfileManager,
-        @inject(INTERFACE_SYMBOLS.MessageManager) /*private*/ _messageManager: IMessageManager,
-        @inject(INTERFACE_SYMBOLS.ComapiConfig) /*private*/ _comapiConfig: IComapiConfig) {
+    constructor(private _eventManager: IEventManager,
+        private _logger: ILogger,
+        private _networkManager: INetworkManager,
+        services: IServices,
+        device: IDevice,
+        channels: IChannels) {
 
-        let dbSupported: boolean = "indexedDB" in window;
-        let orphanedEventManager: IOrphanedEventManager;
-
-        if (dbSupported) {
-            orphanedEventManager = new IndexedDBOrphanedEventManager();
-        } else {
-            orphanedEventManager = new LocalStorageOrphanedEventManager(_localStorageData);
-        }
-
-        let messagePager = new MessagePager(_logger, _localStorageData, _messageManager, orphanedEventManager);
-
-        let appMessaging = new AppMessaging(this._networkManager, _conversationManager, _messageManager, messagePager);
-
-        let profile = new Profile(this._networkManager, _localStorageData, _profileManager);
-
-        this._services = new Services(appMessaging, profile);
-
-        this._device = new Device(this._networkManager, _deviceManager);
-
-        this._channels = new Channels(this._networkManager, _facebookManager);
-
+        // initialising like this for sake of JSDoc ...
+        this._services = services;
+        this._device = device;
+        this._channels = channels;
     }
 
     /**

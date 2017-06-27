@@ -1,9 +1,12 @@
+import { injectable, inject } from "inversify";
+
 import {
     IOrphanedEventManager,
     IConversationMessageEvent,
     ILocalStorageData
 } from "./interfaces";
 
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
 interface IOrphanedEventInfo {
     conversationId: string;
@@ -20,6 +23,7 @@ interface IOrphanedEventContainer {
 };
 
 
+@injectable()
 export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
 
     private _orphanedEevnts = {
@@ -29,7 +33,7 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
     /**
      * 
      */
-    constructor(private _localStorage: ILocalStorageData) {
+    constructor( @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorage: ILocalStorageData) {
         this._orphanedEevnts = this._localStorage.getObject("orphanedEevnts") || {};
     }
 

@@ -15,6 +15,12 @@ import {
     IConversationManager,
     IProfileManager,
     IMessageManager,
+    IOrphanedEventManager,
+    IAppMessaging,
+    IProfile,
+    IServices,
+    IDevice,
+    IChannels
 } from "./interfaces";
 
 import { EventManager } from "./eventManager";
@@ -30,6 +36,15 @@ import { FacebookManager } from "./facebookManager";
 import { ConversationManager } from "./conversationManager";
 import { ProfileManager } from "./profileManager";
 import { MessageManager } from "./messageManager";
+import { IndexedDBOrphanedEventManager } from "./indexedDBOrphanedEventManager";
+import { LocalStorageOrphanedEventManager } from "./localStorageOrphanedEventManager";
+import { MessagePager } from "./messagePager";
+import { AppMessaging } from "./appMessaging";
+import { Profile } from "./profile";
+import { Services } from "./services";
+import { Device } from "./device";
+import { Channels } from "./channels";
+
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
@@ -54,7 +69,23 @@ function initInterfaces() {
     container.bind<IFacebookManager>(INTERFACE_SYMBOLS.FacebookManager).to(FacebookManager);
     container.bind<IConversationManager>(INTERFACE_SYMBOLS.ConversationManager).to(ConversationManager);
     container.bind<IProfileManager>(INTERFACE_SYMBOLS.ProfileManager).to(ProfileManager);
+    container.bind<MessagePager>(INTERFACE_SYMBOLS.MessagePager).to(MessagePager);
+
+    let dbSupported: boolean = "indexedDB" in window;
+
+    if (dbSupported) {
+        container.bind<IOrphanedEventManager>(INTERFACE_SYMBOLS.OrphanedEventManager).to(IndexedDBOrphanedEventManager);
+    } else {
+        container.bind<IOrphanedEventManager>(INTERFACE_SYMBOLS.OrphanedEventManager).to(LocalStorageOrphanedEventManager);
+    }
+
     container.bind<IMessageManager>(INTERFACE_SYMBOLS.MessageManager).to(MessageManager);
+    container.bind<IAppMessaging>(INTERFACE_SYMBOLS.AppMessaging).to(AppMessaging);
+    container.bind<IProfile>(INTERFACE_SYMBOLS.Profile).to(Profile);
+    container.bind<IServices>(INTERFACE_SYMBOLS.Services).to(Services);
+    container.bind<IDevice>(INTERFACE_SYMBOLS.Device).to(Device);
+    container.bind<IChannels>(INTERFACE_SYMBOLS.Channels).to(Channels);
+
 }
 
 initInterfaces();

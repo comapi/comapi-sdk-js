@@ -1,3 +1,5 @@
+import { injectable } from "inversify";
+
 import {
     IOrphanedEventManager,
     IConversationMessageEvent,
@@ -19,6 +21,8 @@ interface IOrphanedEventContainer {
 };
 
 
+
+@injectable()
 export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
 
 

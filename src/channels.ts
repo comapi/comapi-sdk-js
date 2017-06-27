@@ -1,9 +1,14 @@
+import { injectable, inject } from "inversify";
+
 import {
     IFacebookManager,
     IChannels,
     INetworkManager
 } from "./interfaces";
 
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
+@injectable()
 export class Channels implements IChannels {
 
     /**          
@@ -13,7 +18,8 @@ export class Channels implements IChannels {
      * @parameter {NetworkManager} networkManager 
      * @parameter {IFacebookManager} facebookManager 
      */
-    constructor(private _networkManager: INetworkManager, private _facebookManager: IFacebookManager) { }
+    constructor( @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
+        @inject(INTERFACE_SYMBOLS.FacebookManager) private _facebookManager: IFacebookManager) { }
 
     /**
      * Method to create opt in state for facebook messenger

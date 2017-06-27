@@ -1,3 +1,5 @@
+import { injectable, inject } from "inversify";
+
 import {
     IConversationManager,
     IConversationDetails,
@@ -10,11 +12,14 @@ import {
     ISendMessageResult,
     IMessageStatus,
     IGetMessagesResponse,
-    INetworkManager
+    INetworkManager,
 } from "./interfaces";
 
 import { MessagePager } from "./messagePager";
 
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
+@injectable()
 export class AppMessaging {
 
     /**          
@@ -25,7 +30,10 @@ export class AppMessaging {
      * @param {IConversationManager} conversationManager 
      * @param {IMessageManager} messageManager 
      */
-    constructor(private _networkManager: INetworkManager, private _conversationManager: IConversationManager, private _messageManager: IMessageManager, private _messagePager: MessagePager) { }
+    constructor( @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
+        @inject(INTERFACE_SYMBOLS.ConversationManager) private _conversationManager: IConversationManager,
+        @inject(INTERFACE_SYMBOLS.MessageManager) private _messageManager: IMessageManager,
+        @inject(INTERFACE_SYMBOLS.MessagePager) private _messagePager: MessagePager) { }
 
     /**
      * Function to create a conversation

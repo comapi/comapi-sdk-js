@@ -1,3 +1,5 @@
+import { injectable, inject } from "inversify";
+
 import {
     ILocalStorageData,
     IProfile,
@@ -5,6 +7,9 @@ import {
     INetworkManager
 } from "./interfaces";
 
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
+@injectable()
 export class Profile implements IProfile {
 
     /**
@@ -15,7 +20,9 @@ export class Profile implements IProfile {
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IProfileManager} profileManager 
      */
-    constructor(private _networkManager: INetworkManager, private _localStorage: ILocalStorageData, private _profileManager: IProfileManager) { }
+    constructor( @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorage: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.ProfileManager) private _profileManager: IProfileManager) { }
 
     /**
      * Get a profile

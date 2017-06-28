@@ -91,7 +91,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
             "Content-Type": "application/json"
         };
 
-        authenticatedRestClient.get("http://localhost:6969/refresh", headers)
+        authenticatedRestClient.get("http://localhost:6971/refresh", headers)
             .then(result => {
                 done();
             });

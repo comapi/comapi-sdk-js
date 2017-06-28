@@ -20,7 +20,8 @@ import {
     IProfile,
     IServices,
     IDevice,
-    IChannels
+    IChannels,
+    IMessagePager
 } from "./interfaces";
 
 import { EventManager } from "./eventManager";
@@ -69,7 +70,7 @@ function initInterfaces() {
     container.bind<IFacebookManager>(INTERFACE_SYMBOLS.FacebookManager).to(FacebookManager);
     container.bind<IConversationManager>(INTERFACE_SYMBOLS.ConversationManager).to(ConversationManager);
     container.bind<IProfileManager>(INTERFACE_SYMBOLS.ProfileManager).to(ProfileManager);
-    container.bind<MessagePager>(INTERFACE_SYMBOLS.MessagePager).to(MessagePager);
+    container.bind<IMessagePager>(INTERFACE_SYMBOLS.MessagePager).to(MessagePager);
 
     let dbSupported: boolean = "indexedDB" in window;
 

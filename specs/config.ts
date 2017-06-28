@@ -13,18 +13,18 @@ export class Config {
     /**
      * Url base for all Comapi REST API calls
      * "http://192.168.99.100:8000"
-     * "http://localhost:6969"
+     * "http://localhost:6971"
      */
     public static getUrlBase() {
 
         let urBase: string = localStorage.getItem("urlBase");
-        return urBase ? urBase : "http://localhost:6969";
+        return urBase ? urBase : "http://localhost:6971";
     }
 
     /**
      * Web Socket base for all Comapi REST API calls
      * "http://192.168.99.100:8000"
-     * "http://localhost:6969"
+     * "http://localhost:6971"
      */
     public static getWebSocketBase() {
 
@@ -55,7 +55,7 @@ export class Config {
 
         console.log("calling authenticate ...");
 
-        restClient.post("http://localhost:6969/authenticate",
+        restClient.post("http://localhost:6971/authenticate",
             { "Content-Type": "application/json" },
             {
                 audience: "*",

@@ -110,58 +110,32 @@ export class Foundation implements IFoundation {
         }
 
         if (comapiConfig.logPersistence &&
-            comapiConfig.logPersistence === LogPersistences.IndexedDB) {
-
-            let indexedDBLogger: IndexedDBLogger = new IndexedDBLogger();
-
-            return indexedDBLogger.openDatabase()
-                .then(function () {
-
-                    let retentionHours = comapiConfig.logRetentionHours === undefined ? 24 : comapiConfig.logRetentionHours;
-
-                    let purgeDate = new Date((new Date()).valueOf() - 1000 * 60 * 60 * retentionHours);
-
-                    return indexedDBLogger.purge(purgeDate);
-                })
-                .then(function () {
-                    let foundation: Foundation = foundationFactory(comapiConfig, indexedDBLogger);
-                    // let foundation: IFoundation = container.get<IFoundation>("Foundation");
-                    if (doSingleton) { Foundation._foundation = foundation; }
-                    return Promise.resolve(foundation);
-                });
-        } else {
-            let foundation: Foundation = foundationFactory(comapiConfig);
-            // let foundation: IFoundation = container.get<IFoundation>("Foundation");
-            if (doSingleton) { Foundation._foundation = foundation; }
-            return Promise.resolve(foundation);
+            comapiConfig.logPersistence === LogPersistences.IndexedDB &&
+            !container.isBound(INTERFACE_SYMBOLS.ComapiConfig)) {
+            container.bind<IndexedDBLogger>(INTERFACE_SYMBOLS.IndexedDBLogger).to(IndexedDBLogger);
+        } else if (container.isBound(INTERFACE_SYMBOLS.IndexedDBLogger)) {
+            container.unbind(INTERFACE_SYMBOLS.IndexedDBLogger);
         }
 
-        function foundationFactory(config: IComapiConfig, indexedDBLogger?: IndexedDBLogger) {
+        let eventManager: IEventManager = container.get<IEventManager>(INTERFACE_SYMBOLS.EventManager);
 
-            if (indexedDBLogger) {
-                container.bind<IndexedDBLogger>(INTERFACE_SYMBOLS.IndexedDBLogger).toDynamicValue((context) => {
-                    return indexedDBLogger;
-                });
-            }
+        let logger: ILogger = container.get<ILogger>(INTERFACE_SYMBOLS.Logger);
 
-            let eventManager: IEventManager = container.get<IEventManager>(INTERFACE_SYMBOLS.EventManager);
-
-            let logger: ILogger = container.get<ILogger>(INTERFACE_SYMBOLS.Logger);
-
-            if (config.logLevel) {
-                logger.logLevel = config.logLevel;
-            }
-
-            let networkManager: INetworkManager = container.get<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
-
-            let services = container.get<IServices>(INTERFACE_SYMBOLS.Services);
-            let device = container.get<IDevice>(INTERFACE_SYMBOLS.Device);
-            let channels = container.get<IChannels>(INTERFACE_SYMBOLS.Channels);
-
-            let foundation = new Foundation(eventManager, logger, networkManager, services, device, channels);
-
-            return foundation;
+        if (comapiConfig.logLevel) {
+            logger.logLevel = comapiConfig.logLevel;
         }
+
+        let networkManager: INetworkManager = container.get<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
+
+        let services = container.get<IServices>(INTERFACE_SYMBOLS.Services);
+        let device = container.get<IDevice>(INTERFACE_SYMBOLS.Device);
+        let channels = container.get<IChannels>(INTERFACE_SYMBOLS.Channels);
+
+        let foundation = new Foundation(eventManager, logger, networkManager, services, device, channels);
+
+        if (doSingleton) { Foundation._foundation = foundation; }
+
+        return Promise.resolve(foundation);
     }
 
 

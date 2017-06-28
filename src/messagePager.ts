@@ -9,7 +9,8 @@ import {
     IGetMessagesResponse,
     IOrphanedEventManager,
     IConversationMessageEvent,
-    IConversationMessagesResult
+    IConversationMessagesResult,
+    IMessagePager
 } from "./interfaces";
 
 import { Utils } from "./utils";
@@ -17,7 +18,7 @@ import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
 
 @injectable()
-export class MessagePager {
+export class MessagePager implements IMessagePager {
 
     /**        
      * MessagePager class constructor.

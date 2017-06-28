@@ -13,9 +13,8 @@ import {
     IMessageStatus,
     IGetMessagesResponse,
     INetworkManager,
+    IMessagePager
 } from "./interfaces";
-
-import { MessagePager } from "./messagePager";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
@@ -33,7 +32,7 @@ export class AppMessaging {
     constructor( @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
         @inject(INTERFACE_SYMBOLS.ConversationManager) private _conversationManager: IConversationManager,
         @inject(INTERFACE_SYMBOLS.MessageManager) private _messageManager: IMessageManager,
-        @inject(INTERFACE_SYMBOLS.MessagePager) private _messagePager: MessagePager) { }
+        @inject(INTERFACE_SYMBOLS.MessagePager) private _messagePager: IMessagePager) { }
 
     /**
      * Function to create a conversation

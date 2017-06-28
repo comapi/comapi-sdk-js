@@ -111,7 +111,7 @@ export class WebSocketManager implements IWebSocketManager {
                         };
 
                         this.webSocket.onerror = (event) => {
-                            this._logger.log(`websocket onerror - readystate: ${this.readystates[this.webSocket.readyState]}`);
+                            this._logger.log(`websocket onerror - readystate: ${this.readystates[this.webSocket.readyState]}`, event);
 
                         };
 
@@ -130,13 +130,16 @@ export class WebSocketManager implements IWebSocketManager {
                             }
                         };
 
-                        this.webSocket.onclose = () => {
+                        this.webSocket.onclose = (event) => {
                             this.connected = false;
                             this.webSocket = undefined;
                             this._logger.log("WebSocket Connection closed.");
                             // this._eventManager.publishLocalEvent("WebsocketClosed", { timestamp: new Date().toISOString() });
                             if (this.didConnect === false) {
-                                reject();
+                                reject({
+                                    code: event.code,
+                                    message: "Failed to connect webSocket",
+                                });
                             }
 
                             // only retry if we didng manually close it and it actually connected in the first place
@@ -163,7 +166,7 @@ export class WebSocketManager implements IWebSocketManager {
                 if (this.didConnect) {
                     resolve(true);
                 } else {
-                    reject();
+                    reject({ message: "Failed to connect webSocket" });
                 }
             }
         });

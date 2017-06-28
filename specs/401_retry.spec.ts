@@ -74,7 +74,7 @@ describe("REST API 401 retry tests", () => {
 
         spyOn(networkManager, "restartSession").and.callThrough();
 
-        restClient.post("http://localhost:6969/testUnauthorized", headers, data)
+        restClient.post("http://localhost:6971/testUnauthorized", headers, data)
             .then(result => {
 
                 expect(networkManager.restartSession).toHaveBeenCalled();

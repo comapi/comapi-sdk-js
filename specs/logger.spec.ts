@@ -64,15 +64,12 @@ describe("IndexedDBLogger basic logging tests", () => {
 
         myIndexedDBLogger = new IndexedDBLogger();
 
-        myIndexedDBLogger.openDatabase()
-            .then(() => {
-                data = new LocalStorageData();
-                logger = new Logger(undefined, data, myIndexedDBLogger);
+        data = new LocalStorageData();
+        logger = new Logger(undefined, data, myIndexedDBLogger);
 
-                logger.clearLog().then(() => {
-                    done();
-                });
-            });
+        logger.clearLog().then(() => {
+            done();
+        });
     });
 
     afterEach(() => {
@@ -134,15 +131,13 @@ describe("IndexedDBLogger purge test", () => {
 
         myIndexedDBLogger = new IndexedDBLogger();
 
-        myIndexedDBLogger.openDatabase()
-            .then(() => {
-                data = new LocalStorageData();
-                logger = new Logger(undefined, data, myIndexedDBLogger);
+        data = new LocalStorageData();
+        logger = new Logger(undefined, data, myIndexedDBLogger);
 
-                logger.clearLog().then(() => {
-                    done();
-                });
-            });
+        logger.clearLog().then(() => {
+            done();
+        });
+
     });
 
     afterEach(() => {

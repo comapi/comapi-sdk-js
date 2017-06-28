@@ -7,26 +7,27 @@ import { IndexedDBLogger } from "../src/indexedDBLogger";
 describe("Indexed DB DELETE DATABASE", () => {
 
 
-    let myIndexedDBLogger;
+    let myIndexedDBLogger: IndexedDBLogger;
 
     beforeEach(done => {
         let name = ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
-        myIndexedDBLogger = new IndexedDBLogger(name);
+        myIndexedDBLogger = new IndexedDBLogger();
+        myIndexedDBLogger.name = name;
         done();
     });
 
-    it("should delete a database", done => {
+    // it("should delete a database", done => {
 
-        myIndexedDBLogger.deleteDatabase()
-            .then(() => {
-                expect(true).toBe(true);
-                done();
-            }).catch(() => {
-                expect(true).toBe(false);
-                done();
-            });
+    //     myIndexedDBLogger.deleteDatabase()
+    //         .then(() => {
+    //             expect(true).toBe(true);
+    //             done();
+    //         }).catch(() => {
+    //             expect(true).toBe(false);
+    //             done();
+    //         });
 
-    }, 30000);
+    // }, 30000);
 
 });
 
@@ -34,11 +35,12 @@ describe("Indexed DB DELETE DATABASE", () => {
  * 
  */
 describe("Indexed DB end to end test", () => {
-    let myIndexedDBLogger;
+    let myIndexedDBLogger: IndexedDBLogger;
 
     beforeEach(done => {
         let name = ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
-        myIndexedDBLogger = new IndexedDBLogger(name);
+        myIndexedDBLogger = new IndexedDBLogger();
+        myIndexedDBLogger.name = name;
         done();
     });
 
@@ -117,8 +119,7 @@ describe("Indexed DB end to end test", () => {
 
 
         // open
-        myIndexedDBLogger.openDatabase()
-            .then(addRecords)
+        addRecords()
             .then(queryRecords)
             .then(clearRecords)
             .then(verifyEmpty)

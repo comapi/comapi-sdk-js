@@ -692,6 +692,12 @@ export interface IOrphanedEventManager {
     getOrphanedEvents(conversationId: string): Promise<IConversationMessageEvent[]>;
 }
 
+export interface IMessagePager {
+    getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse>;
+    getOrphanedEvents(conversationId: string, orphanedEvents: any[]): Promise<IConversationMessageEvent[]>;
+    markMessagesAsDelivered(id: string, messages: IConversationMessage[], userId: string): Promise<string>;
+    resetConversation(conversationId: string): Promise<boolean>;
+}
 
 
 /**

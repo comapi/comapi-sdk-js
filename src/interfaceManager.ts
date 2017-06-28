@@ -12,7 +12,12 @@ import {
     IFacebookManager,
     IConversationManager,
     IProfileManager,
-    IMessageManager
+    IMessageManager,
+    IMessagePager,
+    IAppMessaging,
+    IProfile,
+    IDevice,
+    IChannels
 } from "./interfaces";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
@@ -223,5 +228,78 @@ export class InterfaceManager {
     public static get IMessageManager(): IMessageManager {
         return InterfaceManager.getInterface(INTERFACE_SYMBOLS.MessageManager);
     }
+
+    /**
+     * 
+     */
+    public static set IMessagePager(messagePager: IMessagePager) {
+        InterfaceManager.setInterface(INTERFACE_SYMBOLS.MessagePager, messagePager);
+    }
+
+    /**
+     * 
+     */
+    public static get IMessagePager(): IMessagePager {
+        return InterfaceManager.getInterface(INTERFACE_SYMBOLS.MessagePager);
+    }
+
+    /**
+     * 
+     */
+    public static set IAppMessaging(appMessaging: IAppMessaging) {
+        InterfaceManager.setInterface(INTERFACE_SYMBOLS.AppMessaging, appMessaging);
+    }
+
+    /**
+     * 
+     */
+    public static get IAppMessaging(): IAppMessaging {
+        return InterfaceManager.getInterface(INTERFACE_SYMBOLS.AppMessaging);
+    }
+
+    /**
+     * 
+     */
+    public static set IProfile(profile: IProfile) {
+        InterfaceManager.setInterface(INTERFACE_SYMBOLS.Profile, profile);
+    }
+
+    /**
+     * 
+     */
+    public static get IProfile(): IProfile {
+        return InterfaceManager.getInterface(INTERFACE_SYMBOLS.Profile);
+    }
+
+    /**
+     * 
+     */
+    public static set IDevice(device: IDevice) {
+        InterfaceManager.setInterface(INTERFACE_SYMBOLS.Device, device);
+    }
+
+    /**
+     * 
+     */
+    public static get IDevice(): IDevice {
+        return InterfaceManager.getInterface(INTERFACE_SYMBOLS.Device);
+    }
+
+    /**
+     * 
+     */
+    public static set IChannels(channels: IChannels) {
+        InterfaceManager.setInterface(INTERFACE_SYMBOLS.Channels, channels);
+    }
+
+    /**
+     * 
+     */
+    public static get IChannels(): IChannels {
+        return InterfaceManager.getInterface(INTERFACE_SYMBOLS.Channels);
+    }
+
+
+
 
 }

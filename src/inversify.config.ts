@@ -45,6 +45,7 @@ import { Profile } from "./profile";
 import { Services } from "./services";
 import { Device } from "./device";
 import { Channels } from "./channels";
+import { IndexedDBLogger } from "./indexedDBLogger";
 
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
@@ -91,5 +92,22 @@ function initInterfaces() {
 
 initInterfaces();
 
-export { container, initInterfaces };
+function bindIndexedDBLogger() {
+    "use strict";
+    if (container.isBound(INTERFACE_SYMBOLS.IndexedDBLogger)) {
+        container.rebind<IndexedDBLogger>(INTERFACE_SYMBOLS.IndexedDBLogger).to(IndexedDBLogger);
+    } else {
+        container.bind<IndexedDBLogger>(INTERFACE_SYMBOLS.IndexedDBLogger).to(IndexedDBLogger);
+    }
+}
+
+function unbindIndexedDBLogger() {
+    "use strict";
+    if (container.isBound(INTERFACE_SYMBOLS.IndexedDBLogger)) {
+        container.unbind(INTERFACE_SYMBOLS.IndexedDBLogger);
+    }
+}
+
+
+export { container, initInterfaces, bindIndexedDBLogger, unbindIndexedDBLogger };
 

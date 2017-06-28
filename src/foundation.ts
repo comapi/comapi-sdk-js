@@ -11,7 +11,6 @@ import {
     INetworkManager,
 } from "./interfaces";
 
-import { IndexedDBLogger } from "./indexedDBLogger";
 import { ConversationBuilder } from "./conversationBuilder";
 import { MessageBuilder } from "./messageBuilder";
 import { MessageStatusBuilder } from "./messageStatusBuilder";
@@ -22,7 +21,7 @@ import { FoundationRestUrls } from "./urlConfig";
 
 import { InterfaceManager } from "./interfaceManager";
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
-import { container } from "./inversify.config";
+import { container, bindIndexedDBLogger, unbindIndexedDBLogger } from "./inversify.config";
 
 
 /*
@@ -110,11 +109,10 @@ export class Foundation implements IFoundation {
         }
 
         if (comapiConfig.logPersistence &&
-            comapiConfig.logPersistence === LogPersistences.IndexedDB &&
-            !container.isBound(INTERFACE_SYMBOLS.ComapiConfig)) {
-            container.bind<IndexedDBLogger>(INTERFACE_SYMBOLS.IndexedDBLogger).to(IndexedDBLogger);
+            comapiConfig.logPersistence === LogPersistences.IndexedDB) {
+            bindIndexedDBLogger();
         } else if (container.isBound(INTERFACE_SYMBOLS.IndexedDBLogger)) {
-            container.unbind(INTERFACE_SYMBOLS.IndexedDBLogger);
+            unbindIndexedDBLogger();
         }
 
         let eventManager: IEventManager = container.get<IEventManager>(INTERFACE_SYMBOLS.EventManager);

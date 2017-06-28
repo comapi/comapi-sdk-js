@@ -1,6 +1,7 @@
-import { container } from "./inversify.config";
+import { container, bindIndexedDBLogger, unbindIndexedDBLogger, bindComapiConfig } from "./inversify.config";
 
 import {
+    IComapiConfig,
     IEventManager,
     ILocalStorageData,
     ILogger,
@@ -25,6 +26,18 @@ import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 export class InterfaceManager {
 
     private static interfaces = {};
+
+    public static bindIndexedDBLogger() {
+        bindIndexedDBLogger();
+    }
+
+    public static unbindIndexedDBLogger() {
+        unbindIndexedDBLogger();
+    }
+
+    public static bindComapiConfig(omapiConfig: IComapiConfig) {
+        bindComapiConfig(omapiConfig);
+    }
 
     private static getInterface(serviceIdentifier: string): any {
         return container.get(serviceIdentifier);
@@ -298,8 +311,4 @@ export class InterfaceManager {
     public static get IChannels(): IChannels {
         return InterfaceManager.getInterface(INTERFACE_SYMBOLS.Channels);
     }
-
-
-
-
 }

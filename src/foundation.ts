@@ -21,7 +21,7 @@ import { FoundationRestUrls } from "./urlConfig";
 
 import { InterfaceManager } from "./interfaceManager";
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
-import { container, bindIndexedDBLogger, unbindIndexedDBLogger } from "./inversify.config";
+import { container } from "./inversify.config";
 
 
 /*
@@ -92,13 +92,7 @@ export class Foundation implements IFoundation {
      */
     private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
 
-        if (container.isBound(INTERFACE_SYMBOLS.ComapiConfig)) {
-            container.unbind(INTERFACE_SYMBOLS.ComapiConfig);
-        }
-
-        container.bind<IComapiConfig>(INTERFACE_SYMBOLS.ComapiConfig).toDynamicValue((context) => {
-            return comapiConfig;
-        });
+        InterfaceManager.bindComapiConfig(comapiConfig);
 
         if (doSingleton && Foundation._foundation) {
             return Promise.resolve(Foundation._foundation);
@@ -110,9 +104,9 @@ export class Foundation implements IFoundation {
 
         if (comapiConfig.logPersistence &&
             comapiConfig.logPersistence === LogPersistences.IndexedDB) {
-            bindIndexedDBLogger();
+            InterfaceManager.bindIndexedDBLogger();
         } else if (container.isBound(INTERFACE_SYMBOLS.IndexedDBLogger)) {
-            unbindIndexedDBLogger();
+            InterfaceManager.unbindIndexedDBLogger();
         }
 
         let eventManager: IEventManager = container.get<IEventManager>(INTERFACE_SYMBOLS.EventManager);

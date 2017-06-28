@@ -3,6 +3,7 @@ import "reflect-metadata";
 import { Container } from "inversify";
 
 import {
+    IComapiConfig,
     IEventManager,
     ILocalStorageData,
     ILogger,
@@ -108,6 +109,20 @@ function unbindIndexedDBLogger() {
     }
 }
 
+function bindComapiConfig(comapiConfig: IComapiConfig) {
+    "use strict";
 
-export { container, initInterfaces, bindIndexedDBLogger, unbindIndexedDBLogger };
+    if (container.isBound(INTERFACE_SYMBOLS.ComapiConfig)) {
+        container.unbind(INTERFACE_SYMBOLS.ComapiConfig);
+    }
+
+    container.bind<IComapiConfig>(INTERFACE_SYMBOLS.ComapiConfig).toDynamicValue((context) => {
+        return comapiConfig;
+    });
+
+}
+
+
+
+export { container, initInterfaces, bindIndexedDBLogger, unbindIndexedDBLogger, bindComapiConfig };
 

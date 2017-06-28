@@ -12,6 +12,8 @@ import { Mutex } from "./mutex";
 @injectable()
 export class IndexedDBLogger {
 
+    private _initialised: Promise<boolean>;
+
     private idbSupported: boolean = "indexedDB" in window;
     private _database: any;
 
@@ -264,22 +266,20 @@ export class IndexedDBLogger {
                             // returns auto incremented id ...
                             resolve(e.target.result);
                         };
-
                     });
                 });
         });
-
     }
 
     /**
      * 
      */
     private ensureInitialised() {
-        return this._database ?
-            Promise.resolve(true) :
-            this.initialise()
-                .then((result) => {
 
+        if (!this._initialised) {
+            // this is a promise instance to ensure it's only called once
+            this._initialised = this.initialise()
+                .then((result) => {
                     if (this._comapiConfig) {
                         let retentionHours = this._comapiConfig.logRetentionHours === undefined ? 24 : this._comapiConfig.logRetentionHours;
 
@@ -290,6 +290,8 @@ export class IndexedDBLogger {
                         return result;
                     }
                 });
+        }
+        return this._initialised;
     }
 
     /**

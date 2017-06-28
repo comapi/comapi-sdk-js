@@ -25,6 +25,7 @@ interface IOrphanedEventContainer {
 @injectable()
 export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
 
+    private _initialised: Promise<boolean>;
 
     private idbSupported: boolean = "indexedDB" in window;
     private _database: any;
@@ -230,7 +231,11 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
     }
 
     private ensureInitialised() {
-        return this._database ? Promise.resolve(true) : this.initialise();
+        if (!this._initialised) {
+            // this is a promise instance to ensure it's only called once
+            this._initialised = this.initialise();
+        }
+        return this._initialised;
     }
 
     /**

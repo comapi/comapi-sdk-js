@@ -44,7 +44,7 @@ export class ConversationManager implements IConversationManager {
 
 
     /**
-     * Function to create a onversation
+     * Function to create a conversation
      * @method ConversationManager#createConversation 
      * @param {IConversationDetails} conversationDetails
      * @returns {Promise} 

@@ -20,6 +20,7 @@ import { Logger } from "../src/logger";
 import { WebSocketManager } from "../src/webSocketManager";
 import { EventManager } from "../src/eventManager";
 import { LocalStorageData } from "../src/localStorageData";
+import { EventMapper } from "../src/eventMapper";
 
 /**
  * Currently using an actual websocket, may change to mock ...
@@ -68,8 +69,9 @@ describe("webSocket Manager tests", () => {
         let data = new LocalStorageData();
         let logger = new Logger(eventManager, data);
         let sessionManager = new MockSessionManager();
+        let eventMapper = new EventMapper();
 
-        webSocketManager = new WebSocketManager(logger, data, comapiConfig, sessionManager, eventManager);
+        webSocketManager = new WebSocketManager(logger, data, comapiConfig, sessionManager, eventManager, eventMapper);
         console.log("created new websocket for test");
         done();
     });

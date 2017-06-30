@@ -22,7 +22,8 @@ import {
     IServices,
     IDevice,
     IChannels,
-    IMessagePager
+    IMessagePager,
+    IEventMapper
 } from "./interfaces";
 
 import { EventManager } from "./eventManager";
@@ -47,7 +48,7 @@ import { Services } from "./services";
 import { Device } from "./device";
 import { Channels } from "./channels";
 import { IndexedDBLogger } from "./indexedDBLogger";
-
+import { EventMapper } from "./eventMapper";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
@@ -65,6 +66,7 @@ function initInterfaces() {
     container.bind<ILogger>(INTERFACE_SYMBOLS.Logger).to(Logger);
     container.bind<IRestClient>(INTERFACE_SYMBOLS.RestClient).to(RestClient);
     container.bind<ISessionManager>(INTERFACE_SYMBOLS.SessionManager).to(SessionManager).inSingletonScope();
+    container.bind<IEventMapper>(INTERFACE_SYMBOLS.EventMapper).to(EventMapper);
     container.bind<IWebSocketManager>(INTERFACE_SYMBOLS.WebSocketManager).to(WebSocketManager);
     container.bind<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager).to(NetworkManager);
     container.bind<IRestClient>(INTERFACE_SYMBOLS.AuthenticatedRestClient).to(AuthenticatedRestClient);

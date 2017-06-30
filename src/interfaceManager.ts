@@ -7,6 +7,7 @@ import {
     ILogger,
     IRestClient,
     ISessionManager,
+    IEventMapper,
     IWebSocketManager,
     INetworkManager,
     IDeviceManager,
@@ -127,6 +128,20 @@ export class InterfaceManager {
      */
     public static get ISessionManager(): ISessionManager {
         return InterfaceManager.getInterface(INTERFACE_SYMBOLS.SessionManager);
+    }
+
+    /**
+     * 
+     */
+    public static set IEventMapper(eventMapper: IEventMapper) {
+        InterfaceManager.setInterface(INTERFACE_SYMBOLS.EventMapper, eventMapper);
+    }
+
+    /**
+     * 
+     */
+    public static get IEventMapper(): IEventMapper {
+        return InterfaceManager.getInterface(INTERFACE_SYMBOLS.EventMapper);
     }
 
     /**

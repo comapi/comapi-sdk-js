@@ -1,15 +1,7 @@
 import { injectable, inject } from "inversify";
 
 import {
-    IConversationDeletedEventData,
-    IConversationUndeletedEventData,
-    IConversationUpdatedEventData,
-    IParticipantAddedEventData,
-    IParticipantRemovedEventData,
-    IParticipantTypingEventData,
-    IParticipantTypingOffEventData,
-    IConversationMessageEvent,
-    IProfileUpdatedEvent,
+    IEventMapper,
     IWebSocketManager,
     ISessionManager,
     IEventManager,
@@ -58,7 +50,8 @@ export class WebSocketManager implements IWebSocketManager {
         @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
         @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig,
         @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
-        @inject(INTERFACE_SYMBOLS.EventManager) private _eventManager: IEventManager) {
+        @inject(INTERFACE_SYMBOLS.EventManager) private _eventManager: IEventManager,
+        @inject(INTERFACE_SYMBOLS.EventMapper) private _eventMapper: IEventMapper) {
     }
 
     /**
@@ -332,175 +325,86 @@ export class WebSocketManager implements IWebSocketManager {
 
             case "conversation.delete":
                 {
-                    let conversationDeletedEventData: IConversationDeletedEventData = {
-                        conversationId: event.conversationId,
-                        createdBy: event.context.createdBy,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationDeleted", conversationDeletedEventData);
+                    this._eventManager.publishLocalEvent("conversationDeleted",
+                        this._eventMapper.conversationDeleted(event));
                 }
                 break;
 
             case "conversation.undelete":
                 {
-                    let conversationUndeletedEventData: IConversationUndeletedEventData = {
-                        conversationId: event.conversationId,
-                        createdBy: event.context.createdBy,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationUndeleted", conversationUndeletedEventData);
+                    this._eventManager.publishLocalEvent("conversationUndeleted",
+                        this._eventMapper.conversationUndeleted(event));
                 }
                 break;
 
             case "conversation.update":
                 {
-                    let conversationUpdatedEventData: IConversationUpdatedEventData = {
-                        conversationId: event.conversationId,
-                        // the user who updated the conversation
-                        createdBy: event.context.createdBy,
-                        description: event.payload.description,
-                        eTag: event.etag,
-                        isPublic: event.payload.isPublic,
-                        name: event.payload.name,
-                        roles: event.payload.roles,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationUpdated", conversationUpdatedEventData);
+                    this._eventManager.publishLocalEvent("conversationUpdated",
+                        this._eventMapper.conversationUpdated(event));
                 }
                 break;
 
 
             case "conversation.participantAdded":
                 {
-                    let participantAddedEventData: IParticipantAddedEventData = {
-                        conversationId: event.conversationId,
-                        createdBy: event.context.createdBy,
-                        profileId: event.payload.profileId,
-                        role: event.payload.role,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("participantAdded", participantAddedEventData);
+                    this._eventManager.publishLocalEvent("participantAdded",
+                        this._eventMapper.participantAdded(event));
                 }
                 break;
 
 
             case "conversation.participantRemoved":
                 {
-                    let participantRemovedEventData: IParticipantRemovedEventData = {
-                        conversationId: event.conversationId,
-                        createdBy: event.context.createdBy,
-                        profileId: event.payload.profileId,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("participantRemoved", participantRemovedEventData);
+                    this._eventManager.publishLocalEvent("participantRemoved",
+                        this._eventMapper.participantRemoved(event));
                 }
                 break;
 
             case "conversation.participantTyping":
                 {
-                    let participantTypingEventData: IParticipantTypingEventData = {
-                        conversationId: event.payload.conversationId,
-                        createdBy: event.context.createdBy,
-                        profileId: event.payload.profileId,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("participantTyping", participantTypingEventData);
+                    this._eventManager.publishLocalEvent("participantTyping",
+                        this._eventMapper.participantTyping(event));
                 }
                 break;
 
 
             case "conversation.participantTypingOff":
                 {
-                    let participantTypingOffEventData: IParticipantTypingOffEventData = {
-                        conversationId: event.payload.conversationId,
-                        createdBy: event.context.createdBy,
-                        profileId: event.payload.profileId,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("participantTypingOff", participantTypingOffEventData);
+                    this._eventManager.publishLocalEvent("participantTypingOff",
+                        this._eventMapper.participantTypingOff(event));
                 }
                 break;
 
 
             case "conversationMessage.sent":
                 {
-                    let _event: IConversationMessageEvent = {
-
-                        conversationEventId: event.conversationEventId,
-                        conversationId: event.payload.context.conversationId,
-                        eventId: event.eventId,
-                        name: "conversationMessage.sent",
-                        payload: {
-                            alert: event.payload.alert,
-                            context: event.payload.context,
-                            messageId: event.payload.messageId,
-                            metadata: event.payload.metadata,
-                            parts: event.payload.parts,
-                        }
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationMessageEvent", _event);
+                    this._eventManager.publishLocalEvent("conversationMessageEvent",
+                        this._eventMapper.conversationMessageSent(event));
                 }
                 break;
 
             case "conversationMessage.read":
                 {
-
-                    let _event: IConversationMessageEvent = {
-                        conversationEventId: event.conversationEventId,
-                        conversationId: event.payload.conversationId,
-                        eventId: event.eventId,
-                        name: "conversationMessage.read",
-                        payload: {
-                            conversationId: event.payload.conversationId,
-                            messageId: event.payload.messageId,
-                            profileId: event.payload.profileId,
-                            timestamp: event.payload.timestamp
-                        }
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationMessageEvent", _event);
+                    this._eventManager.publishLocalEvent("conversationMessageEvent",
+                        this._eventMapper.conversationMessageRead(event));
                 }
                 break;
 
             case "conversationMessage.delivered":
                 {
-                    let _event: IConversationMessageEvent = {
-                        conversationEventId: event.conversationEventId,
-                        conversationId: event.payload.conversationId,
-                        eventId: event.eventId,
-                        name: "conversationMessage.delivered",
-                        payload: {
-                            conversationId: event.payload.conversationId,
-                            messageId: event.payload.messageId,
-                            profileId: event.payload.profileId,
-                            timestamp: event.payload.timestamp
-                        }
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationMessageEvent", _event);
+                    this._eventManager.publishLocalEvent("conversationMessageEvent",
+                        this._eventMapper.conversationMessageDelivered(event));
                 }
                 break;
 
             case "profile.update":
                 {
-                    let _event: IProfileUpdatedEvent = {
-                        eTag: event.eTag,
-                        profile: event.payload
-                    };
-
                     if (event.eTag) {
                         this._localStorageData.setString("MyProfileETag", event.eTag);
                     }
 
-                    this._eventManager.publishLocalEvent("profileUpdated", _event);
+                    this._eventManager.publishLocalEvent("profileUpdated",
+                        this._eventMapper.profileUpdated(event));
                 }
                 break;
 

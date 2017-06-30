@@ -9,6 +9,7 @@ import { EventManager } from "../src/eventManager";
 import { LocalStorageData } from "../src/localStorageData";
 import { RestClient } from "../src/restClient";
 import { FoundationRestUrls } from "../src/urlConfig";
+import { EventMapper } from "../src/eventMapper";
 
 /**
  * 
@@ -61,7 +62,8 @@ describe("AUTHENTICATED REST API TESTS", () => {
 
         sessionManager = new SessionManager(logger, restClient, data, comapiConfig);
 
-        let webSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager);
+        let eventMapper = new EventMapper();
+        let webSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager, eventMapper);
 
         let networkManager = new NetworkManager(sessionManager, webSocketManager);
 

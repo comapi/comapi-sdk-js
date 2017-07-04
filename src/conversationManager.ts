@@ -282,6 +282,7 @@ export class ConversationManager implements IConversationManager {
      * @returns {Promise} 
      */
     public sendIsTypingOff(conversationId: string): Promise<boolean> {
+
         // we only want to call this once every n seconds (10?)
         if (this.isTypingOffInfo[conversationId]) {
 

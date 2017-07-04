@@ -9,10 +9,14 @@ import {
 } from "./interfaces";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+import { Mutex } from "./mutex";
 
 
 @injectable()
 export class NetworkManager implements INetworkManager {
+
+
+    private _mutex: Mutex = new Mutex();
 
     /**        
      * NetworkManager class constructor.
@@ -94,13 +98,15 @@ export class NetworkManager implements INetworkManager {
      * @returns {Promise} - returns a Promise  
      */
     public ensureSessionAndSocket(): Promise<ISessionInfo> {
-        return this.ensureSession()
-            .then(sessionInfo => {
-                return this.ensureSocket();
-            })
-            .then(connected => {
-                return this._sessionManager.sessionInfo;
-            });
+        return this._mutex.runExclusive(() => {
+            return this.ensureSession()
+                .then(sessionInfo => {
+                    return this.ensureSocket();
+                })
+                .then(connected => {
+                    return this._sessionManager.sessionInfo;
+                });
+        });
     }
 
     /**

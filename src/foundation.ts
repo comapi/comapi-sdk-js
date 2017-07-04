@@ -19,15 +19,14 @@ import { ComapiConfig } from "./comapiConfig";
 
 import { FoundationRestUrls } from "./urlConfig";
 
-import { InterfaceManager } from "./interfaceManager";
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
-import { container } from "./inversify.config";
+import { InterfaceContainer } from "./inversify.config";
 
 
 /*
  * Exports to be added to COMAPI namespace
  */
-export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, InterfaceManager }
+export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder }
 
 export class Foundation implements IFoundation {
 
@@ -92,8 +91,6 @@ export class Foundation implements IFoundation {
      */
     private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
 
-        InterfaceManager.bindComapiConfig(comapiConfig);
-
         if (doSingleton && Foundation._foundation) {
             return Promise.resolve(Foundation._foundation);
         }
@@ -102,26 +99,34 @@ export class Foundation implements IFoundation {
             comapiConfig.foundationRestUrls = new FoundationRestUrls();
         }
 
-        if (comapiConfig.logPersistence &&
-            comapiConfig.logPersistence === LogPersistences.IndexedDB) {
-            InterfaceManager.bindIndexedDBLogger();
-        } else if (container.isBound(INTERFACE_SYMBOLS.IndexedDBLogger)) {
-            InterfaceManager.unbindIndexedDBLogger();
+        let container: InterfaceContainer = comapiConfig.interfaceContainer ? comapiConfig.interfaceContainer : new InterfaceContainer();
+
+        if (comapiConfig.interfaceContainer) {
+            container = comapiConfig.interfaceContainer;
+        } else {
+            container = new InterfaceContainer();
+            container.initialise();
+            container.bindComapiConfig(comapiConfig);
         }
 
-        let eventManager: IEventManager = container.get<IEventManager>(INTERFACE_SYMBOLS.EventManager);
+        if (comapiConfig.logPersistence &&
+            comapiConfig.logPersistence === LogPersistences.IndexedDB) {
+            container.bindIndexedDBLogger();
+        }
 
-        let logger: ILogger = container.get<ILogger>(INTERFACE_SYMBOLS.Logger);
+        let eventManager: IEventManager = container.getInterface<IEventManager>(INTERFACE_SYMBOLS.EventManager);
+
+        let logger: ILogger = container.getInterface<ILogger>(INTERFACE_SYMBOLS.Logger);
 
         if (comapiConfig.logLevel) {
             logger.logLevel = comapiConfig.logLevel;
         }
 
-        let networkManager: INetworkManager = container.get<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
+        let networkManager: INetworkManager = container.getInterface<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
 
-        let services = container.get<IServices>(INTERFACE_SYMBOLS.Services);
-        let device = container.get<IDevice>(INTERFACE_SYMBOLS.Device);
-        let channels = container.get<IChannels>(INTERFACE_SYMBOLS.Channels);
+        let services = container.getInterface<IServices>(INTERFACE_SYMBOLS.Services);
+        let device = container.getInterface<IDevice>(INTERFACE_SYMBOLS.Device);
+        let channels = container.getInterface<IChannels>(INTERFACE_SYMBOLS.Channels);
 
         let foundation = new Foundation(eventManager, logger, networkManager, services, device, channels);
 

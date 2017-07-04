@@ -1,26 +1,24 @@
 import { Foundation } from "../src/foundation";
 import { IComapiConfig, LogPersistences, ISessionManager, ISessionInfo, ILogger, LogLevels } from "../src/interfaces";
 import { Config } from "./config";
-import { InterfaceManager } from "../src/interfaceManager";
-
-import { initInterfaces } from "../src/inversify.config";
+import { InterfaceContainer } from "../src/inversify.config";
+import { INTERFACE_SYMBOLS } from "../src/interfaceSymbols";
 
 describe("Foundation tests", () => {
 
     let foundation: Foundation;
+    let comapiConfig: IComapiConfig;
 
-    let comapiConfig: IComapiConfig = {
-        apiSpaceId: undefined,
-        authChallenge: Config.authChallenge,
-        logPersistence: LogPersistences.IndexedDB,
-        logRetentionHours: 1,
-        urlBase: Config.getUrlBase(),
-        webSocketBase: Config.getWebSocketBase(),
-    };
-
-
-    afterEach(() => {
-        initInterfaces();
+    beforeEach(() => {
+        comapiConfig = {
+            apiSpaceId: undefined,
+            authChallenge: Config.authChallenge,
+            interfaceContainer: new InterfaceContainer(),
+            logPersistence: LogPersistences.IndexedDB,
+            logRetentionHours: 1,
+            urlBase: Config.getUrlBase(),
+            webSocketBase: Config.getWebSocketBase(),
+        };
     });
 
     /**
@@ -53,7 +51,10 @@ describe("Foundation tests", () => {
             public endSession(): Promise<boolean> { return Promise.resolve(true); }
             public ensureSession(): Promise<ISessionInfo> { return Promise.resolve(this.sessionInfo); }
         }
-        InterfaceManager.ISessionManager = new MockSessionManager();
+        comapiConfig.interfaceContainer.initialise();
+        comapiConfig.interfaceContainer.bindComapiConfig(comapiConfig);
+
+        comapiConfig.interfaceContainer.setInterface(INTERFACE_SYMBOLS.SessionManager, new MockSessionManager());
 
         Foundation.initialise(comapiConfig).then(result => {
             foundation = result;
@@ -68,7 +69,7 @@ describe("Foundation tests", () => {
     /**
      * want to get the existing logger and extend it
      */
-    it("should allow overide of log interface", done => {
+    it("should allow override of log interface", done => {
 
         class OverriddenLogger implements ILogger {
             public logLevel: LogLevels;
@@ -96,7 +97,11 @@ describe("Foundation tests", () => {
             }
         }
 
-        let stockLogger = InterfaceManager.ILogger;
+        let container: InterfaceContainer = comapiConfig.interfaceContainer;
+        container.initialise();
+        container.bindComapiConfig(comapiConfig);
+
+        let stockLogger = container.getInterface<ILogger>(INTERFACE_SYMBOLS.Logger);
 
         expect(stockLogger).toBeDefined();
 
@@ -104,7 +109,7 @@ describe("Foundation tests", () => {
 
         spyOn(overridden, "log").and.callThrough();
 
-        InterfaceManager.ILogger = overridden;
+        container.setInterface(INTERFACE_SYMBOLS.Logger, overridden);
 
         Foundation.initialise(comapiConfig).then(result => {
             foundation = result;

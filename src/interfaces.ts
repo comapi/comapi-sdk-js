@@ -287,6 +287,7 @@ export interface IComapiConfig {
     isTypingOffTimeout?: number;
     foundationRestUrls?: IFoundationRestUrls;
     eventMapping?: IEventMapping;
+    interfaceContainer?: any;
 };
 
 /**

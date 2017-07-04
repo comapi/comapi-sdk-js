@@ -13,8 +13,9 @@ module.exports = function (config) {
             "src/**/*.ts",
             "specs/config.ts",
             "specs/**/*.spec.ts",
+            // "specs/conversations.spec.ts"
             // "specs/interfaceManager.spec.ts"
-            // "specs/indexedDBLogger.spec.ts"
+            //"specs/indexedDBLogger.spec.ts"
         ],
 
         preprocessors: {

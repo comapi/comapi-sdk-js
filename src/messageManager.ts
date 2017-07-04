@@ -6,7 +6,6 @@ import {
     IMessagePart,
     IMessageAlert,
     ISendMessageResult,
-    IConversationManager,
     IConversationMessage,
     IConversationMessageEvent,
     IConversationMessagesResult,
@@ -34,14 +33,12 @@ export class MessageManager implements IMessageManager {
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IComapiConfig} comapiConfig 
      * @parameter {ISessionManager} sessionManager
-     * @parameter {IChannelManager} channelManager                    
      */
     constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
         @inject(INTERFACE_SYMBOLS.AuthenticatedRestClient) private _restClient: IRestClient,
         @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
         @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig,
-        @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
-        @inject(INTERFACE_SYMBOLS.ConversationManager) private _conversationManager: IConversationManager) { }
+        @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager) { }
 
 
     /**

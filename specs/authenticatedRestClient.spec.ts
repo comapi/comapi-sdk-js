@@ -39,7 +39,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
      * 
      */
     let comapiConfig: IComapiConfig = {
-        apiSpaceId: undefined,
+        apiSpaceId: "9308C588-CA74-42A1-A2AF-0FB9B02DA7A3",
         authChallenge: Config.authChallenge,
         foundationRestUrls: new FoundationRestUrls(),
         logRetentionHours: 1,

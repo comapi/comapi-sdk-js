@@ -118,17 +118,13 @@ export class Utils {
     public static format(content: string, tags: Object) {
 
         return (<any>content).replace(/{{(.*?)}}/g, (tag, key) => {
-            let replacement = false;
+            let replacement;
 
             if (typeof tags[key] === "string") {
                 replacement = tags[key];
             }
 
-            if (typeof replacement === "string") {
-                return replacement;
-            } else {
-                return tag;
-            }
+            return typeof replacement === "string" ? replacement : "";
         });
     }
 

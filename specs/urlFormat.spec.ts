@@ -21,4 +21,21 @@ describe("Url formatting Tests", () => {
 
     });
 
+    it("should format correctly with missing data", () => {
+
+        let model = {
+            apiSpaceId: "1234",
+            // conversationId: "5678",
+            urlBase: "http://test.com",
+        };
+
+        let formatted = Utils.format(getParticipantsUrl, model);
+
+        expect(formatted).toBe("http://test.com/apispaces/1234/conversations//participants");
+
+    });
+
+
+
+
 });

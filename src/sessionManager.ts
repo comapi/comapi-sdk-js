@@ -239,8 +239,8 @@ export class SessionManager implements ISessionManager {
 
         let url = Utils.format(this._comapiConfig.foundationRestUrls.session, {
             apiSpaceId: this._comapiConfig.apiSpaceId,
+            sessionId: this.sessionInfo.session.id,
             urlBase: this._comapiConfig.urlBase,
-            sessionId: this.sessionInfo.session.id
         });
 
         return this._restClient.delete(url, headers)

@@ -121,7 +121,7 @@ export class Utils {
             let replacement;
 
             if (typeof tags[key] === "string") {
-                replacement = tags[key];
+                replacement = key !== "urlBase" ? encodeURIComponent(tags[key]) : tags[key];
             }
 
             return typeof replacement === "string" ? replacement : "";

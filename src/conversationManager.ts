@@ -58,7 +58,7 @@ export class ConversationManager implements IConversationManager {
 
         return this._restClient.post(url, {}, conversationDetails)
             .then(function (result) {
-                result.response._etag = result.headers.ETag;
+                result.response._etag = Utils.getHeaderValue(result.headers, "ETag");
                 return Promise.resolve<IConversationDetails2>(result.response);
             });
     }
@@ -92,7 +92,7 @@ export class ConversationManager implements IConversationManager {
 
         return this._restClient.put(url, headers, args)
             .then(function (result) {
-                result.response._etag = result.headers.ETag;
+                result.response._etag = Utils.getHeaderValue(result.headers, "ETag");
                 return Promise.resolve<IConversationDetails2>(result.response);
             });
     }
@@ -114,7 +114,7 @@ export class ConversationManager implements IConversationManager {
 
         return this._restClient.get(url)
             .then(function (result) {
-                result.response._etag = result.headers.ETag;
+                result.response._etag = Utils.getHeaderValue(result.headers, "ETag");
                 return Promise.resolve<IConversationDetails2>(result.response);
             });
     }

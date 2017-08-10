@@ -129,6 +129,16 @@ export class Utils {
     }
 
     /**
+     * 
+     * @param headers Helper function to deal with potential case issues accessing http headers collection
+     * @param key 
+     */
+    public static getHeaderValue(headers: Object, key: string) {
+        return headers[key] || headers[key.toLowerCase()];
+    }
+
+
+    /**
      * @class Utils
      * @ignore
      * @classdesc Class that implements a Utils.

@@ -7,6 +7,9 @@ import {
     INetworkManager
 } from "./interfaces";
 
+import { Utils } from "./utils";
+
+
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
 @injectable()
@@ -94,7 +97,7 @@ export class Profile implements IProfile {
             })
             .then(result => {
                 if (useEtag) {
-                    this._localStorage.setString("MyProfileETag", result.headers.ETag);
+                    this._localStorage.setString("MyProfileETag", Utils.getHeaderValue(result.headers, "ETag"));
                 }
                 return Promise.resolve(result.response);
             });
@@ -117,7 +120,7 @@ export class Profile implements IProfile {
             })
             .then(result => {
                 if (useEtag) {
-                    this._localStorage.setString("MyProfileETag", result.headers.ETag);
+                    this._localStorage.setString("MyProfileETag", Utils.getHeaderValue(result.headers, "ETag"));
                 }
                 return Promise.resolve(result.response);
             });
@@ -138,7 +141,7 @@ export class Profile implements IProfile {
             })
             .then(result => {
                 if (useEtag) {
-                    this._localStorage.setString("MyProfileETag", result.headers.ETag);
+                    this._localStorage.setString("MyProfileETag", Utils.getHeaderValue(result.headers, "ETag"));
                 }
                 return Promise.resolve(result.response);
             });

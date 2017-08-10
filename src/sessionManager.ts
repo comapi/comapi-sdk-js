@@ -252,14 +252,30 @@ export class SessionManager implements ISessionManager {
 
     /**
      * Internal function to load in an existing session if available 
+     * Also now checks the apiSpace matches up and deletes cached session if not
      * @returns {ISessionInfo} - returns session info if available 
      */
     private _getSession(): ISessionInfo {
         let sessionInfo: ISessionInfo = this._localStorageData.getObject("session") as ISessionInfo;
+
         if (sessionInfo) {
-            this._sessionInfo = sessionInfo;
+
+            // check that the token matches 
+            if (sessionInfo.token) {
+                let bits = sessionInfo.token.split(".");
+                if (bits.length === 3) {
+                    let payload = JSON.parse(atob(bits[1]));
+                    if (payload.apiSpaceId === this._comapiConfig.apiSpaceId) {
+                        this._sessionInfo = sessionInfo;
+                    }
+                }
+            }
+
+            if (!this._sessionInfo) {
+                this._localStorageData.remove("session");
+            }
         }
-        return sessionInfo;
+        return this._sessionInfo;
     }
 
     /**

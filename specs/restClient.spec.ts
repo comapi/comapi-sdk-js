@@ -1,6 +1,6 @@
 import { Logger } from "../src/logger";
 import { RestClient } from "../src/restClient";
-
+import { Utils } from "../src/utils";
 /**
  * 
  */
@@ -58,11 +58,9 @@ describe("REST API TESTS", () => {
                 // check some headers
                 expect(result.headers !== undefined).toBeTruthy();
 
-
-                expect(result.headers["Access-Control-Allow-Origin"]).toBe("*");
-                expect(result.headers["X-Powered-By"]).toBe("Express");
-                expect(result.headers["Content-Type"]).toBe("application/json; charset=utf-8");
-
+                expect(Utils.getHeaderValue(result.headers, "Access-Control-Allow-Origin")).toBe("*");
+                expect(Utils.getHeaderValue(result.headers, "X-Powered-By")).toBe("Express");
+                expect(Utils.getHeaderValue(result.headers, "Content-Type")).toBe("application/json; charset=utf-8");
 
                 done();
             });

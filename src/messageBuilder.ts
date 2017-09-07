@@ -49,6 +49,23 @@ export class MessageBuilder implements IConversationMessage {
     }
 
     /**
+     * Method to create a message containing a single data part
+     * @method MessageBuilder#withData
+     * @param {String} type - the type of the data i.e. `image/png`
+     * @param {String} url - the url
+     * @param {Number} [size] - the size of the resource te URL is pointing to
+     * @returns {MessageBuilder}  - Returns reference to itself so methods can be chained
+     */
+    public withURL(type: string, url: string, size?: number) {
+        this.parts.push({
+            url: url,
+            type: type,
+            size: size,
+        });
+        return this;
+    }
+
+    /**
      * Method to add a message part to the message. This can be called multiple times
      * @method MessageBuilder#withPart
      * @param {IMessagePart} part - the message part to add

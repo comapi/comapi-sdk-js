@@ -167,7 +167,7 @@ export class SessionManager implements ISessionManager {
                         resolve(true);
                     }).catch((error) => {
                         this._removeSession();
-                        reject(error);
+                        resolve(false);
                     });
             } else {
                 reject({ message: "No active session is present, create one before ending one" });

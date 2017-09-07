@@ -58,9 +58,9 @@ export class MessageBuilder implements IConversationMessage {
      */
     public withURL(type: string, url: string, size?: number) {
         this.parts.push({
-            url: url,
-            type: type,
             size: size,
+            type: type,
+            url: url,
         });
         return this;
     }

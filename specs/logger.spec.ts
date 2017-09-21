@@ -12,7 +12,7 @@ describe("Local Storage basic log logging tests", () => {
     let data;
 
     beforeEach(function (done) {
-        data = new LocalStorageData();
+        data = new LocalStorageData(undefined);
         logger = new Logger(undefined, data, undefined);
 
         // this will actually be synchronous with the eventlog ...
@@ -64,7 +64,7 @@ describe("IndexedDBLogger basic logging tests", () => {
 
         myIndexedDBLogger = new IndexedDBLogger();
 
-        data = new LocalStorageData();
+        data = new LocalStorageData(undefined);
         logger = new Logger(undefined, data, myIndexedDBLogger);
 
         logger.clearLog().then(() => {
@@ -131,7 +131,7 @@ describe("IndexedDBLogger purge test", () => {
 
         myIndexedDBLogger = new IndexedDBLogger();
 
-        data = new LocalStorageData();
+        data = new LocalStorageData(undefined);
         logger = new Logger(undefined, data, myIndexedDBLogger);
 
         logger.clearLog().then(() => {

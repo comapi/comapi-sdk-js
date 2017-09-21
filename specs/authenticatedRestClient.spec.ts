@@ -54,13 +54,11 @@ describe("AUTHENTICATED REST API TESTS", () => {
      */
     beforeEach(done => {
 
-        let localStorageData = new LocalStorageData();
+        let localStorageData = new LocalStorageData(undefined);
         let eventManager = new EventManager();
-        let data = new LocalStorageData();
-        let logger = new Logger(eventManager, data);
+        let logger = new Logger(eventManager, localStorageData);
         let restClient = new RestClient(logger);
-
-        sessionManager = new SessionManager(logger, restClient, data, comapiConfig);
+        sessionManager = new SessionManager(logger, restClient, localStorageData, comapiConfig);
 
         let eventMapper = new EventMapper();
         let webSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager, eventMapper);

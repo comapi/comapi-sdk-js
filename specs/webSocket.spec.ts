@@ -66,7 +66,7 @@ describe("webSocket Manager tests", () => {
 
         eventManager = new EventManager();
 
-        let data = new LocalStorageData();
+        let data = new LocalStorageData(undefined);
         let logger = new Logger(eventManager, data);
         let sessionManager = new MockSessionManager();
         let eventMapper = new EventMapper();

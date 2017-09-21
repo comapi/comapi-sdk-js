@@ -13,7 +13,7 @@ describe("localStorage tests", () => {
   };
 
   beforeEach(() => {
-    ls = new LocalStorageData();
+    ls = new LocalStorageData(undefined);
     ls.prefix = "unit.tests.";
   });
 

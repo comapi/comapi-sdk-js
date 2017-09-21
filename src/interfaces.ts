@@ -288,6 +288,7 @@ export interface IComapiConfig {
     foundationRestUrls?: IFoundationRestUrls;
     eventMapping?: IEventMapping;
     interfaceContainer?: any;
+    localStoragePrefix?: string;
 };
 
 /**

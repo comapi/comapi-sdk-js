@@ -23,6 +23,7 @@ export class ComapiConfig implements IComapiConfig {
     public isTypingOffTimeout: number = 10;
     public foundationRestUrls: IFoundationRestUrls = new FoundationRestUrls();
     public eventMapping: IEventMapping;
+    public localStoragePrefix: string;
 
     /**
      * ComapiConfig class constructor.
@@ -130,7 +131,16 @@ export class ComapiConfig implements IComapiConfig {
         return this;
     }
 
-
+    /**
+     * Function to override localStoragePrefix 
+     * @method ComapiConfig#withLocalStoragePrefix
+     * @param {string} localStoragePrefix - the localStoragePrefix
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+    public withLocalStoragePrefix(localStoragePrefix: string) {
+        this.localStoragePrefix = localStoragePrefix;
+        return this;
+    }
 
 }
 

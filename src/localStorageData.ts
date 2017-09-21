@@ -1,5 +1,6 @@
-import { injectable } from "inversify";
-import { ILocalStorageData } from "./interfaces";
+import { injectable, inject } from "inversify";
+import { ILocalStorageData, IComapiConfig } from "./interfaces";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
 @injectable()
 export class LocalStorageData implements ILocalStorageData {
@@ -14,8 +15,12 @@ export class LocalStorageData implements ILocalStorageData {
      * @classdesc Class that implements Local storage access.
      * @param  {string} [prefix]
      */
-    constructor() {
-        this._prefix = "comapi.";
+    constructor( @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig) {
+        if (_comapiConfig && _comapiConfig.localStoragePrefix) {
+            this._prefix = _comapiConfig.localStoragePrefix;
+        } else {
+            this._prefix = "comapi.";
+        }
     }
 
     /**

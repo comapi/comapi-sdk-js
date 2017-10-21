@@ -162,7 +162,7 @@ export class RestClient implements IRestClient {
      * @param  {any} [data]
      * @returns {Promise} - returns a promise
      */
-    private makeRequest(method: string, url: string, headers?: any, data?: any) {
+    private makeRequest(method: string, url: string, headers?: any, data?: any): Promise<IRestClientResult> {
 
         return new Promise((resolve, reject) => {
 

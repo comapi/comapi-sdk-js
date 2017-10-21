@@ -13,7 +13,9 @@ import {
     IMessageStatus,
     IGetMessagesResponse,
     INetworkManager,
-    IMessagePager
+    IMessagePager,
+    IContentManager,
+    IContentData
 } from "./interfaces";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
@@ -32,7 +34,8 @@ export class AppMessaging {
     constructor( @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
         @inject(INTERFACE_SYMBOLS.ConversationManager) private _conversationManager: IConversationManager,
         @inject(INTERFACE_SYMBOLS.MessageManager) private _messageManager: IMessageManager,
-        @inject(INTERFACE_SYMBOLS.MessagePager) private _messagePager: IMessagePager) { }
+        @inject(INTERFACE_SYMBOLS.MessagePager) private _messagePager: IMessagePager,
+        @inject(INTERFACE_SYMBOLS.ContentManager) private _contentManager: IContentManager) { }
 
     /**
      * Function to create a conversation
@@ -239,7 +242,16 @@ export class AppMessaging {
             });
     }
 
+    /**
+     * 
+     * @param content 
+     * @param folder 
+     */
+    public uploadContent(content: IContentData, folder?: string): Promise<string> {
 
-
-
+        return this._networkManager.ensureSessionAndSocket()
+            .then((sessionInfo) => {
+                return this._contentManager.uploadContent(content, folder);
+            });
+    }
 }

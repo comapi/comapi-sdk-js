@@ -49,6 +49,8 @@ import { Device } from "./device";
 import { Channels } from "./channels";
 import { IndexedDBLogger } from "./indexedDBLogger";
 import { EventMapper } from "./eventMapper";
+import { ContentManager } from "./contentManager";
+
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
@@ -97,6 +99,7 @@ export class InterfaceContainer {
         this._container.bind<IServices>(INTERFACE_SYMBOLS.Services).to(Services).inSingletonScope();
         this._container.bind<IDevice>(INTERFACE_SYMBOLS.Device).to(Device).inSingletonScope();
         this._container.bind<IChannels>(INTERFACE_SYMBOLS.Channels).to(Channels).inSingletonScope();
+        this._container.bind<ContentManager>(INTERFACE_SYMBOLS.ContentManager).to(ContentManager).inSingletonScope();
     }
 
     /**

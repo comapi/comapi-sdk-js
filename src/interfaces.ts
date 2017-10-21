@@ -249,6 +249,7 @@ export interface IAuthChallenge {
 };
 
 export interface IFoundationRestUrls {
+    content: string;
     conversations: string;
     conversation: string;
     participants: string;
@@ -290,6 +291,22 @@ export interface IComapiConfig {
     interfaceContainer?: any;
     localStoragePrefix?: string;
 };
+
+export interface IContentData {
+
+    file: File;
+    data: string;
+    name: string;
+    type: string;
+
+};
+
+
+export interface IContentManager {
+    uploadContent(content: IContentData, folder?: string): Promise<string>;
+}
+
+
 
 /**
  * Profile manager interface
@@ -666,6 +683,7 @@ export interface IAppMessaging {
     getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse>;
     sendIsTyping(conversationId: string): Promise<boolean>;
     sendIsTypingOff(conversationId: string): Promise<boolean>;
+    uploadContent(content: IContentData, folder?: string): Promise<string>;
 }
 
 export interface IProfile {

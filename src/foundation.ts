@@ -22,11 +22,13 @@ import { FoundationRestUrls } from "./urlConfig";
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 import { InterfaceContainer } from "./inversify.config";
 
+import { ContentData } from "./contentData";
+
 
 /*
  * Exports to be added to COMAPI namespace
  */
-export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder }
+export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, ContentData }
 
 export class Foundation implements IFoundation {
 

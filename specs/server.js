@@ -863,5 +863,13 @@ app.post('/apispaces/:appSpaceId/channels/facebook/state', function (req, res, n
     res.send("688E1E43-4899-47D3-A44D-09414880A5A6");
 });
 
+/**
+ * Dummy content
+ */
+app.post('/apispaces/:appSpaceId/content', function (req, res, next) {
+    console.log(req.body.data);
+
+    res.send("3518A974-9770-4081-823A-E984E2642F7A");
+});
 
 

@@ -53,11 +53,13 @@ export class MessageBuilder implements IConversationMessage {
      * @method MessageBuilder#withData
      * @param {String} type - the type of the data i.e. `image/png`
      * @param {String} url - the url
-     * @param {Number} [size] - the size of the resource te URL is pointing to
+     * @param {Number} [size] - the size of the resource the URL is pointing to
+     * @param {String} [name] - the teh name of the original file
      * @returns {MessageBuilder}  - Returns reference to itself so methods can be chained
      */
-    public withURL(type: string, url: string, size?: number) {
+    public withURL(type: string, url: string, size?: number, name?: string) {
         this.parts.push({
+            name: name,
             size: size,
             type: type,
             url: url,

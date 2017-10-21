@@ -3,6 +3,7 @@ let INTERFACE_SYMBOLS = {
     AuthenticatedRestClient: "AuthenticatedRestClient",
     Channels: "Channels",
     ComapiConfig: "ComapiConfig",
+    ContentManager: "ContentManager",
     ConversationManager: "ConversationManager",
     Device: "Device",
     DeviceManager: "DeviceManager",
@@ -22,7 +23,6 @@ let INTERFACE_SYMBOLS = {
     Services: "Services",
     SessionManager: "SessionManager",
     WebSocketManager: "WebSocketManager",
-
 };
 
 export { INTERFACE_SYMBOLS };

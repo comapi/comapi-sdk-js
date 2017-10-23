@@ -144,6 +144,17 @@ export class ComapiConfig implements IComapiConfig {
         return this;
     }
 
+    /**
+     * Function to override orphanedEventPersistence 
+     * @method ComapiConfig#withOrphanedEventPersistence
+     * @param {string} orphanedEventPersistence - the orphanedEventPersistence
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+    public withOrphanedEventPersistence(orphanedEventPersistence: OrphanedEventPersistences) {
+        this.orphanedEventPersistence = orphanedEventPersistence;
+        return this;
+    }
+
 }
 
 

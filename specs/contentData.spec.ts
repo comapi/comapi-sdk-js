@@ -7,7 +7,7 @@ import { ContentData } from "../src/contentData";
 /**
  * 
  */
-fdescribe("contentData tests", () => {
+describe("contentData tests", () => {
 
     let foundation: Foundation;
 

@@ -3,6 +3,7 @@ import {
     IAuthChallenge,
     LogLevels,
     LogPersistences,
+    OrphanedEventPersistences,
     IFoundationRestUrls,
     IEventMapping
 } from "./interfaces";
@@ -24,6 +25,7 @@ export class ComapiConfig implements IComapiConfig {
     public foundationRestUrls: IFoundationRestUrls = new FoundationRestUrls();
     public eventMapping: IEventMapping;
     public localStoragePrefix: string;
+    public orphanedEventPersistence: OrphanedEventPersistences = OrphanedEventPersistences.IndexedDbIfSupported;
 
     /**
      * ComapiConfig class constructor.

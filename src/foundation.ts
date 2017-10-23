@@ -107,7 +107,7 @@ export class Foundation implements IFoundation {
             container = comapiConfig.interfaceContainer;
         } else {
             container = new InterfaceContainer();
-            container.initialise();
+            container.initialise(comapiConfig);
             container.bindComapiConfig(comapiConfig);
         }
 

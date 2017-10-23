@@ -17,6 +17,7 @@ import {
     IProfileManager,
     IMessageManager,
     IOrphanedEventManager,
+    OrphanedEventPersistences,
     IAppMessaging,
     IProfile,
     IServices,
@@ -68,7 +69,7 @@ export class InterfaceContainer {
     /**
      * 
      */
-    public initialise(): void {
+    public initialise(comapiConfig?: IComapiConfig): void {
 
         this._container.bind<IEventManager>(INTERFACE_SYMBOLS.EventManager).to(EventManager).inSingletonScope();
         this._container.bind<ILocalStorageData>(INTERFACE_SYMBOLS.LocalStorageData).to(LocalStorageData).inSingletonScope();
@@ -87,10 +88,23 @@ export class InterfaceContainer {
 
         let dbSupported: boolean = "indexedDB" in window;
 
-        if (dbSupported) {
-            this._container.bind<IOrphanedEventManager>(INTERFACE_SYMBOLS.OrphanedEventManager).to(IndexedDBOrphanedEventManager).inSingletonScope();
+        if (comapiConfig && comapiConfig.orphanedEventPersistence) {
+
+            if (comapiConfig.orphanedEventPersistence === OrphanedEventPersistences.LocalStorage) {
+                this._container.bind<IOrphanedEventManager>(INTERFACE_SYMBOLS.OrphanedEventManager).to(LocalStorageOrphanedEventManager).inSingletonScope();
+            } else if (comapiConfig.orphanedEventPersistence === OrphanedEventPersistences.IndexedDbIfSupported) {
+                if (dbSupported) {
+                    this._container.bind<IOrphanedEventManager>(INTERFACE_SYMBOLS.OrphanedEventManager).to(IndexedDBOrphanedEventManager).inSingletonScope();
+                } else {
+                    this._container.bind<IOrphanedEventManager>(INTERFACE_SYMBOLS.OrphanedEventManager).to(LocalStorageOrphanedEventManager).inSingletonScope();
+                }
+            }
         } else {
-            this._container.bind<IOrphanedEventManager>(INTERFACE_SYMBOLS.OrphanedEventManager).to(LocalStorageOrphanedEventManager).inSingletonScope();
+            if (dbSupported) {
+                this._container.bind<IOrphanedEventManager>(INTERFACE_SYMBOLS.OrphanedEventManager).to(IndexedDBOrphanedEventManager).inSingletonScope();
+            } else {
+                this._container.bind<IOrphanedEventManager>(INTERFACE_SYMBOLS.OrphanedEventManager).to(LocalStorageOrphanedEventManager).inSingletonScope();
+            }
         }
 
         this._container.bind<IMessageManager>(INTERFACE_SYMBOLS.MessageManager).to(MessageManager).inSingletonScope();

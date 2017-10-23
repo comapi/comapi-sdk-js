@@ -40,6 +40,16 @@ export enum LogPersistences {
     LocalStorage
 };
 
+/**
+ * Log persistence enum
+ */
+export enum OrphanedEventPersistences {
+    None,
+    IndexedDbIfSupported,       // use indexedDb if available, or revert to local storage
+    LocalStorage                // force local storage
+};
+
+
 
 /**
  * Log Event interface
@@ -290,6 +300,8 @@ export interface IComapiConfig {
     eventMapping?: IEventMapping;
     interfaceContainer?: any;
     localStoragePrefix?: string;
+    orphanedEventPersistence?: OrphanedEventPersistences;
+
 };
 
 export interface IContentData {

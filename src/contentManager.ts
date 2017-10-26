@@ -4,7 +4,8 @@ import {
     ILogger,
     IComapiConfig,
     IContentData,
-    INetworkManager
+    INetworkManager,
+    IUploadContentResult
 } from "./interfaces";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
@@ -33,7 +34,7 @@ export class ContentManager {
      * @param folder 
      * @param content 
      */
-    public uploadContent(content: IContentData, folder?: string): Promise<string> {
+    public uploadContent(content: IContentData, folder?: string): Promise<IUploadContentResult> {
 
         let url = Utils.format(this._comapiConfig.foundationRestUrls.content, {
             apiSpaceId: this._comapiConfig.apiSpaceId,
@@ -43,7 +44,7 @@ export class ContentManager {
         return this.networkManager.getValidToken()
             .then(token => {
 
-                return new Promise<string>((resolve, reject) => {
+                return new Promise<IUploadContentResult>((resolve, reject) => {
                     let xhr = new XMLHttpRequest();
                     xhr.open("POST", url);
                     xhr.setRequestHeader("authorization", this.constructAUthHeader(token));
@@ -65,7 +66,7 @@ export class ContentManager {
                     xhr.send(body);
 
                     xhr.onload = () => {
-                        let response;
+                        let response: IUploadContentResult;
 
                         try {
                             response = JSON.parse(xhr.responseText);
@@ -75,11 +76,12 @@ export class ContentManager {
                             }
 
                         } catch (e) {
-                            response = xhr.responseText;
 
                             if (this._logger) {
                                 this._logger.log(`uploadContent returned this text: ${xhr.responseText}`);
                             }
+
+                            reject(xhr.responseText);
                         }
 
                         if (xhr.status === 200) {

@@ -59,8 +59,8 @@ describe("contentData tests", () => {
         let contentData: IContentData = ContentData.createFromBase64("iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==", "image.png", "image/png");
 
         foundation.services.appMessaging.uploadContent(contentData)
-            .then(contentId => {
-                expect(contentId).toBeDefined();
+            .then(result => {
+                expect(result).toBeDefined();
                 done();
             });
     });

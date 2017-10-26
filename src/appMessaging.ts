@@ -15,7 +15,8 @@ import {
     INetworkManager,
     IMessagePager,
     IContentManager,
-    IContentData
+    IContentData,
+    IUploadContentResult
 } from "./interfaces";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
@@ -247,7 +248,7 @@ export class AppMessaging {
      * @param content 
      * @param folder 
      */
-    public uploadContent(content: IContentData, folder?: string): Promise<string> {
+    public uploadContent(content: IContentData, folder?: string): Promise<IUploadContentResult> {
 
         return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {

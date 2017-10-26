@@ -869,7 +869,15 @@ app.post('/apispaces/:appSpaceId/channels/facebook/state', function (req, res, n
 app.post('/apispaces/:appSpaceId/content', function (req, res, next) {
     console.log(req.body.data);
 
-    res.send("3518A974-9770-4081-823A-E984E2642F7A");
+    res.status(200).json({
+        folder: "content",
+        id: "3518A974-9770-4081-823A-E984E2642F7A",
+        type: "image/png",
+        url: "http://content/3518A974-9770-4081-823A-E984E2642F7A",
+        size: 1234,
+        name: "image.png"
+    });
+
 });
 
 

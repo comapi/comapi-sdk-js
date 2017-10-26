@@ -319,7 +319,7 @@ export interface IUploadContentResult {
     id: string;
     type: string;
     url: string;
-    size: string;
+    size: number;
     name: string;
 }
 

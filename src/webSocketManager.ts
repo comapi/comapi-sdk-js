@@ -100,7 +100,7 @@ export class WebSocketManager implements IWebSocketManager {
                                 this._logger.log("resolving connect() promise");
                                 resolve(true);
                             }
-                            // this._eventManager.publishLocalEvent("WebsocketOpened", { timestamp: new Date().toISOString() });
+                            this._eventManager.publishLocalEvent("WebsocketOpened", { timestamp: new Date().toISOString() });
                         };
 
                         this.webSocket.onerror = (event) => {
@@ -127,7 +127,7 @@ export class WebSocketManager implements IWebSocketManager {
                             this.connected = false;
                             this.webSocket = undefined;
                             this._logger.log("WebSocket Connection closed.");
-                            // this._eventManager.publishLocalEvent("WebsocketClosed", { timestamp: new Date().toISOString() });
+                            this._eventManager.publishLocalEvent("WebsocketClosed", { timestamp: new Date().toISOString() });
                             if (this.didConnect === false) {
                                 reject({
                                     code: event.code,

@@ -52,7 +52,9 @@ export class ContentManager {
                     let body;
 
                     if (content.file) {
-                        throw new Error("Not implemented");
+                        let fd = new FormData();
+                        fd.append("file", content.file);
+                        body = fd;
                     } else {
                         xhr.setRequestHeader("Content-Type", "application/json");
 

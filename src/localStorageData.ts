@@ -39,8 +39,8 @@ export class LocalStorageData implements ILocalStorageData {
      * @param {String} key - the key
      * @returns (String) - the raw string value
      */
-    public getString(key: string): string {
-        return localStorage.getItem(this._prefix + key);
+    public getString(key: string): Promise<string> {
+        return Promise.resolve(localStorage.getItem(this._prefix + key));
     }
 
     /**
@@ -49,8 +49,9 @@ export class LocalStorageData implements ILocalStorageData {
      * @param {String} key - the key
      * @param {String} value - the value
      */
-    public setString(key: string, value: string) {
+    public setString(key: string, value: string): Promise<boolean> {
         localStorage.setItem(this._prefix + key, value);
+        return Promise.resolve(true);
     }
 
 
@@ -60,17 +61,19 @@ export class LocalStorageData implements ILocalStorageData {
      * @param  {string} key
      * @returns {Object} - the value Object
      */
-    public getObject(key: string): Object {
+    public getObject(key: string): Promise<Object> {
 
-        let obj = null;
-        let raw = this.getString(key);
-        try {
-            obj = JSON.parse(raw);
-        } catch (e) {
-            console.error("caught exception in LocalStorageData.get(" + key + "): " + e);
-        }
-        return obj;
+        return this.getString(key)
+            .then(function (raw) {
+                let obj = null;
 
+                try {
+                    obj = JSON.parse(raw);
+                } catch (e) {
+                    console.error("caught exception in LocalStorageData.get(" + key + "): " + e);
+                }
+                return Promise.resolve(obj);
+            });
     }
 
     /**
@@ -80,7 +83,7 @@ export class LocalStorageData implements ILocalStorageData {
      * @param  {Object} data
      * @returns {boolean} - returns boolean value representing success
      */
-    public setObject(key: string, data: Object): boolean {
+    public setObject(key: string, data: Object): Promise<boolean> {
         let succeeded = true;
         try {
             let stringified = JSON.stringify(data);
@@ -89,7 +92,7 @@ export class LocalStorageData implements ILocalStorageData {
             console.log("caught exception in LocalStorageData.set(" + key + "): " + e);
             succeeded = false;
         }
-        return succeeded;
+        return Promise.resolve(succeeded);
     }
 
     /**
@@ -97,13 +100,13 @@ export class LocalStorageData implements ILocalStorageData {
      * @method LocalStorageData#remove
      * @param  {string} key
      */
-    public remove(key: string) {
+    public remove(key: string): Promise<boolean> {
 
         try {
             localStorage.removeItem(this._prefix + key);
         } catch (e) {
             console.error("caught exception in LocalStorageData.remove(" + key + "): " + e);
         }
-
+        return Promise.resolve(true);
     }
 }

@@ -125,7 +125,8 @@ app.post('/apispaces/:appSpaceId/sessions', function (req, res, next) {
         var claims = {
             iss: verified.body.iss,
             sub: verified.body.sub,
-            aud: verified.body.aud
+            aud: verified.body.aud,
+            apiSpaceId: req.params.appSpaceId
         }
 
         var jwt = njwt.create(claims, signingKey);

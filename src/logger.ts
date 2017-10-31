@@ -188,27 +188,32 @@ export class Logger implements ILogger {
 
                 if (this._indexedDB) {
 
-                    this._indexedDB.addRecord(logEvent).then(function (index) {
-                        resolve(true);
-                    });
+                    this._indexedDB.addRecord(logEvent)
+                        .then(index => {
+                            resolve(true);
+                        });
 
                 } else if (this._localStorageData) {
                     // fall back to using local storage
-                    let log = this._localStorageData.getString(this._localStorageKey);
+                    this._localStorageData.getString(this._localStorageKey)
+                        .then(log => {
 
-                    if (log !== null) {
-                        log += formattedMessage;
-                    } else {
-                        log = formattedMessage;
-                    }
+                            if (log !== null) {
+                                log += formattedMessage;
+                            } else {
+                                log = formattedMessage;
+                            }
 
-                    if (log.length > this._maxLocalStorageLogSize) {
-                        log = log.substring(formattedMessage.length);
-                    }
+                            if (log.length > this._maxLocalStorageLogSize) {
+                                log = log.substring(formattedMessage.length);
+                            }
 
-                    this._localStorageData.setString(this._localStorageKey, log);
+                            this._localStorageData.setString(this._localStorageKey, log)
+                                .then(() => {
+                                    resolve(true);
+                                });
+                        });
 
-                    resolve(true);
 
                 } else {
                     resolve(true);

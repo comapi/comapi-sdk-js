@@ -114,9 +114,12 @@ export class Profile implements IProfile {
     public updateMyProfile(profile: any, useEtag: boolean = true): Promise<any> {
         return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
+                return Promise.all([sessionInfo, this.getMyProfileETag(useEtag)]);
+            })
+            .then(([sessionInfo, eTag]) => {
                 return this._profileManager.updateProfile(sessionInfo.session.profileId,
                     profile,
-                    useEtag ? this._localStorage.getString("MyProfileETag") : undefined);
+                    eTag);
             })
             .then(result => {
                 if (useEtag) {
@@ -135,9 +138,12 @@ export class Profile implements IProfile {
     public patchMyProfile(profile: any, useEtag: boolean): Promise<any> {
         return this._networkManager.ensureSessionAndSocket()
             .then((sessionInfo) => {
+                return Promise.all([sessionInfo, this.getMyProfileETag(useEtag)]);
+            })
+            .then(([sessionInfo, eTag]) => {
                 return this._profileManager.patchProfile(sessionInfo.session.profileId,
                     profile,
-                    useEtag ? this._localStorage.getString("MyProfileETag") : undefined);
+                    eTag);
             })
             .then(result => {
                 if (useEtag) {
@@ -145,5 +151,17 @@ export class Profile implements IProfile {
                 }
                 return Promise.resolve(result.response);
             });
+    }
+
+    /**
+     * 
+     * @param useEtag 
+     */
+    private getMyProfileETag(useEtag: boolean): Promise<string> {
+        if (useEtag) {
+            return this._localStorage.getString("MyProfileETag");
+        } else {
+            return Promise.resolve(undefined);
+        }
     }
 }

@@ -12,13 +12,13 @@ export interface IEventManager {
  * Local storage interface
  */
 export interface ILocalStorageData {
-    getString(key: string): string;
-    setString(key: string, data: string);
+    getString(key: string): Promise<string>;
+    setString(key: string, data: string): Promise<boolean>;
 
-    getObject(key: string): Object;
-    setObject(key: string, data: Object): boolean;
+    getObject(key: string): Promise<Object>;
+    setObject(key: string, data: Object): Promise<boolean>;
 
-    remove(key: string);
+    remove(key: string): Promise<boolean>;
 }
 
 /**
@@ -206,7 +206,7 @@ export enum Environment {
  * Session manager interface
  */
 export interface ISessionManager {
-    sessionInfo: ISessionInfo;
+    // sessionInfo: ISessionInfo;
     getValidToken(): Promise<string>;
     startSession(): Promise<ISessionInfo>;
     endSession(): Promise<boolean>;
@@ -216,7 +216,7 @@ export interface ISessionManager {
  * Network manager interface
  */
 export interface INetworkManager {
-    session: ISession;
+    // session: ISession;
     getValidToken(): Promise<string>;
     startSession(): Promise<ISessionInfo>;
     restartSession(): Promise<ISessionInfo>;
@@ -764,7 +764,7 @@ export interface IFoundation {
     services: IServices;
     device: IDevice;
     channels: IChannels;
-    session: ISession;
+    //    session: ISession;
     logger: ILogger;
 
     startSession(): Promise<ISession>;

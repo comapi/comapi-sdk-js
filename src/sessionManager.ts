@@ -38,58 +38,25 @@ export class SessionManager implements ISessionManager {
         @inject(INTERFACE_SYMBOLS.RestClient) private _restClient: IRestClient,
         @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
         @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig) {
-
-        this._deviceId = _localStorageData.getString("deviceId");
-
-        if (!this._deviceId) {
-            this._deviceId = Utils.uuid();
-            _localStorageData.setString("deviceId", this._deviceId);
-        }
-
-        // Load in cached session on startup
-        this._getSession();
     }
-
 
     /**
      * Getter to get the current sessionInfo
      * @method SessionManager#sessionInfo
      * @returns {ISessionInfo}   
      */
-    get sessionInfo(): ISessionInfo {
+    private get sessionInfo(): ISessionInfo {
         return this._sessionInfo;
     }
 
-    /**
-     * Getter to get the current sessionInfo expiry time
-     * @method SessionManager#expiry
-     * @returns {string}   
-     */
-    get expiry(): string {
-        return this._sessionInfo.session.expiresOn;
-    }
-
-    /**
-     * @method SessionManager#isActive
-     */
-    private get isActive(): boolean {
-
-        let result = false;
-        // check we have a token and also that the token hasn't expired ...
-        if (this._sessionInfo) {
-
-            let now = new Date();
-            let expiry = new Date(this._sessionInfo.session.expiresOn);
-
-            if (now < expiry) {
-                result = true;
-            } else {
-                this._removeSession();
-            }
-        }
-
-        return result;
-    }
+    // /**
+    //  * Getter to get the current sessionInfo expiry time
+    //  * @method SessionManager#expiry
+    //  * @returns {string}   
+    //  */
+    // private get expiry(): string {
+    //     return this._sessionInfo.session.expiresOn;
+    // }
 
     /**
      * Function to get auth token
@@ -98,16 +65,14 @@ export class SessionManager implements ISessionManager {
      */
     public getValidToken(): Promise<string> {
 
-        return this.isActive
-            ? Promise.resolve(this._sessionInfo.token)
-            : this.startSession()
-                .then(sessionInfo => {
-                    return Promise.resolve(sessionInfo.token);
-                });
+        return this.startSession()
+            .then(sessionInfo => {
+                return Promise.resolve(sessionInfo.token);
+            });
     }
 
     /**
-     * Function to start a new session
+     * Function to start a new session or return an existing session
      * @method SessionManager#startSession
      * @param {any} userDefined -  Additional client-specific information
      * @returns {Promise} - Returns a promise 
@@ -117,39 +82,51 @@ export class SessionManager implements ISessionManager {
 
         return new Promise((resolve, reject) => {
 
-            if (this.isActive) {
-                self._logger.log("startSession() found an existing session: ");
-                resolve(this._getSession());
-            } else {
+            return this._getCachedSession()
+                .then(cachedSessionInfo => {
 
-                // call comapi service startAuth                
-                this._startAuth().then(sessionStartResponse => {
+                    if (cachedSessionInfo) {
+                        self._logger.log("startSession() found an existing session: ");
+                        resolve(cachedSessionInfo);
+                    } else {
+                        // call comapi service startAuth                
+                        this._startAuth().then(sessionStartResponse => {
 
-                    let authChallengeOptions: IAuthChallengeOptions = {
-                        nonce: sessionStartResponse.nonce
-                    };
+                            let authChallengeOptions: IAuthChallengeOptions = {
+                                nonce: sessionStartResponse.nonce
+                            };
 
-                    // call integrators auth challenge method
-                    self._comapiConfig.authChallenge(authChallengeOptions, function (jwt: string) {
+                            // call integrators auth challenge method
+                            self._comapiConfig.authChallenge(authChallengeOptions, function (jwt: string) {
 
-                        if (jwt) {
-                            self._createAuthenticatedSession(jwt, sessionStartResponse.authenticationId, {})
-                                .then(function (sessionInfo) {
-                                    self._setSession(sessionInfo);
-                                    // pass back to client
-                                    resolve(sessionInfo);
-                                }).catch(function (error) {
-                                    reject(error);
-                                });
-                        } else {
-                            // client failed to fulfil the auth challenge for some reason ...
-                            reject({ message: "Failed to get a JWT from authChallenge", statusCode: 401 });
-                        }
+                                if (jwt) {
+                                    self._createAuthenticatedSession(jwt, sessionStartResponse.authenticationId, {})
+                                        .then((sessionInfo) => {
+                                            return Promise.all([sessionInfo, self._setSession(sessionInfo)]);
+                                        })
+                                        .then(([sessionInfo, result]) => {
+                                            if (!result) {
+                                                console.error("_setSession() failed");
+                                            }
+                                            // pass back to client
+                                            resolve(sessionInfo);
+                                        })
+                                        .catch(function (error) {
+                                            reject(error);
+                                        });
+                                } else {
+                                    // client failed to fulfil the auth challenge for some reason ...
+                                    reject({ message: "Failed to get a JWT from authChallenge", statusCode: 401 });
+                                }
 
-                    });
+                            });
 
-                }).catch(error => reject(error));
-            }
+                        }).catch(error => reject(error));
+
+                    }
+
+                });
+
         });
     }
 
@@ -185,25 +162,28 @@ export class SessionManager implements ISessionManager {
      */
     private _createAuthenticatedSession(jwt: string, authenticationId: string, deviceInfo: Object): Promise<ISessionInfo> {
 
-        let browserInfo = Utils.getBrowserInfo();
-
-        let data = {
-            authenticationId: authenticationId,
-            authenticationToken: jwt,
-
-            deviceId: this._deviceId,
-            platform: /*browserInfo.name*/ "javascript",
-            platformVersion: browserInfo.version,
-            sdkType: /*"javascript"*/ "native",
-            sdkVersion: "_SDK_VERSION_"
-        };
-
         let url = Utils.format(this._comapiConfig.foundationRestUrls.sessions, {
             apiSpaceId: this._comapiConfig.apiSpaceId,
             urlBase: this._comapiConfig.urlBase,
         });
 
-        return this._restClient.post(url, {}, data)
+        return this.getDeviceId()
+            .then(() => {
+                let browserInfo = Utils.getBrowserInfo();
+
+                let data = {
+                    authenticationId: authenticationId,
+                    authenticationToken: jwt,
+
+                    deviceId: this._deviceId,
+                    platform: /*browserInfo.name*/ "javascript",
+                    platformVersion: browserInfo.version,
+                    sdkType: /*"javascript"*/ "native",
+                    sdkVersion: "_SDK_VERSION_"
+                };
+
+                return this._restClient.post(url, {}, data);
+            })
             .then(function (result) {
                 return Promise.resolve(<ISessionInfo>result.response);
             });
@@ -249,60 +229,87 @@ export class SessionManager implements ISessionManager {
             });
     }
 
+    /**
+     * Method to either retrieve session from local storage or from memory via a promise
+     */
+    private _getSessionInfo(): Promise<ISessionInfo> {
+        if (this._sessionInfo) {
+            return Promise.resolve(this._sessionInfo);
+        } else {
+            return this._localStorageData.getObject("session") as Promise<ISessionInfo>;
+        }
+    }
 
     /**
      * Internal function to load in an existing session if available 
-     * Also now checks the apiSpace matches up and deletes cached session if not
+     * Also now checks the apiSpace matches up and hasn't expired and deletes cached session if necessary
      * @returns {ISessionInfo} - returns session info if available 
      */
-    private _getSession(): ISessionInfo {
-        let sessionInfo: ISessionInfo = this._localStorageData.getObject("session") as ISessionInfo;
+    private _getCachedSession(): Promise<ISessionInfo> {
 
-        if (sessionInfo) {
+        return this._getSessionInfo()
+            .then((sessionInfo: ISessionInfo) => {
 
-            // check that the token matches 
-            if (sessionInfo.token) {
-                let bits = sessionInfo.token.split(".");
-                if (bits.length === 3) {
-                    let payload = JSON.parse(atob(bits[1]));
-                    if (payload.apiSpaceId === this._comapiConfig.apiSpaceId) {
-                        this._sessionInfo = sessionInfo;
+                if (sessionInfo) {
+
+                    if (!this.hasExpired(sessionInfo.session.expiresOn)) {
+
+                        // check that the token matches 
+                        if (sessionInfo.token) {
+                            let bits = sessionInfo.token.split(".");
+                            if (bits.length === 3) {
+                                let payload = JSON.parse(atob(bits[1]));
+                                if (payload.apiSpaceId === this._comapiConfig.apiSpaceId) {
+                                    this._sessionInfo = sessionInfo;
+                                } else {
+                                    // need to reset as may have already been set
+                                    this._sessionInfo = null;
+                                }
+                            }
+                        }
+                    } else {
+                        // need to reset as may have already been set
+                        this._sessionInfo = null;
                     }
-                }
-            }
 
-            if (!this._sessionInfo) {
-                this._localStorageData.remove("session");
-            }
-        }
-        return this._sessionInfo;
+                    if (!this._sessionInfo) {
+                        this._localStorageData.remove("session")
+                            .then(() => {
+                                return null;
+                            });
+                    } else {
+                        return this._sessionInfo;
+                    }
+                } else {
+                    return null;
+                }
+            });
     }
 
     /**
      * Internal function to load in an existing session if available 
      * @returns {boolean} - returns boolean reault 
      */
-    private _setSession(sessionInfo: ISessionInfo) {
+    private _setSession(sessionInfo: ISessionInfo): Promise<boolean> {
 
-        let expiry = new Date(sessionInfo.session.expiresOn);
-
-        let now = new Date();
-
-        if (expiry < now) {
+        if (this.hasExpired(sessionInfo.session.expiresOn)) {
             this._logger.error("Was given an expired token ;-(");
         }
 
         this._sessionInfo = sessionInfo;
-        this._localStorageData.setObject("session", sessionInfo);
+        return this._localStorageData.setObject("session", sessionInfo);
     }
 
     /**
      * Internal function to remove an existing session 
      * @returns {boolean} - returns boolean reault 
      */
-    private _removeSession() {
-        this._localStorageData.remove("session");
-        this._sessionInfo = undefined;
+    private _removeSession(): Promise<Boolean> {
+        return this._localStorageData.remove("session")
+            .then(result => {
+                this._sessionInfo = undefined;
+                return result;
+            });
     }
 
 
@@ -312,4 +319,42 @@ export class SessionManager implements ISessionManager {
     private getAuthHeader() {
         return `Bearer ${this.sessionInfo.token}`;
     }
+
+
+    /**
+     * Create one if not available ...
+     */
+    private getDeviceId(): Promise<string> {
+
+        if (this._deviceId) {
+            return Promise.resolve(this._deviceId);
+        } else {
+            return this._localStorageData.getString("deviceId")
+                .then(value => {
+                    if (value === null) {
+                        this._deviceId = Utils.uuid();
+                        return this._localStorageData.setString("deviceId", this._deviceId)
+                            .then(result => {
+                                return Promise.resolve(this._deviceId);
+                            });
+
+                    } else {
+                        this._deviceId = value;
+                        return Promise.resolve(this._deviceId);
+                    }
+                });
+        }
+    }
+
+    /**
+     * Check an iso date is not in the past ...
+     * @param expiresOn 
+     */
+    private hasExpired(expiresOn: string): boolean {
+        let now = new Date();
+        let expiry = new Date(expiresOn);
+
+        return now > expiry;
+    }
+
 }

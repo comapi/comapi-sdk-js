@@ -4,7 +4,7 @@ import {
     ISessionManager,
     IWebSocketManager,
     ISessionInfo,
-    ISession,
+    // ISession,
     INetworkManager
 } from "./interfaces";
 
@@ -39,10 +39,13 @@ export class NetworkManager implements INetworkManager {
 
         return this._sessionManager.startSession()
             .then((sessionInfo) => {
-                return this._webSocketManager.connect();
+                return Promise.all([sessionInfo, this._webSocketManager.connect()]);
             })
-            .then((connected) => {
-                return this._sessionManager.sessionInfo;
+            .then(([sessionInfo, connected]) => {
+                if (!connected) {
+                    console.error("Failed to connect web socket");
+                }
+                return sessionInfo;
             });
     }
 
@@ -59,10 +62,14 @@ export class NetworkManager implements INetworkManager {
                 return this._sessionManager.startSession();
             })
             .then((sessionInfo) => {
-                return this._webSocketManager.connect();
+                return Promise.all([sessionInfo, this._webSocketManager.connect()]);
             })
-            .then((connected) => {
-                return this._sessionManager.sessionInfo;
+            .then(([sessionInfo, connected]) => {
+                if (!connected) {
+                    console.error("Failed to connect web socket");
+                }
+
+                return sessionInfo;
             });
     }
 
@@ -71,9 +78,9 @@ export class NetworkManager implements INetworkManager {
      * @method Foundation#session
      * @returns {ISession} - Returns an ISession interface
      */
-    public get session(): ISession {
-        return this._sessionManager.sessionInfo ? this._sessionManager.sessionInfo.session : null;
-    }
+    // public get session(): ISession {
+    //     return this._sessionManager.sessionInfo ? this._sessionManager.sessionInfo.session : null;
+    // }
 
     /**
      * Method to end an existing authenticated session
@@ -101,10 +108,14 @@ export class NetworkManager implements INetworkManager {
         return this._mutex.runExclusive(() => {
             return this.ensureSession()
                 .then(sessionInfo => {
-                    return this.ensureSocket();
+                    return Promise.all([sessionInfo, this.ensureSocket()]);
                 })
-                .then(connected => {
-                    return this._sessionManager.sessionInfo;
+                .then(([sessionInfo, connected]) => {
+                    if (!connected) {
+                        console.error("Failed to connect web socket");
+                    }
+
+                    return sessionInfo;
                 });
         });
     }
@@ -115,7 +126,8 @@ export class NetworkManager implements INetworkManager {
      * @returns {Promise} - returns a Promise  
      */
     private ensureSession(): Promise<ISessionInfo> {
-        return this._sessionManager.sessionInfo ? Promise.resolve(this._sessionManager.sessionInfo) : this._sessionManager.startSession();
+        // return this._sessionManager.sessionInfo ? Promise.resolve(this._sessionManager.sessionInfo) : this._sessionManager.startSession();
+        return this._sessionManager.startSession();
     }
 
     /**

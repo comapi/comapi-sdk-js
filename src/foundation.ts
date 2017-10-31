@@ -204,14 +204,14 @@ export class Foundation implements IFoundation {
         return this._channels;
     }
 
-    /**
-     * Method to get current session
-     * @method Foundation#session
-     * @returns {ISession} - Returns an ISession interface
-     */
-    public get session(): ISession {
-        return this._networkManager.session;
-    }
+    // /**
+    //  * Method to get current session
+    //  * @method Foundation#session
+    //  * @returns {ISession} - Returns an ISession interface
+    //  */
+    // public get session(): ISession {
+    //     return this._networkManager.session;
+    // }
 
     /**
      * Method to get the logger

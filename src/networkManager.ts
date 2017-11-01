@@ -4,7 +4,7 @@ import {
     ISessionManager,
     IWebSocketManager,
     ISessionInfo,
-    // ISession,
+    ISession,
     INetworkManager
 } from "./interfaces";
 
@@ -78,9 +78,9 @@ export class NetworkManager implements INetworkManager {
      * @method Foundation#session
      * @returns {ISession} - Returns an ISession interface
      */
-    // public get session(): ISession {
-    //     return this._sessionManager.sessionInfo ? this._sessionManager.sessionInfo.session : null;
-    // }
+    public get session(): ISession {
+        return this._sessionManager.sessionInfo ? this._sessionManager.sessionInfo.session : null;
+    }
 
     /**
      * Method to end an existing authenticated session

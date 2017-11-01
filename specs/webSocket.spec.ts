@@ -39,7 +39,7 @@ describe("webSocket Manager tests", () => {
         private _sessionInfo: any = {
             token: "1.2.3"
         };
-
+        public initialise(): Promise<boolean> { return Promise.resolve(true); }
         get sessionInfo(): ISessionInfo { return this._sessionInfo; }
         public getValidToken(): Promise<string> { return Promise.resolve(this._sessionInfo.token); }
         public startSession(): Promise<ISessionInfo> { return Promise.resolve(null); }

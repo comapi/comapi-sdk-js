@@ -9,6 +9,7 @@ import {
     IChannels,
     IFoundation,
     INetworkManager,
+    ISessionManager
 } from "./interfaces";
 
 import { ConversationBuilder } from "./conversationBuilder";
@@ -134,7 +135,13 @@ export class Foundation implements IFoundation {
 
         if (doSingleton) { Foundation._foundation = foundation; }
 
-        return Promise.resolve(foundation);
+        // adopt a cached session if there is one
+        let sessionManager = container.getInterface<ISessionManager>(INTERFACE_SYMBOLS.SessionManager);
+
+        return sessionManager.initialise()
+            .then(result => {
+                return Promise.resolve(foundation);
+            });
     }
 
 
@@ -204,14 +211,14 @@ export class Foundation implements IFoundation {
         return this._channels;
     }
 
-    // /**
-    //  * Method to get current session
-    //  * @method Foundation#session
-    //  * @returns {ISession} - Returns an ISession interface
-    //  */
-    // public get session(): ISession {
-    //     return this._networkManager.session;
-    // }
+    /**
+     * Method to get current session
+     * @method Foundation#session
+     * @returns {ISession} - Returns an ISession interface
+     */
+    public get session(): ISession {
+        return this._networkManager.session;
+    }
 
     /**
      * Method to get the logger

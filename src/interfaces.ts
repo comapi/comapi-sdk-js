@@ -206,7 +206,8 @@ export enum Environment {
  * Session manager interface
  */
 export interface ISessionManager {
-    // sessionInfo: ISessionInfo;
+    sessionInfo: ISessionInfo;
+    initialise(): Promise<boolean>;
     getValidToken(): Promise<string>;
     startSession(): Promise<ISessionInfo>;
     endSession(): Promise<boolean>;
@@ -216,7 +217,7 @@ export interface ISessionManager {
  * Network manager interface
  */
 export interface INetworkManager {
-    // session: ISession;
+    session: ISession;
     getValidToken(): Promise<string>;
     startSession(): Promise<ISessionInfo>;
     restartSession(): Promise<ISessionInfo>;

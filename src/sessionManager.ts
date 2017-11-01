@@ -41,22 +41,38 @@ export class SessionManager implements ISessionManager {
     }
 
     /**
+     * Retrieve a cached session if there is one
+     */
+    public initialise(): Promise<boolean> {
+
+        return this._localStorageData.getObject("session")
+            .then((sessionInfo: ISessionInfo) => {
+                if (sessionInfo) {
+
+                    if (this.isSessionValid(sessionInfo)) {
+                        this._sessionInfo = sessionInfo;
+                        return true;
+                    } else {
+                        return this._localStorageData.remove("session")
+                            .then(() => {
+                                return false;
+                            });
+                    }
+
+                } else {
+                    return false;
+                }
+            });
+    }
+
+    /**
      * Getter to get the current sessionInfo
      * @method SessionManager#sessionInfo
      * @returns {ISessionInfo}   
      */
-    private get sessionInfo(): ISessionInfo {
+    public get sessionInfo(): ISessionInfo {
         return this._sessionInfo;
     }
-
-    // /**
-    //  * Getter to get the current sessionInfo expiry time
-    //  * @method SessionManager#expiry
-    //  * @returns {string}   
-    //  */
-    // private get expiry(): string {
-    //     return this._sessionInfo.session.expiresOn;
-    // }
 
     /**
      * Function to get auth token
@@ -82,51 +98,43 @@ export class SessionManager implements ISessionManager {
 
         return new Promise((resolve, reject) => {
 
-            return this._getCachedSession()
-                .then(cachedSessionInfo => {
+            if (this._sessionInfo && this.isSessionValid(this._sessionInfo)) {
+                resolve(this._sessionInfo);
+            } else {
+                // call comapi service startAuth                
+                this._startAuth().then(sessionStartResponse => {
 
-                    if (cachedSessionInfo) {
-                        self._logger.log("startSession() found an existing session: ");
-                        resolve(cachedSessionInfo);
-                    } else {
-                        // call comapi service startAuth                
-                        this._startAuth().then(sessionStartResponse => {
+                    let authChallengeOptions: IAuthChallengeOptions = {
+                        nonce: sessionStartResponse.nonce
+                    };
 
-                            let authChallengeOptions: IAuthChallengeOptions = {
-                                nonce: sessionStartResponse.nonce
-                            };
+                    // call integrators auth challenge method
+                    self._comapiConfig.authChallenge(authChallengeOptions, function (jwt: string) {
 
-                            // call integrators auth challenge method
-                            self._comapiConfig.authChallenge(authChallengeOptions, function (jwt: string) {
+                        if (jwt) {
+                            self._createAuthenticatedSession(jwt, sessionStartResponse.authenticationId, {})
+                                .then((sessionInfo) => {
+                                    return Promise.all([sessionInfo, self._setSession(sessionInfo)]);
+                                })
+                                .then(([sessionInfo, result]) => {
+                                    if (!result) {
+                                        console.error("_setSession() failed");
+                                    }
+                                    // pass back to client
+                                    resolve(sessionInfo);
+                                })
+                                .catch(function (error) {
+                                    reject(error);
+                                });
+                        } else {
+                            // client failed to fulfil the auth challenge for some reason ...
+                            reject({ message: "Failed to get a JWT from authChallenge", statusCode: 401 });
+                        }
 
-                                if (jwt) {
-                                    self._createAuthenticatedSession(jwt, sessionStartResponse.authenticationId, {})
-                                        .then((sessionInfo) => {
-                                            return Promise.all([sessionInfo, self._setSession(sessionInfo)]);
-                                        })
-                                        .then(([sessionInfo, result]) => {
-                                            if (!result) {
-                                                console.error("_setSession() failed");
-                                            }
-                                            // pass back to client
-                                            resolve(sessionInfo);
-                                        })
-                                        .catch(function (error) {
-                                            reject(error);
-                                        });
-                                } else {
-                                    // client failed to fulfil the auth challenge for some reason ...
-                                    reject({ message: "Failed to get a JWT from authChallenge", statusCode: 401 });
-                                }
+                    });
 
-                            });
-
-                        }).catch(error => reject(error));
-
-                    }
-
-                });
-
+                }).catch(error => reject(error));
+            }
         });
     }
 
@@ -229,62 +237,6 @@ export class SessionManager implements ISessionManager {
             });
     }
 
-    /**
-     * Method to either retrieve session from local storage or from memory via a promise
-     */
-    private _getSessionInfo(): Promise<ISessionInfo> {
-        if (this._sessionInfo) {
-            return Promise.resolve(this._sessionInfo);
-        } else {
-            return this._localStorageData.getObject("session") as Promise<ISessionInfo>;
-        }
-    }
-
-    /**
-     * Internal function to load in an existing session if available 
-     * Also now checks the apiSpace matches up and hasn't expired and deletes cached session if necessary
-     * @returns {ISessionInfo} - returns session info if available 
-     */
-    private _getCachedSession(): Promise<ISessionInfo> {
-
-        return this._getSessionInfo()
-            .then((sessionInfo: ISessionInfo) => {
-
-                if (sessionInfo) {
-
-                    if (!this.hasExpired(sessionInfo.session.expiresOn)) {
-
-                        // check that the token matches 
-                        if (sessionInfo.token) {
-                            let bits = sessionInfo.token.split(".");
-                            if (bits.length === 3) {
-                                let payload = JSON.parse(atob(bits[1]));
-                                if (payload.apiSpaceId === this._comapiConfig.apiSpaceId) {
-                                    this._sessionInfo = sessionInfo;
-                                } else {
-                                    // need to reset as may have already been set
-                                    this._sessionInfo = null;
-                                }
-                            }
-                        }
-                    } else {
-                        // need to reset as may have already been set
-                        this._sessionInfo = null;
-                    }
-
-                    if (!this._sessionInfo) {
-                        this._localStorageData.remove("session")
-                            .then(() => {
-                                return null;
-                            });
-                    } else {
-                        return this._sessionInfo;
-                    }
-                } else {
-                    return null;
-                }
-            });
-    }
 
     /**
      * Internal function to load in an existing session if available 
@@ -355,6 +307,31 @@ export class SessionManager implements ISessionManager {
         let expiry = new Date(expiresOn);
 
         return now > expiry;
+    }
+
+    /**
+     * Checks validity of session based on expiry and matching apiSpace
+     * @param sessionInfo 
+     */
+    private isSessionValid(sessionInfo: ISessionInfo): boolean {
+
+        let valid = false;
+
+        if (!this.hasExpired(sessionInfo.session.expiresOn)) {
+
+            // check that the token matches 
+            if (sessionInfo.token) {
+                let bits = sessionInfo.token.split(".");
+                if (bits.length === 3) {
+                    let payload = JSON.parse(atob(bits[1]));
+                    if (payload.apiSpaceId === this._comapiConfig.apiSpaceId) {
+                        valid = true;
+                    }
+                }
+            }
+        }
+
+        return valid;
     }
 
 }

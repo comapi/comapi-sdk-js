@@ -46,6 +46,7 @@ describe("Foundation tests", () => {
             };
 
             get sessionInfo(): ISessionInfo { return this._sessionInfo; }
+            public initialise(): Promise<boolean> { return Promise.resolve(true); }
             public getValidToken(): Promise<string> { return Promise.resolve(this._sessionInfo.token); }
             public startSession(): Promise<ISessionInfo> { return Promise.resolve(this.sessionInfo); }
             public endSession(): Promise<boolean> { return Promise.resolve(true); }

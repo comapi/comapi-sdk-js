@@ -70,7 +70,7 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
     public getContinuationToken(conversationId: string): Promise<number> {
         return this.ensureInitialised()
             .then(initialised => {
-                return new Promise((resolve, reject) => {
+                return new Promise<number>((resolve, reject) => {
 
                     let transaction = this._database.transaction([this._continuationTokenStore], "readonly");
 
@@ -110,7 +110,7 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
 
         return this.ensureInitialised()
             .then(initialised => {
-                return new Promise((resolve, reject) => {
+                return new Promise<boolean>((resolve, reject) => {
 
                     let transaction = this._database.transaction([this._continuationTokenStore], "readwrite");
                     let store = transaction.objectStore(this._continuationTokenStore);
@@ -141,7 +141,7 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
 
         return this.ensureInitialised()
             .then(initialised => {
-                return new Promise((resolve, reject) => {
+                return new Promise<boolean>((resolve, reject) => {
 
                     let transaction: IDBTransaction = this._database.transaction([this._orphanedEventStore], "readwrite");
                     let store: IDBObjectStore = transaction.objectStore(this._orphanedEventStore);
@@ -170,7 +170,7 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
 
         return this.ensureInitialised()
             .then(initialised => {
-                return new Promise((resolve, reject) => {
+                return new Promise<boolean>((resolve, reject) => {
 
                     let transaction = this._database.transaction([this._orphanedEventStore], "readwrite");
                     let store = transaction.objectStore(this._orphanedEventStore);
@@ -196,7 +196,7 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
 
         return this.ensureInitialised()
             .then(initialised => {
-                return new Promise((resolve, reject) => {
+                return new Promise<IConversationMessageEvent[]>((resolve, reject) => {
 
                     let transaction: IDBTransaction = this._database.transaction([this._orphanedEventStore], "readonly");
 
@@ -241,7 +241,7 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
     /**
      * 
      */
-    private initialise(): Promise<Boolean> {
+    private initialise(): Promise<boolean> {
 
         return new Promise((resolve, reject) => {
             if (this.idbSupported) {

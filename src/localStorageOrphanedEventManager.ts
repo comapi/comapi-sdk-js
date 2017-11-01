@@ -26,7 +26,7 @@ interface IOrphanedEventContainer {
 @injectable()
 export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
 
-    private _orphanedEevnts = {
+    private _orphanedEvents = {
         // IOrphanedEventContainer will be keyed off a conversationId property
     };
 
@@ -34,15 +34,15 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
      * 
      */
     constructor( @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorage: ILocalStorageData) {
-        this._orphanedEevnts = this._localStorage.getObject("orphanedEevnts") || {};
+        this._orphanedEvents = this._localStorage.getObject("orphanedEvents") || {};
     }
 
     /**
      * 
      */
     public clearAll(): Promise<boolean> {
-        this._orphanedEevnts = {};
-        this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
+        this._orphanedEvents = {};
+        this._localStorage.setObject("orphanedEvents", this._orphanedEvents);
         return Promise.resolve(true);
     }
 
@@ -50,10 +50,10 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
      * 
      */
     public clear(conversationId: string): Promise<boolean> {
-        this._orphanedEevnts[conversationId] = {
+        this._orphanedEvents[conversationId] = {
             orphanedEvents: []
         };
-        this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
+        this._localStorage.setObject("orphanedEvents", this._orphanedEvents);
         return Promise.resolve(true);
     }
 
@@ -61,7 +61,7 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
      * 
      */
     public getContinuationToken(conversationId: string): Promise<number> {
-        let container: IOrphanedEventContainer = this._orphanedEevnts[conversationId];
+        let container: IOrphanedEventContainer = this._orphanedEvents[conversationId];
         return Promise.resolve(container ? container.continuationToken : null);
     }
 
@@ -70,11 +70,11 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
      */
     public setContinuationToken(conversationId: string, continuationToken: number): Promise<boolean> {
 
-        let _info: IOrphanedEventInfo = this._orphanedEevnts[conversationId];
+        let _info: IOrphanedEventInfo = this._orphanedEvents[conversationId];
         if (_info) {
             _info.continuationToken = continuationToken;
         } else {
-            this._orphanedEevnts[conversationId] = {
+            this._orphanedEvents[conversationId] = {
                 continuationToken: continuationToken,
                 orphanedEvents: []
             };
@@ -87,7 +87,7 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
      */
     public addOrphanedEvent(event: IConversationMessageEvent): Promise<boolean> {
 
-        let info: IOrphanedEventContainer = this._orphanedEevnts[event.conversationId];
+        let info: IOrphanedEventContainer = this._orphanedEvents[event.conversationId];
 
         if (info) {
 
@@ -110,7 +110,7 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
                 });
 
                 // save
-                this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
+                this._localStorage.setObject("orphanedEvents", this._orphanedEvents);
             }
 
         } else {
@@ -122,7 +122,7 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
      * 
      */
     public removeOrphanedEvent(event: IConversationMessageEvent): Promise<boolean> {
-        let info: IOrphanedEventContainer = this._orphanedEevnts[event.conversationId];
+        let info: IOrphanedEventContainer = this._orphanedEvents[event.conversationId];
 
         if (info) {
 
@@ -135,7 +135,7 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
             }
 
             // save
-            this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
+            this._localStorage.setObject("orphanedEvents", this._orphanedEvents);
 
             return Promise.resolve(true);
 
@@ -148,7 +148,7 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
      * 
      */
     public getOrphanedEvents(conversationId: string): Promise<IConversationMessageEvent[]> {
-        let info: IOrphanedEventContainer = this._orphanedEevnts[conversationId];
+        let info: IOrphanedEventContainer = this._orphanedEvents[conversationId];
         return Promise.resolve(info ? info.orphanedEvents : []);
     }
 }

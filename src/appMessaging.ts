@@ -244,9 +244,9 @@ export class AppMessaging {
     }
 
     /**
-     * 
-     * @param content 
-     * @param folder 
+     * Method to upload content data
+     * @param {ContentData} content - the content
+     * @returns {IUploadContentResult} - the result
      */
     public uploadContent(content: IContentData, folder?: string): Promise<IUploadContentResult> {
 

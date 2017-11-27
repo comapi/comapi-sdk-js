@@ -30,9 +30,10 @@ export class ContentManager {
     }
 
     /**
-     * 
-     * @param folder 
-     * @param content 
+     * Method to upload content data
+     * @param {string} folder - the folder
+     * @param {ContentData} content - the content
+     * @returns {IUploadContentResult} - the result
      */
     public uploadContent(content: IContentData, folder?: string): Promise<IUploadContentResult> {
 

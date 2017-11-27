@@ -14,26 +14,29 @@ export class ContentData implements IContentData {
     public type: string;
 
     /**
-     * 
-     * @param file 
+     * Static method that creates and initialises a ContentData instance from a File object  
+     * @param {File} file - the file object 
+     * @returns {ContentData}
      */
     public static createFromFile(file: File): ContentData {
         return new ContentData().initFromFile(file);
     }
 
     /**
-     * 
-     * @param data 
-     * @param name 
-     * @param type 
+     * Static method that creates and initialises a ContentData instance from raw base64 data
+     * @param {string} data - the base64 data
+     * @param {string} name - the name of the attachment
+     * @param {string} type - the type of attachment
+     * @returns {ContentData}
      */
     public static createFromBase64(data: string, name: string, type: string): ContentData {
         return new ContentData().initFromBase64Data(data, name, type);
     }
 
     /**
-     * 
-     * @param file 
+     * Method that initialises a ContentData instance from a File object  
+     * @param {File} file - the file object 
+     * @returns {ContentData}
      */
     private initFromFile(file: File): ContentData {
         this.file = file;
@@ -41,10 +44,11 @@ export class ContentData implements IContentData {
     }
 
     /**
-     * 
-     * @param data 
-     * @param name 
-     * @param type 
+     * Method that initialises a ContentData instance from raw base64 data
+     * @param {string} data - the base64 data
+     * @param {string} name - the name of the attachment
+     * @param {string} type - the type of attachment
+     * @returns {ContentData}
      */
     private initFromBase64Data(data: string, name: string, type: string): ContentData {
         this.data = data;

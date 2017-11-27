@@ -3,7 +3,7 @@ import {
     IContentData
 } from "./interfaces";
 
-/** 
+/* 
  * Helper class to create the content 
  */
 export class ContentData implements IContentData {
@@ -33,24 +33,35 @@ export class ContentData implements IContentData {
         return new ContentData().initFromBase64Data(data, name, type);
     }
 
+    /**        
+     * ContentData class constructor.
+     * @class ContentData
+     * @classdesc Class that implements Content Data.
+     */
+    /* tslint:disable:no-empty */
+    constructor() { }
+    /* tslint:enable:no-empty */
+
     /**
      * Method that initialises a ContentData instance from a File object  
+     * @method ContentData#initFromFile
      * @param {File} file - the file object 
      * @returns {ContentData}
      */
-    private initFromFile(file: File): ContentData {
+    public initFromFile(file: File): ContentData {
         this.file = file;
         return this;
     }
 
     /**
      * Method that initialises a ContentData instance from raw base64 data
+     * @method ContentData#initFromBase64Data
      * @param {string} data - the base64 data
      * @param {string} name - the name of the attachment
      * @param {string} type - the type of attachment
      * @returns {ContentData}
      */
-    private initFromBase64Data(data: string, name: string, type: string): ContentData {
+    public initFromBase64Data(data: string, name: string, type: string): ContentData {
         this.data = data;
         this.name = name;
         this.type = type;

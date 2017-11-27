@@ -31,6 +31,7 @@ export class ContentManager {
 
     /**
      * Method to upload content data
+     * @method ContentManager#uploadContent
      * @param {string} folder - the folder
      * @param {ContentData} content - the content
      * @returns {IUploadContentResult} - the result

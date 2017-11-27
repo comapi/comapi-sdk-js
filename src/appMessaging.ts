@@ -245,6 +245,7 @@ export class AppMessaging {
 
     /**
      * Method to upload content data
+     * @method AppMessaging#uploadContent
      * @param {ContentData} content - the content
      * @returns {IUploadContentResult} - the result
      */

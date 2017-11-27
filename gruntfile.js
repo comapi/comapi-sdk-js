@@ -18,7 +18,7 @@ module.exports = function (grunt) {
         ts: {
             options: {
                 compile: true,                 // perform compilation. [true (default) | false]
-                comments: false,               // same as !removeComments. [true | false (default)]
+                comments: true,               // same as !removeComments. [true | false (default)]
                 target: 'es5',                 // target javascript language. [es3 | es5 (grunt-ts default) | es6]
                 "lib": [
                     "es6",

@@ -14,13 +14,13 @@ export type DoUntilOperationFunction = (data: any) => Promise<any>;
  */
 export type DoUntilTestFunction = (data: any) => boolean;
 
-/**
+/*
  * Utility class
  */
 export class Utils {
 
     /**
-     * Function to clone an object
+     * Static method to clone an object
      * @method Utils#clone
      * @param {any} obj - the object to clone
      * @returns {any} - returns a clone of the object 
@@ -30,7 +30,7 @@ export class Utils {
     }
 
     /**
-     * Method to generate a uuid (simulated)
+     * Static method to generate a uuid (simulated)
      * @method Utils#uuid
      * @returns {string} - returns a uuid
      */
@@ -45,7 +45,7 @@ export class Utils {
     }
 
     /**
-     * Internal method to get current browser info
+     * Static method to get current browser info
      * @method Utils#getBrowserInfo
      * @param {string} [userAgent] - user agent string (optional - for unit tsting)
      * @returns {IBrowserInfo} - returns an IBrowserInfo interface
@@ -83,7 +83,8 @@ export class Utils {
     }
 
     /**
-     * Method to call some async function on an array of data and you want them called sequentially
+     * Static method to call some async function on an array of data and you want them called sequentially
+     * @method Utils#eachSeries
      * @param {any[]} arr 
      * @param {Function} iteratorFn 
      * @returns {Promise} - returns a Promise
@@ -97,7 +98,8 @@ export class Utils {
     }
 
     /**
-     * Method to encapsulate repeatdly calling an async method until a condition is met (tyoes defined at top)
+     * Static method to encapsulate repeatdly calling an async method until a condition is met (tyoes defined at top)
+     * @method Utils#doUntil
      * @param {DoUntilOperationFunction} operation - the operation to perform 
      * @param {DoUntilTestFunction} test - the condition that stops the repeats
      * @param {any} data - the data
@@ -111,7 +113,8 @@ export class Utils {
 
 
     /**
-     * Mustache/handlebars style formatting ...
+     * Static method to provide Mustache/handlebars style formatting ...
+     * @method Utils#format
      * @param {string} content 
      * @param {Object} tags 
      */
@@ -129,7 +132,8 @@ export class Utils {
     }
 
     /**
-     * 
+     * Static method to het a header value from a headers collection in a case insensitive fashion
+     * @method Utils#getHeaderValue
      * @param headers Helper function to deal with potential case issues accessing http headers collection
      * @param key 
      */
@@ -137,15 +141,15 @@ export class Utils {
         return headers[key] || headers[key.toLowerCase()];
     }
 
-
     /**
+     * Utils class constructor.
      * @class Utils
-     * @ignore
      * @classdesc Class that implements a Utils.
      */
     constructor() {
         throw new Error("Cannot new this class");
     }
+
 
 };
 

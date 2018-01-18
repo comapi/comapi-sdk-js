@@ -27,7 +27,7 @@ export class Channels implements IChannels {
      * @param {any} [data] - the data to post
      */
     public createFbOptInState(data?: any): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._facebookManager.createSendToMessengerState(data);
             });

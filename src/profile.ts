@@ -35,7 +35,7 @@ export class Profile implements IProfile {
      */
     public getProfile(profileId: string): Promise<any> {
 
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._profileManager.getProfile(profileId);
             });
@@ -48,7 +48,7 @@ export class Profile implements IProfile {
      * @returns {Promise} 
      */
     public queryProfiles(query?: string): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._profileManager.queryProfiles(query);
             });
@@ -63,7 +63,7 @@ export class Profile implements IProfile {
      * @returns {Promise} 
      */
     public updateProfile(profileId: string, profile: any, eTag?: string): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._profileManager.updateProfile(profileId, profile, eTag);
             });
@@ -78,7 +78,7 @@ export class Profile implements IProfile {
      * @returns {Promise} 
      */
     public patchProfile(profileId: string, profile: Object, eTag?: string): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._profileManager.patchProfile(profileId, profile, eTag);
             });
@@ -91,7 +91,7 @@ export class Profile implements IProfile {
      * @returns {Promise} - returns a Promise  
      */
     public getMyProfile(useEtag: boolean = true): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._profileManager.getProfile(sessionInfo.session.profileId);
             })
@@ -112,7 +112,7 @@ export class Profile implements IProfile {
      * @returns {Promise} - returns a Promise  
      */
     public updateMyProfile(profile: any, useEtag: boolean = true): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return Promise.all([sessionInfo, this.getMyProfileETag(useEtag)]);
             })
@@ -136,7 +136,7 @@ export class Profile implements IProfile {
      * @returns {Promise} - returns a Promise  
      */
     public patchMyProfile(profile: any, useEtag: boolean): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return Promise.all([sessionInfo, this.getMyProfileETag(useEtag)]);
             })

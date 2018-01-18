@@ -51,7 +51,6 @@ describe("REST API 401 retry tests", () => {
         public restartSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
         public endSession(): Promise<boolean> { return Promise.resolve(true); }
         public ensureSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
-        public ensureSessionAndSocket(): Promise<ISessionInfo> { return Promise.reject<ISessionInfo>({ message: "Not implemented" }); }
     }
 
     let networkManager: MockNetworkManager;

@@ -2,9 +2,9 @@
 
 interface IMutexInterface {
 
-    acquire(): Promise<IMutexInterface.IReleaser>;
+    acquire(name?: string): Promise<IMutexInterface.IReleaser>;
 
-    runExclusive<T>(callback: IMutexInterface.IWorker<T>): Promise<T>;
+    runExclusive<T>(callback: IMutexInterface.IWorker<T>, name?: string): Promise<T>;
 
 }
 
@@ -12,6 +12,13 @@ namespace IMutexInterface {
     "use strict";
     export interface IReleaser {
         (): void;
+    }
+
+    export type Worker = (release: IMutexInterface.IReleaser) => void
+
+    export interface IQueueItem {
+        method: Worker;
+        name?: string;
     }
 
     export interface IWorker<T> {

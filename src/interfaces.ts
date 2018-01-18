@@ -222,7 +222,7 @@ export interface INetworkManager {
     startSession(): Promise<ISessionInfo>;
     restartSession(): Promise<ISessionInfo>;
     endSession(): Promise<boolean>;
-    ensureSessionAndSocket(): Promise<ISessionInfo>;
+    ensureSession(): Promise<ISessionInfo>;
 }
 
 

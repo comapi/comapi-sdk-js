@@ -3,11 +3,11 @@ import IMutexInterface from "./mutexInterface";
 
 export class Mutex implements IMutexInterface {
 
-    private _queue: Array<(release: IMutexInterface.IReleaser) => void> = [];
+    private _queue: Array<IMutexInterface.IQueueItem> = [];
     private _pending = false;
 
-    public acquire(): Promise<IMutexInterface.IReleaser> {
-        const ticket = new Promise(resolve => this._queue.push(resolve));
+    public acquire(name?: string): Promise<IMutexInterface.IReleaser> {
+        const ticket = new Promise<IMutexInterface.IReleaser>(resolve => this._queue.push({ method: resolve, name: name }));
 
         if (!this._pending) {
             this._dispatchNext();
@@ -16,7 +16,7 @@ export class Mutex implements IMutexInterface {
         return ticket;
     }
 
-    public runExclusive<T>(callback: IMutexInterface.IWorker<T>): Promise<T> {
+    public runExclusive<T>(callback: IMutexInterface.IWorker<T>, name?: string): Promise<T> {
         return this
             .acquire()
             .then(release => {
@@ -45,7 +45,7 @@ export class Mutex implements IMutexInterface {
     private _dispatchNext(): void {
         if (this._queue.length > 0) {
             this._pending = true;
-            this._queue.shift()(this._dispatchNext.bind(this));
+            this._queue.shift().method(this._dispatchNext.bind(this));
         } else {
             this._pending = false;
         }

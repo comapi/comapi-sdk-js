@@ -32,7 +32,7 @@ export class WebSocketManager implements IWebSocketManager {
     private attempts: number = 1;
     private echoIntervalId: number;
     // TODO: make configurable ...
-    private echoIntervalTimeout: number = 1000 * 60 * 3; // 3 minutes
+    private echoIntervalTimeout: number = 1000 * 60 / 3; // 30 seconds
 
 
     /**          
@@ -71,6 +71,8 @@ export class WebSocketManager implements IWebSocketManager {
 
                 this._sessionManager.getValidToken()
                     .then((token) => {
+                        // Only want to resolve / reject when connect is called, not twice i.e. resolve on connect and a redundant reject on disconnect
+                        let hasResolvedOrRejected = false;
 
                         this._logger.log("WebSocketManager.connect() - got auth token", token);
 
@@ -95,10 +97,11 @@ export class WebSocketManager implements IWebSocketManager {
                         this.webSocket.onopen = () => {
                             this._logger.log("websocket onopen");
                             this.connected = true;
-                            if (this.didConnect === false) {
+                            if (!hasResolvedOrRejected) {
                                 this.didConnect = true;
                                 this._logger.log("resolving connect() promise");
                                 resolve(true);
+                                hasResolvedOrRejected = true;
                             }
                             this._eventManager.publishLocalEvent("WebsocketOpened", { timestamp: new Date().toISOString() });
                         };
@@ -128,11 +131,12 @@ export class WebSocketManager implements IWebSocketManager {
                             this.webSocket = undefined;
                             this._logger.log("WebSocket Connection closed.");
                             this._eventManager.publishLocalEvent("WebsocketClosed", { timestamp: new Date().toISOString() });
-                            if (this.didConnect === false) {
+                            if (!hasResolvedOrRejected) {
                                 reject({
                                     code: event.code,
                                     message: "Failed to connect webSocket",
                                 });
+                                hasResolvedOrRejected = true;
                             }
 
                             // only retry if we didng manually close it and it actually connected in the first place
@@ -153,6 +157,12 @@ export class WebSocketManager implements IWebSocketManager {
                             }
                         };
 
+                    })
+                    .catch(function (error) {
+                        reject({
+                            code: error.code,
+                            message: "Failed to get Valid Token",
+                        });
                     });
 
             } else {

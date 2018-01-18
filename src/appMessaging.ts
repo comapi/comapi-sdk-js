@@ -45,7 +45,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public createConversation(conversationDetails: IConversationDetails): Promise<IConversationDetails2> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.createConversation(conversationDetails);
             });
@@ -59,7 +59,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public updateConversation(conversationDetails: IConversationDetails, eTag?: string): Promise<IConversationDetails2> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.updateConversation(conversationDetails, eTag);
             });
@@ -72,7 +72,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public getConversation(conversationId: string): Promise<IConversationDetails2> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.getConversation(conversationId);
             });
@@ -85,7 +85,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public deleteConversation(conversationId: string): Promise<boolean> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.deleteConversation(conversationId);
             })
@@ -102,7 +102,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public addParticipantsToConversation(conversationId: string, participants: IConversationParticipant[]): Promise<boolean> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.addParticipantsToConversation(conversationId, participants);
             });
@@ -116,7 +116,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public deleteParticipantsFromConversation(conversationId: string, participants: string[]): Promise<boolean> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.deleteParticipantsFromConversation(conversationId, participants);
             });
@@ -129,7 +129,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public getParticipantsInConversation(conversationId: string): Promise<IConversationParticipant[]> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.getParticipantsInConversation(conversationId);
             });
@@ -143,7 +143,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public getConversations(scope?: ConversationScope, profileId?: string): Promise<IConversationDetails2[]> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.getConversations(scope, profileId);
             });
@@ -158,7 +158,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public getConversationEvents(conversationId: string, from: number, limit: number): Promise<IConversationMessageEvent[]> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._messageManager.getConversationEvents(conversationId, from, limit);
             });
@@ -172,7 +172,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public sendMessageToConversation(conversationId: string, message: IConversationMessage): Promise<ISendMessageResult> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._messageManager.sendMessageToConversation(conversationId, message);
             });
@@ -186,7 +186,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public sendMessageStatusUpdates(conversationId: string, statuses: IMessageStatus[]): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._messageManager.sendMessageStatusUpdates(conversationId, statuses);
             });
@@ -203,7 +203,7 @@ export class AppMessaging {
     public getMessages(conversationId: string, pageSize: number, continuationToken?: number): Promise<IGetMessagesResponse> {
         let profileId: string;
         let _getMessagesResponse: IGetMessagesResponse;
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 profileId = sessionInfo.session.profileId;
                 return this._messagePager.getMessages(conversationId, pageSize, continuationToken);
@@ -224,7 +224,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public sendIsTyping(conversationId: string): Promise<boolean> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.sendIsTyping(conversationId);
             });
@@ -237,7 +237,7 @@ export class AppMessaging {
      * @returns {Promise} 
      */
     public sendIsTypingOff(conversationId: string): Promise<boolean> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._conversationManager.sendIsTypingOff(conversationId);
             });
@@ -251,7 +251,7 @@ export class AppMessaging {
      */
     public uploadContent(content: IContentData, folder?: string): Promise<IUploadContentResult> {
 
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._contentManager.uploadContent(content, folder);
             });

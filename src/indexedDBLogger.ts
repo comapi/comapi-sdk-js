@@ -54,7 +54,7 @@ export class IndexedDBLogger {
         return this._mutex.runExclusive(() => {
             return this.ensureInitialised()
                 .then(initialised => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<boolean>((resolve, reject) => {
                         let transaction = this._database.transaction([this._store], "readwrite");
                         let objectStore = transaction.objectStore(this._store);
                         let index = objectStore.index("created");
@@ -73,7 +73,7 @@ export class IndexedDBLogger {
                         };
                     });
                 });
-        });
+        }, "purge");
     }
 
     /**
@@ -85,7 +85,7 @@ export class IndexedDBLogger {
         return this._mutex.runExclusive(() => {
             return this.ensureInitialised()
                 .then(initialised => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<boolean>((resolve, reject) => {
                         let req = indexedDB.deleteDatabase(this._name);
                         let self = this;
 
@@ -103,7 +103,7 @@ export class IndexedDBLogger {
                         };
                     });
                 });
-        });
+        }, "deleteDatabase");
     }
 
     /**
@@ -115,7 +115,7 @@ export class IndexedDBLogger {
         return this._mutex.runExclusive(() => {
             return this.ensureInitialised()
                 .then(initialised => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<boolean>((resolve, reject) => {
 
                         // open a read/write db transaction, ready for clearing the data
                         let transaction = this._database.transaction([this._store], "readwrite");
@@ -140,7 +140,7 @@ export class IndexedDBLogger {
 
                     });
                 });
-        });
+        }, "clearData");
     }
 
     /** 
@@ -154,7 +154,7 @@ export class IndexedDBLogger {
         return this._mutex.runExclusive(() => {
             return this.ensureInitialised()
                 .then(initialised => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<Object[]>((resolve, reject) => {
                         let transaction = this._database.transaction([this._store], "readonly");
 
                         let objectStore = transaction.objectStore(this._store);
@@ -196,7 +196,7 @@ export class IndexedDBLogger {
 
                     });
                 });
-        });
+        }, "getData");
     }
 
     /**
@@ -208,7 +208,7 @@ export class IndexedDBLogger {
         return this._mutex.runExclusive(() => {
             return this.ensureInitialised()
                 .then(initialised => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<number>((resolve, reject) => {
 
                         let transaction = this._database.transaction([this._store], "readonly");
                         let objectStore = transaction.objectStore(this._store);
@@ -224,7 +224,7 @@ export class IndexedDBLogger {
 
                     });
                 });
-        });
+        }, "getCount");
 
     }
 
@@ -248,7 +248,7 @@ export class IndexedDBLogger {
         return this._mutex.runExclusive(() => {
             return this.ensureInitialised()
                 .then(initialised => {
-                    return new Promise((resolve, reject) => {
+                    return new Promise<number>((resolve, reject) => {
 
                         let transaction = this._database.transaction([this._store], "readwrite");
                         let store = transaction.objectStore(this._store);
@@ -268,7 +268,7 @@ export class IndexedDBLogger {
                         };
                     });
                 });
-        });
+        }, "addRecord");
     }
 
     /**

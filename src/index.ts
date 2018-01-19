@@ -7,4 +7,5 @@ export { MessageStatusBuilder } from "./messageStatusBuilder";
 export { InterfaceContainer } from "./inversify.config";
 export { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 export { ContentData } from "./contentData"
+export { Mutex } from "./mutex"
 export * from "./interfaces"

@@ -24,12 +24,13 @@ import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 import { InterfaceContainer } from "./inversify.config";
 
 import { ContentData } from "./contentData";
+import { Mutex } from "./mutex";
 
 
 /*
  * Exports to be added to COMAPI namespace
  */
-export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, ContentData }
+export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, ContentData, Mutex }
 
 export class Foundation implements IFoundation {
 

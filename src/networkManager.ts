@@ -9,8 +9,6 @@ import {
 } from "./interfaces";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
-import { Mutex } from "./mutex";
-
 
 @injectable()
 export class NetworkManager implements INetworkManager {

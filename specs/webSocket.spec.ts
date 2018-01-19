@@ -26,7 +26,7 @@ import { EventMapper } from "../src/eventMapper";
  * Currently using an actual websocket, may change to mock ...
  * http://stackoverflow.com/questions/23151954/stubbing-websocket-in-javascript-with-jasmine
  */
-describe("webSocket Manager tests", () => {
+fdescribe("webSocket Manager tests", () => {
 
     let defaultWebSocketBase = Config.getWebSocketBase();
     let eventManager: IEventManager;
@@ -104,6 +104,73 @@ describe("webSocket Manager tests", () => {
                 done();
             });
     });
+
+
+    /**
+     * 
+     */
+    it("should connect, connect  and disconnect", done => {
+
+        webSocketManager.connect()
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.connect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.disconnect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeFalsy();
+                done();
+            });
+    });
+
+    /**
+     * 
+     */
+    it("should connect, disconnect, connect, disconnect", done => {
+
+        webSocketManager.connect()
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.connect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.disconnect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeFalsy();
+                return webSocketManager.connect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.disconnect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeFalsy();
+                done();
+            });
+    });
+
+
 
     /**
      * 

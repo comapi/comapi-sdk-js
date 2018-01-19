@@ -203,7 +203,13 @@ export class WebSocketManager implements IWebSocketManager {
             return Promise.reject(new Error(`Can't open WebSocket while closing.`));
         }
 
+        // User calls connect and already connected
         if (this.isOpened) {
+            return this._opening.promise;
+        }
+
+        // we have started to open, so return this and everyone can wait on it ....
+        if (this._opening && this._opening.isPending) {
             return this._opening.promise;
         }
 
@@ -384,30 +390,11 @@ export class WebSocketManager implements IWebSocketManager {
             this.didConnect = false;
         }
 
-
         // only retry if we didn't manually close it and it actually connected in the first place
         if (!this.manuallyClosed && this.didConnect) {
-
             this._logger.log("socket not manually closed, reconnecting ...");
-
-            let time = this.generateInterval(this.attempts);
-
-            setTimeout(() => {
-                // We've tried to reconnect so increment the attempts by 1
-                this.attempts++;
-
-                // Connection has closed so try to reconnect every 10 seconds.
-                this._logger.log("reconnecting ...");
-                this.connect()
-                    .then(result => {
-                        this._logger.log("socket reconnected");
-                    })
-                    .catch(error => {
-                        this._logger.log("failed to reconnect", error);
-                    });
-            }, time);
+            this.reconnect();
         }
-
     }
 
     /**
@@ -421,6 +408,26 @@ export class WebSocketManager implements IWebSocketManager {
         });
     }
 
+    /**
+     * 
+     */
+    private reconnect(): void {
+        let time = this.generateInterval(this.attempts);
+
+        setTimeout(function () {
+            this.attempts++;
+            this._logger.log(`reconnecting (${this.attempts}) ...`);
+            this.connect()
+                .then(() => {
+                    this._logger.log("socket reconnected");
+                    this.attempts = 0;
+                })
+                .catch((e) => {
+                    this._logger.log("socket recycle failed", e);
+                    this.reconnect();
+                });
+        }, time);
+    }
 
     /**
      * 

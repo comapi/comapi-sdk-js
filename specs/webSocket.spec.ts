@@ -26,7 +26,7 @@ import { EventMapper } from "../src/eventMapper";
  * Currently using an actual websocket, may change to mock ...
  * http://stackoverflow.com/questions/23151954/stubbing-websocket-in-javascript-with-jasmine
  */
-fdescribe("webSocket Manager tests", () => {
+describe("webSocket Manager tests", () => {
 
     let defaultWebSocketBase = Config.getWebSocketBase();
     let eventManager: IEventManager;

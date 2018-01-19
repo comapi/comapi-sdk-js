@@ -18,7 +18,7 @@ export class Mutex implements IMutexInterface {
 
     public runExclusive<T>(callback: IMutexInterface.IWorker<T>, name?: string): Promise<T> {
         return this
-            .acquire()
+            .acquire(name)
             .then(release => {
                 let result: T | Promise<T>;
 
@@ -36,8 +36,7 @@ export class Mutex implements IMutexInterface {
                     e => {
                         release();
                         throw e;
-                    }
-                    );
+                    });
             }
             );
     }

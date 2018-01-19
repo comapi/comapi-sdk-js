@@ -36,18 +36,18 @@ module.exports = function (config) {
 
         karmaTypescriptConfig: {
             reports:
-            {
-                "cobertura": {
-                    "directory": "coverage",
-                    "filename": "coverage.xml",
-                    "subdirectory": "cobertura"
+                {
+                    "cobertura": {
+                        "directory": "coverage",
+                        "filename": "coverage.xml",
+                        "subdirectory": "cobertura"
+                    },
+                    "html": "coverage",
+                    "text-summary": "",
+                    "teamcity": ""
                 },
-                "html": "coverage",
-                "text-summary": "",
-                "teamcity": ""
-            },
             coverageOptions: {
-                instrumentation: false
+                instrumentation: true
             },
             compilerOptions: {
                 emitDecoratorMetadata: true,

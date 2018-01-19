@@ -414,7 +414,7 @@ export class WebSocketManager implements IWebSocketManager {
     private reconnect(): void {
         let time = this.generateInterval(this.attempts);
 
-        setTimeout(function () {
+        setTimeout(() => {
             this.attempts++;
             this._logger.log(`reconnecting (${this.attempts}) ...`);
             this.connect()

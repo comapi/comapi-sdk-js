@@ -106,7 +106,7 @@ export class WebSocketManager implements IWebSocketManager {
 
     private echoIntervalId: number;
     // TODO: make configurable ...
-    private echoIntervalTimeout: number = 1000 * 60 / 3; // 30 seconds
+    private echoIntervalTimeout: number = 1000 * 60; // 1 minute
 
 
     private STATE = {
@@ -192,6 +192,9 @@ export class WebSocketManager implements IWebSocketManager {
         @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
         @inject(INTERFACE_SYMBOLS.EventManager) private _eventManager: IEventManager,
         @inject(INTERFACE_SYMBOLS.EventMapper) private _eventMapper: IEventMapper) {
+
+        // start this here just once
+        this.echoIntervalId = setInterval(() => this.echo(), this.echoIntervalTimeout);
     }
 
     /**
@@ -247,7 +250,6 @@ export class WebSocketManager implements IWebSocketManager {
                         this.webSocket.onclose = this._handleClose.bind(this);
                         this.webSocket.onmessage = this._handleMessage.bind(this);
 
-                        this.echoIntervalId = setInterval(() => this.echo(), this.echoIntervalTimeout);
                     })
                     .catch(error => {
                         this._opening.reject({

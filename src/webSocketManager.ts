@@ -123,7 +123,8 @@ export class WebSocketManager implements IWebSocketManager {
     private manuallyClosed: boolean = false;
     // whether socket ever connected - set to true on first connect and used to determine whether to reconnect on close if not a manual close
     private didConnect: boolean = false;
-    private attempts: number = 1;
+    private reconnecting: boolean = false;
+    private attempts: number = 0;
 
 
 
@@ -286,7 +287,7 @@ export class WebSocketManager implements IWebSocketManager {
      * @returns {Promise} 
      */
     public send(data: any): void {
-        if (this.webSocket) {
+        if (this.isOpened) {
             this.webSocket.send(JSON.stringify(data));
         }
     }
@@ -391,8 +392,9 @@ export class WebSocketManager implements IWebSocketManager {
         }
 
         // only retry if we didn't manually close it and it actually connected in the first place
-        if (!this.manuallyClosed && this.didConnect) {
+        if (!this.manuallyClosed && this.didConnect && !this.reconnecting) {
             this._logger.log("socket not manually closed, reconnecting ...");
+            this.reconnecting = true;
             this.reconnect();
         }
     }
@@ -421,6 +423,7 @@ export class WebSocketManager implements IWebSocketManager {
                 .then(() => {
                     this._logger.log("socket reconnected");
                     this.attempts = 0;
+                    this.reconnecting = false;
                 })
                 .catch((e) => {
                     this._logger.log("socket recycle failed", e);

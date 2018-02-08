@@ -226,9 +226,11 @@ export class WebSocketManager implements IWebSocketManager {
             if (!this.webSocket) {
 
                 this._logger.log("WebSocketManager.connect()");
+                let _token: string;
 
                 this._sessionManager.getValidToken()
                     .then((token) => {
+                        _token = token;
 
                         this._logger.log("WebSocketManager.connect() - got auth token", token);
 
@@ -254,7 +256,7 @@ export class WebSocketManager implements IWebSocketManager {
                     .catch(error => {
                         this._opening.reject({
                             code: error.code,
-                            message: "Failed to get Valid Token",
+                            message: _token ? "Websocket Error" : "Failed to get Valid Token",
                         });
                     });
             }

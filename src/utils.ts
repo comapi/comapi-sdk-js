@@ -1,18 +1,5 @@
-import { IBrowserInfo } from "./interfaces";
+import { IBrowserInfo, DoUntilOperationFunction, DoUntilTestFunction } from "./interfaces";
 
-
-/**
- * Method to perform the asnc operation
- * @param {any} data  the data to operate on
- * @returns {Promise<any>} returns a promise
- */
-export type DoUntilOperationFunction = (data: any) => Promise<any>;
-/**
- * Method to decide whether to continue or not
- * @param {any} data  the data to look at (will have been returned vi a promise from DoUntilOperationFunction)
- * @returns {boolean} returns true or false. return false to stop
- */
-export type DoUntilTestFunction = (data: any) => boolean;
 
 /*
  * Utility class

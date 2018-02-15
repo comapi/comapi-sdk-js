@@ -1,4 +1,5 @@
-import { Utils, DoUntilTestFunction, DoUntilOperationFunction } from "../src/utils";
+import { Utils, } from "../src/utils";
+import { DoUntilTestFunction, DoUntilOperationFunction } from "../src/interfaces";
 
 /**
  * 

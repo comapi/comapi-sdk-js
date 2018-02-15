@@ -1,0 +1,10 @@
+
+Roll up of all new features / enhancements / bug fixes
+
+Summary of enhancements:
+
+Added inversifyJS IoC container and exposed interface to allow user to provide custom interfaces
+Moved from grunt-typescript to grunt-ts (- )unit tests are now all in typescript)
+Added support for contentData API
+Internal localStorage interface now asynchronous so can be replaced more easily.
+Internal SessionManager interface now initialised asynchronously.

@@ -20,6 +20,7 @@ import { Logger } from "../src/logger";
 import { WebSocketManager } from "../src/webSocketManager";
 import { EventManager } from "../src/eventManager";
 import { LocalStorageData } from "../src/localStorageData";
+import { EventMapper } from "../src/eventMapper";
 
 /**
  * Currently using an actual websocket, may change to mock ...
@@ -31,14 +32,14 @@ describe("webSocket Manager tests", () => {
     let eventManager: IEventManager;
     let webSocketManager: WebSocketManager;
     /**
-     * Mock MockSessionmanager - we just need getValidAuthHeader
+     * Mock SessionManager - we just need getValidAuthHeader
      */
-    class MockSessionmanager implements ISessionManager {
+    class MockSessionManager implements ISessionManager {
 
         private _sessionInfo: any = {
             token: "1.2.3"
         };
-
+        public initialise(): Promise<boolean> { return Promise.resolve(true); }
         get sessionInfo(): ISessionInfo { return this._sessionInfo; }
         public getValidToken(): Promise<string> { return Promise.resolve(this._sessionInfo.token); }
         public startSession(): Promise<ISessionInfo> { return Promise.resolve(null); }
@@ -65,11 +66,12 @@ describe("webSocket Manager tests", () => {
 
         eventManager = new EventManager();
 
-        let data = new LocalStorageData();
+        let data = new LocalStorageData(undefined);
         let logger = new Logger(eventManager, data);
-        let sessionManager = new MockSessionmanager();
+        let sessionManager = new MockSessionManager();
+        let eventMapper = new EventMapper();
 
-        webSocketManager = new WebSocketManager(logger, data, comapiConfig, sessionManager, eventManager);
+        webSocketManager = new WebSocketManager(logger, data, comapiConfig, sessionManager, eventManager, eventMapper);
         console.log("created new websocket for test");
         done();
     });
@@ -102,6 +104,73 @@ describe("webSocket Manager tests", () => {
                 done();
             });
     });
+
+
+    /**
+     * 
+     */
+    it("should connect, connect  and disconnect", done => {
+
+        webSocketManager.connect()
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.connect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.disconnect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeFalsy();
+                done();
+            });
+    });
+
+    /**
+     * 
+     */
+    it("should connect, disconnect, connect, disconnect", done => {
+
+        webSocketManager.connect()
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.connect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.disconnect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeFalsy();
+                return webSocketManager.connect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeTruthy();
+                return webSocketManager.disconnect();
+            })
+            .then(() => {
+                let isConnected = webSocketManager.isConnected();
+                console.log("isConnected = " + isConnected);
+                expect(isConnected).toBeFalsy();
+                done();
+            });
+    });
+
+
 
     /**
      * 
@@ -138,7 +207,7 @@ describe("webSocket Manager tests", () => {
 
         let seenEvent = false;
 
-        // wire up an event handler - the "socket service" will send some data on conection         
+        // wire up an event handler - the "socket service" will send some data on connection         
         eventManager.subscribeToLocalEvent("webSocketEvent", event => {
             seenEvent = true;
             console.log("got webSocketEvent");

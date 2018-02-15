@@ -50,24 +50,36 @@ describe("Profile Tests", () => {
             });
     });
 
-
     /**
      * Basic end-to-end test ...
      */
-    it("should get users profile", done => {
+    it("should get users profile with getMyProfile()", done => {
 
         foundation.services.profile.getMyProfile()
             .then(profile => {
                 expect(profile).toBeDefined();
-                expect(profile.id).toBeDefined();
+                expect(profile.id).toBe(Config.testUserProfileId);
                 done();
             });
-
     });
 
+    /**
+     * Basic end-to-end test ...
+     * NOTE the generic version returns the http response so we can examine the headers for the returned eTag
+     */
+    it("should get users profile with getProfile()", done => {
+
+        foundation.services.profile.getProfile(Config.testUserProfileId)
+            .then(result => {
+                expect(result).toBeDefined();
+                expect(result.response).toBeDefined();
+                expect(result.response.id).toBe(Config.testUserProfileId);
+                done();
+            });
+    });
 
     /**
-     * sad path eTag
+     * 
      */
     it("should update my profile", done => {
 
@@ -80,6 +92,50 @@ describe("Profile Tests", () => {
                 expect(profile).toBeDefined();
                 expect(profile.key1).toBeDefined();
                 expect(profile.key1).toBe("value1");
+                done();
+            });
+    });
+
+    /**
+     * 
+     */
+    it("should patch my profile using patchMyProfile()", done => {
+
+        foundation.services.profile.getMyProfile()
+            .then(profile => {
+                return foundation.services.profile.patchMyProfile({
+                    patchKey1: 1,
+                    patchKey2: 2,
+                    patchKey3: 3,
+                });
+            })
+            .then(patched => {
+                expect(patched).toBeDefined();
+                expect(patched.patchKey1).toBe(1);
+                expect(patched.patchKey2).toBe(2);
+                expect(patched.patchKey3).toBe(3);
+                done();
+            });
+    });
+
+    /**
+     * 
+     */
+    it("should patch my profile using patchProfile()", done => {
+
+        foundation.services.profile.getMyProfile()
+            .then(profile => {
+                return foundation.services.profile.patchProfile(Config.testUserProfileId, {
+                    patchKey1: 1,
+                    patchKey2: 2,
+                    patchKey3: 3,
+                });
+            })
+            .then(result => {
+                expect(result).toBeDefined();
+                expect(result.response.patchKey1).toBe(1);
+                expect(result.response.patchKey2).toBe(2);
+                expect(result.response.patchKey3).toBe(3);
                 done();
             });
 
@@ -95,9 +151,6 @@ describe("Profile Tests", () => {
                 expect(result.response.length).toBeDefined();
                 done();
             });
-
     });
-
-
 });
 

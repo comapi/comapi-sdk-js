@@ -1,8 +1,10 @@
+import { injectable, inject } from "inversify";
 
 import { IProfileManager, ISessionManager, ILogger, IRestClient, ILocalStorageData, IComapiConfig } from "./interfaces";
 
 import { Utils } from "./utils";
-
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+@injectable()
 export class ProfileManager implements IProfileManager {
 
     /**        
@@ -16,11 +18,11 @@ export class ProfileManager implements IProfileManager {
      * @parameter {IComapiConfig} comapiConfig 
      * @parameter {ISessionManager} sessionManager 
      */
-    constructor(private _logger: ILogger,
-        private _restClient: IRestClient,
-        private _localStorageData: ILocalStorageData,
-        private _comapiConfig: IComapiConfig,
-        private _sessionManager: ISessionManager) { }
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.AuthenticatedRestClient) private _restClient: IRestClient,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig,
+        @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager) { }
 
     /**
      * Function to retrieve a user's profile
@@ -29,7 +31,12 @@ export class ProfileManager implements IProfileManager {
      * @returns {Promise} 
      */
     public getProfile(id: string): Promise<any> {
-        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/profiles/${id}`;
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.profile, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            profileId: id,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         return this._restClient.get(url);
     }
@@ -42,7 +49,10 @@ export class ProfileManager implements IProfileManager {
      */
     public queryProfiles(query?: string): Promise<any> {
 
-        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/profiles`;
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.profiles, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         if (query) {
             url += ("?" + query);
@@ -73,9 +83,45 @@ export class ProfileManager implements IProfileManager {
             data.id = id;
         }
 
-        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/profiles/${id}`;
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.profile, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            profileId: id,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
         return this._restClient.put(url, headers, data);
+    }
+
+
+    /**
+     * Function to patch a profile
+     * @method ProfileManager#updateProfile    
+     * @param {string} id
+     * @param {Object} profile 
+     * @param {string} [eTag] 
+     * @returns {Promise} 
+     */
+    public patchProfile(id: string, profile: Object, eTag?: string): Promise<any> {
+        let headers = {};
+
+        if (eTag) {
+            headers["If-Match"] = eTag;
+        }
+
+        // take a copy of it prior to messing with it ...
+        let data = Utils.clone(profile);
+
+        if (data.id === undefined) {
+            data.id = id;
+        }
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.profile, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            profileId: id,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.patch(url, headers, data);
     }
 
 }

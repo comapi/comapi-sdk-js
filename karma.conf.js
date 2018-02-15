@@ -7,8 +7,15 @@ module.exports = function (config) {
 
         files: [
             'lib/es5-promise-polyfill.js',
+            'lib/array-find-polyfill.js',
+            'lib/es6-map-shim.js',
+            "src/inversify.config.ts",
             "src/**/*.ts",
-            "specs/**/*.ts",
+            "specs/config.ts",
+            "specs/**/*.spec.ts",
+            // "specs/conversations.spec.ts"
+            // "specs/interfaceManager.spec.ts"
+            //"specs/indexedDBLogger.spec.ts"
         ],
 
         preprocessors: {
@@ -19,17 +26,44 @@ module.exports = function (config) {
 
         browsers: ["Chrome"],
 
+        // level of logging
+        // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
+        logLevel: config.LOG_DEBUG,
+
+        client: {
+            captureConsole: true
+        },
+
         karmaTypescriptConfig: {
             reports:
-            {
-                "cobertura": {
-                    "directory": "coverage",
-                    "filename": "coverage.xml",
-                    "subdirectory": "cobertura"
+                {
+                    "cobertura": {
+                        "directory": "coverage",
+                        "filename": "coverage.xml",
+                        "subdirectory": "cobertura"
+                    },
+                    "html": "coverage",
+                    "text-summary": "",
+                    "teamcity": ""
                 },
-                "html": "coverage",
-                "text-summary": "",
-                "teamcity": ""
+            coverageOptions: {
+                instrumentation: true
+            },
+            compilerOptions: {
+                emitDecoratorMetadata: true,
+                experimentalDecorators: true,
+                module: "commonjs",
+                sourceMap: true,
+                "moduleResolution": "node",
+                target: "ES5",
+                "lib": [
+                    "es6",
+                    "dom"
+                ],
+                "types": [
+                    "jasmine",
+                    "reflect-metadata"
+                ]
             }
         }
     });

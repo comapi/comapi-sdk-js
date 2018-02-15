@@ -1,65 +1,44 @@
 import {
     IEventManager,
     ILogger,
-    IRestClient,
-    ILocalStorageData,
-    ISessionManager,
     ISession,
-    IDeviceManager,
-    IFacebookManager,
-    IConversationManager,
-    IProfileManager,
-    IMessageManager,
     IComapiConfig,
-    IWebSocketManager,
     LogPersistences,
     IServices,
     IDevice,
     IChannels,
     IFoundation,
-    IOrphanedEventManager
+    INetworkManager,
+    ISessionManager
 } from "./interfaces";
 
-import { EventManager } from "./eventManager";
-import { Logger } from "./logger";
-import { RestClient } from "./restClient";
-import { AuthenticatedRestClient } from "./authenticatedRestClient";
-import { IndexedDBLogger } from "./indexedDBLogger";
-import { LocalStorageData } from "./localStorageData";
-import { SessionManager } from "./sessionManager";
-import { DeviceManager } from "./deviceManager";
-import { FacebookManager } from "./facebookManager";
-import { ProfileManager } from "./profileManager";
-import { MessageManager } from "./messageManager";
-import { MessagePager } from "./messagePager";
-import { ConversationManager } from "./conversationManager";
-import { WebSocketManager } from "./webSocketManager";
 import { ConversationBuilder } from "./conversationBuilder";
 import { MessageBuilder } from "./messageBuilder";
 import { MessageStatusBuilder } from "./messageStatusBuilder";
-import { IndexedDBOrphanedEventManager } from "./indexedDBOrphanedEventManager";
-import { LocalStorageOrphanedEventManager } from "./localStorageOrphanedEventManager";
 
 import { ComapiConfig } from "./comapiConfig";
 
-import { AppMessaging } from "./appMessaging";
-import { Profile } from "./profile";
-import { Services } from "./services";
-import { Device } from "./device";
-import { Channels } from "./channels";
-import { NetworkManager } from "./networkManager";
+import { FoundationRestUrls } from "./urlConfig";
+
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+import { InterfaceContainer } from "./inversify.config";
+
+import { ContentData } from "./contentData";
+import { Mutex } from "./mutex";
+import { Utils } from "./utils";
+
 
 /*
  * Exports to be added to COMAPI namespace
  */
-export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder }
+export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, ContentData, Mutex, Utils }
 
 export class Foundation implements IFoundation {
 
     /**
      * Singleton Foundation instance
      */
-    private static _foundation: Foundation;
+    private static _foundation: IFoundation;
 
     /**
      * @name Foundation#_services
@@ -107,7 +86,7 @@ export class Foundation implements IFoundation {
      * @method Foundation#version
      */
     public static get version(): string {
-        return "_SDK_VERSION_";
+        return "1.0.2.121";
     }
 
     /**
@@ -121,77 +100,52 @@ export class Foundation implements IFoundation {
             return Promise.resolve(Foundation._foundation);
         }
 
+        if (comapiConfig.foundationRestUrls === undefined) {
+            comapiConfig.foundationRestUrls = new FoundationRestUrls();
+        }
+
+        let container: InterfaceContainer = comapiConfig.interfaceContainer ? comapiConfig.interfaceContainer : new InterfaceContainer();
+
+        if (comapiConfig.interfaceContainer) {
+            container = comapiConfig.interfaceContainer;
+        } else {
+            container = new InterfaceContainer();
+            container.initialise(comapiConfig);
+            container.bindComapiConfig(comapiConfig);
+        }
+
         if (comapiConfig.logPersistence &&
             comapiConfig.logPersistence === LogPersistences.IndexedDB) {
-
-            let indexedDBLogger: IndexedDBLogger = new IndexedDBLogger();
-
-            return indexedDBLogger.openDatabase()
-                .then(function () {
-
-                    let retentionHours = comapiConfig.logRetentionHours === undefined ? 24 : comapiConfig.logRetentionHours;
-
-                    let purgeDate = new Date((new Date()).valueOf() - 1000 * 60 * 60 * retentionHours);
-
-                    return indexedDBLogger.purge(purgeDate);
-                })
-                .then(function () {
-                    let foundation: Foundation = foundationFactory(comapiConfig, indexedDBLogger);
-                    if (doSingleton) { Foundation._foundation = foundation; }
-                    return Promise.resolve(foundation);
-                });
-        } else {
-            let foundation: Foundation = foundationFactory(comapiConfig);
-            if (doSingleton) { Foundation._foundation = foundation; }
-            return Promise.resolve(foundation);
+            container.bindIndexedDBLogger();
         }
 
-        function foundationFactory(config: IComapiConfig, indexedDBLogger?: IndexedDBLogger) {
-            let eventManager: IEventManager = new EventManager();
+        let eventManager: IEventManager = container.getInterface<IEventManager>(INTERFACE_SYMBOLS.EventManager);
 
-            let localStorageData: ILocalStorageData = new LocalStorageData();
+        let logger: ILogger = container.getInterface<ILogger>(INTERFACE_SYMBOLS.Logger);
 
-            let logger: ILogger = new Logger(eventManager, config.logPersistence === LogPersistences.LocalStorage ? localStorageData : undefined, indexedDBLogger);
-
-            if (config.logLevel) {
-                logger.logLevel = config.logLevel;
-            }
-
-            let restClient: IRestClient = new RestClient(logger);
-
-            let sessionManager: ISessionManager = new SessionManager(logger, restClient, localStorageData, config);
-
-            let webSocketManager: IWebSocketManager = new WebSocketManager(logger, localStorageData, config, sessionManager, eventManager);
-
-            let networkManager = new NetworkManager(sessionManager, webSocketManager);
-
-            let authenticatedRestClient: IRestClient = new AuthenticatedRestClient(logger, networkManager);
-
-            let deviceManager: IDeviceManager = new DeviceManager(logger, authenticatedRestClient, localStorageData, config);
-
-            let facebookManager: IFacebookManager = new FacebookManager(authenticatedRestClient, config);
-
-            let conversationManager: IConversationManager = new ConversationManager(logger, authenticatedRestClient, localStorageData, config, sessionManager);
-
-            let profileManager: IProfileManager = new ProfileManager(logger, authenticatedRestClient, localStorageData, config, sessionManager);
-
-            let messageManager: IMessageManager = new MessageManager(logger, authenticatedRestClient, localStorageData, config, sessionManager, conversationManager);
-
-
-            let foundation = new Foundation(eventManager,
-                logger,
-                localStorageData,
-                networkManager,
-                deviceManager,
-                facebookManager,
-                conversationManager,
-                profileManager,
-                messageManager,
-                config);
-
-            return foundation;
+        if (comapiConfig.logLevel) {
+            logger.logLevel = comapiConfig.logLevel;
         }
+
+        let networkManager: INetworkManager = container.getInterface<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
+
+        let services = container.getInterface<IServices>(INTERFACE_SYMBOLS.Services);
+        let device = container.getInterface<IDevice>(INTERFACE_SYMBOLS.Device);
+        let channels = container.getInterface<IChannels>(INTERFACE_SYMBOLS.Channels);
+
+        let foundation = new Foundation(eventManager, logger, networkManager, services, device, channels);
+
+        if (doSingleton) { Foundation._foundation = foundation; }
+
+        // adopt a cached session if there is one
+        let sessionManager = container.getInterface<ISessionManager>(INTERFACE_SYMBOLS.SessionManager);
+
+        return sessionManager.initialise()
+            .then(result => {
+                return Promise.resolve(foundation);
+            });
     }
+
 
     /**
      * Foundation class constructor.
@@ -200,37 +154,15 @@ export class Foundation implements IFoundation {
      */
     constructor(private _eventManager: IEventManager,
         private _logger: ILogger,
-        /*private*/ _localStorageData: ILocalStorageData,
-        private _networkManager: NetworkManager,
-        /*private*/ _deviceManager: IDeviceManager,
-        /*private*/ _facebookManager: IFacebookManager,
-        /*private*/ _conversationManager: IConversationManager,
-        /*private*/ _profileManager: IProfileManager,
-        /*private*/ _messageManager: IMessageManager,
-        /*private*/ _comapiConfig: IComapiConfig) {
+        private _networkManager: INetworkManager,
+        services: IServices,
+        device: IDevice,
+        channels: IChannels) {
 
-
-        let dbSupported: boolean = "indexedDB" in window;
-        let orphanedEventManager: IOrphanedEventManager;
-
-        if (dbSupported) {
-            orphanedEventManager = new IndexedDBOrphanedEventManager();
-        } else {
-            orphanedEventManager = new LocalStorageOrphanedEventManager(_localStorageData);
-        }
-
-        let messagePager = new MessagePager(_logger, _localStorageData, _messageManager, orphanedEventManager);
-
-        let appMessaging = new AppMessaging(this._networkManager, _conversationManager, _messageManager, messagePager);
-
-        let profile = new Profile(this._networkManager, _localStorageData, _profileManager);
-
-        this._services = new Services(appMessaging, profile);
-
-        this._device = new Device(this._networkManager, _deviceManager);
-
-        this._channels = new Channels(this._networkManager, _facebookManager);
-
+        // initialising like this for sake of JSDoc ...
+        this._services = services;
+        this._device = device;
+        this._channels = channels;
     }
 
     /**
@@ -289,6 +221,16 @@ export class Foundation implements IFoundation {
     public get session(): ISession {
         return this._networkManager.session;
     }
+
+    /**
+     * Method to get the logger
+     * @method Foundation#logger
+     * @returns {ILogger} - Returns an ILogger interface
+     */
+    public get logger(): ILogger {
+        return this._logger;
+    }
+
 
     /**
      * Subscribes the caller to a comapi event.

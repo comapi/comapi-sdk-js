@@ -1,3 +1,5 @@
+import { injectable, inject } from "inversify";
+
 import {
     IDeviceManager,
     Environment,
@@ -5,6 +7,9 @@ import {
     INetworkManager
 } from "./interfaces";
 
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
+@injectable()
 export class Device implements IDevice {
 
     /**        
@@ -14,7 +19,8 @@ export class Device implements IDevice {
      * @parameter {INetworkManager} _networkManager 
      * @parameter {IDeviceManager} deviceManager 
      */
-    constructor(private _networkManager: INetworkManager, private _deviceManager: IDeviceManager) { }
+    constructor( @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
+        @inject(INTERFACE_SYMBOLS.DeviceManager) private _deviceManager: IDeviceManager) { }
 
     /**
      * Function to set FCM push details for the current session
@@ -24,7 +30,7 @@ export class Device implements IDevice {
      * @returns {Promise} - Returns a promise
      */
     public setFCMPushDetails(packageName: string, registrationId: string): Promise<boolean> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._deviceManager.setFCMPushDetails(sessionInfo.session.id, packageName, registrationId);
             });
@@ -39,7 +45,7 @@ export class Device implements IDevice {
      * @returns {Promise} - Returns a promise
      */
     public setAPNSPushDetails(bundleId: string, environment: Environment, token: string): Promise<boolean> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._deviceManager.setAPNSPushDetails(sessionInfo.session.id, bundleId, environment, token);
             });
@@ -51,7 +57,7 @@ export class Device implements IDevice {
      * @returns {Promise} - Returns a promise
      */
     public removePushDetails(): Promise<boolean> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._deviceManager.removePushDetails(sessionInfo.session.id);
             });

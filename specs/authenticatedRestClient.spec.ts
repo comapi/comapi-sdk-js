@@ -8,6 +8,8 @@ import { NetworkManager } from "../src/networkManager";
 import { EventManager } from "../src/eventManager";
 import { LocalStorageData } from "../src/localStorageData";
 import { RestClient } from "../src/restClient";
+import { FoundationRestUrls } from "../src/urlConfig";
+import { EventMapper } from "../src/eventMapper";
 
 /**
  * 
@@ -37,8 +39,9 @@ describe("AUTHENTICATED REST API TESTS", () => {
      * 
      */
     let comapiConfig: IComapiConfig = {
-        apiSpaceId: undefined,
+        apiSpaceId: "9308C588-CA74-42A1-A2AF-0FB9B02DA7A3",
         authChallenge: Config.authChallenge,
+        foundationRestUrls: new FoundationRestUrls(),
         logRetentionHours: 1,
         urlBase: Config.getUrlBase(),
         webSocketBase: Config.getWebSocketBase(),
@@ -51,20 +54,18 @@ describe("AUTHENTICATED REST API TESTS", () => {
      */
     beforeEach(done => {
 
-        let localStorageData = new LocalStorageData();
+        let localStorageData = new LocalStorageData(undefined);
         let eventManager = new EventManager();
-        let data = new LocalStorageData();
-        let logger = new Logger(eventManager, data);
+        let logger = new Logger(eventManager, localStorageData);
         let restClient = new RestClient(logger);
+        sessionManager = new SessionManager(logger, restClient, localStorageData, comapiConfig);
 
-        sessionManager = new SessionManager(logger, restClient, data, comapiConfig);
-
-        let webSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager);
+        let eventMapper = new EventMapper();
+        let webSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager, eventMapper);
 
         let networkManager = new NetworkManager(sessionManager, webSocketManager);
 
-
-        authenticatedRestClient = new AuthenticatedRestClient(logger, networkManager);
+        authenticatedRestClient = new AuthenticatedRestClient(logger, restClient, networkManager);
 
         sessionManager.startSession()
             .then(sessionInfo => {
@@ -90,7 +91,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
             "Content-Type": "application/json"
         };
 
-        authenticatedRestClient.get("http://localhost:6969/refresh", headers)
+        authenticatedRestClient.get("http://localhost:6971/refresh", headers)
             .then(result => {
                 done();
             });

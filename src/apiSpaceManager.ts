@@ -44,12 +44,12 @@ export class ApiSpaceManager implements IApiSpaceManager {
     /**
      * 
      */
-    public updateAuth(token: string, appspaceId: string, authInfo: IApiSpaceAuthInfo): Promise<IApiSpaceAuthInfo> {
+    public updateAuth(token: string, apiSpaceId: string, authInfo: IApiSpaceAuthInfo): Promise<IApiSpaceAuthInfo> {
         let headers = {
             "authorization": "Bearer " + token
         };
 
-        return this._restClient.put(`${this._urlBase}/apispaces/${appspaceId}/auth`, headers, authInfo)
+        return this._restClient.put(`${this._urlBase}/apispaces/${apiSpaceId}/auth`, headers, authInfo)
             .then(function (result) {
                 return Promise.resolve(result.response);
             });

@@ -43,6 +43,7 @@ describe("networkManager tests", () => {
         };
 
         get sessionInfo(): ISessionInfo { return this._sessionInfo; }
+        public initialise(): Promise<boolean> { return Promise.resolve(true); }
         public getValidToken(): Promise<string> { return Promise.resolve(this._sessionInfo.token); }
         public startSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
         public endSession(): Promise<boolean> { return Promise.resolve(true); }
@@ -66,14 +67,14 @@ describe("networkManager tests", () => {
     });
 
 
-    /**
-     * 
-     */
-    it("should GET the active session", done => {
-        let session = networkManager.session;
-        expect(session.id).toBe("A78B9D3A-B9B4-4612-BE8A-4221A198DD62");
-        done();
-    });
+    // /**
+    //  * 
+    //  */
+    // it("should GET the active session", done => {
+    //     let session = networkManager.session;
+    //     expect(session.id).toBe("A78B9D3A-B9B4-4612-BE8A-4221A198DD62");
+    //     done();
+    // });
 
 
     /**

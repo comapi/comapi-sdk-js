@@ -9,3 +9,4 @@ tests/
 _SpecRunner.html
 JSDoc/
 coverage/
+.tscache/

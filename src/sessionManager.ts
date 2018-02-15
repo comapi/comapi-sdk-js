@@ -1,3 +1,5 @@
+import { injectable, inject } from "inversify";
+
 import {
     IAuthChallengeOptions,
     ISessionManager,
@@ -10,7 +12,9 @@ import {
 } from "./interfaces";
 
 import { Utils } from "./utils";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
+@injectable()
 export class SessionManager implements ISessionManager {
 
     private _deviceId: string;
@@ -30,61 +34,44 @@ export class SessionManager implements ISessionManager {
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IComapiConfig} comapiConfig 
      */
-    constructor(private _logger: ILogger,
-        private _restClient: IRestClient,
-        private _localStorageData: ILocalStorageData,
-        private _comapiConfig: IComapiConfig) {
-
-        this._deviceId = _localStorageData.getString("deviceId");
-
-        if (!this._deviceId) {
-            this._deviceId = Utils.uuid();
-            _localStorageData.setString("deviceId", this._deviceId);
-        }
-
-        // Load in cached session on startup
-        this._getSession();
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.RestClient) private _restClient: IRestClient,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig) {
     }
 
+    /**
+     * Retrieve a cached session if there is one
+     */
+    public initialise(): Promise<boolean> {
+
+        return this._localStorageData.getObject("session")
+            .then((sessionInfo: ISessionInfo) => {
+                if (sessionInfo) {
+
+                    if (this.isSessionValid(sessionInfo)) {
+                        this._sessionInfo = sessionInfo;
+                        return true;
+                    } else {
+                        return this._localStorageData.remove("session")
+                            .then(() => {
+                                return false;
+                            });
+                    }
+
+                } else {
+                    return false;
+                }
+            });
+    }
 
     /**
      * Getter to get the current sessionInfo
      * @method SessionManager#sessionInfo
      * @returns {ISessionInfo}   
      */
-    get sessionInfo(): ISessionInfo {
+    public get sessionInfo(): ISessionInfo {
         return this._sessionInfo;
-    }
-
-    /**
-     * Getter to get the current sessionInfo expiry time
-     * @method SessionManager#expiry
-     * @returns {string}   
-     */
-    get expiry(): string {
-        return this._sessionInfo.session.expiresOn;
-    }
-
-    /**
-     * @method SessionManager#isActive
-     */
-    private get isActive(): boolean {
-
-        let result = false;
-        // check we have a token and also that the token hasn't expired ...
-        if (this._sessionInfo) {
-
-            let now = new Date();
-            let expiry = new Date(this._sessionInfo.session.expiresOn);
-
-            if (now < expiry) {
-                result = true;
-            } else {
-                this._removeSession();
-            }
-        }
-
-        return result;
     }
 
     /**
@@ -94,16 +81,14 @@ export class SessionManager implements ISessionManager {
      */
     public getValidToken(): Promise<string> {
 
-        return this.isActive
-            ? Promise.resolve(this._sessionInfo.token)
-            : this.startSession()
-                .then(sessionInfo => {
-                    return Promise.resolve(sessionInfo.token);
-                });
+        return this.startSession()
+            .then(sessionInfo => {
+                return Promise.resolve(sessionInfo.token);
+            });
     }
 
     /**
-     * Function to start a new session
+     * Function to start a new session or return an existing session
      * @method SessionManager#startSession
      * @param {any} userDefined -  Additional client-specific information
      * @returns {Promise} - Returns a promise 
@@ -113,11 +98,9 @@ export class SessionManager implements ISessionManager {
 
         return new Promise((resolve, reject) => {
 
-            if (this.isActive) {
-                self._logger.log("startSession() found an existing session: ");
-                resolve(this._getSession());
+            if (this._sessionInfo && this.isSessionValid(this._sessionInfo)) {
+                resolve(this._sessionInfo);
             } else {
-
                 // call comapi service startAuth                
                 this._startAuth().then(sessionStartResponse => {
 
@@ -130,11 +113,17 @@ export class SessionManager implements ISessionManager {
 
                         if (jwt) {
                             self._createAuthenticatedSession(jwt, sessionStartResponse.authenticationId, {})
-                                .then(function (sessionInfo) {
-                                    self._setSession(sessionInfo);
+                                .then((sessionInfo) => {
+                                    return Promise.all([sessionInfo, self._setSession(sessionInfo)]);
+                                })
+                                .then(([sessionInfo, result]) => {
+                                    if (!result) {
+                                        console.error("_setSession() failed");
+                                    }
                                     // pass back to client
                                     resolve(sessionInfo);
-                                }).catch(function (error) {
+                                })
+                                .catch(function (error) {
                                     reject(error);
                                 });
                         } else {
@@ -163,7 +152,7 @@ export class SessionManager implements ISessionManager {
                         resolve(true);
                     }).catch((error) => {
                         this._removeSession();
-                        reject(error);
+                        resolve(false);
                     });
             } else {
                 reject({ message: "No active session is present, create one before ending one" });
@@ -181,20 +170,28 @@ export class SessionManager implements ISessionManager {
      */
     private _createAuthenticatedSession(jwt: string, authenticationId: string, deviceInfo: Object): Promise<ISessionInfo> {
 
-        let browserInfo = Utils.getBrowserInfo();
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.sessions, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
 
-        let data = {
-            authenticationId: authenticationId,
-            authenticationToken: jwt,
+        return this.getDeviceId()
+            .then(() => {
+                let browserInfo = Utils.getBrowserInfo();
 
-            deviceId: this._deviceId,
-            platform: /*browserInfo.name*/ "javascript",
-            platformVersion: browserInfo.version,
-            sdkType: /*"javascript"*/ "native",
-            sdkVersion: "_SDK_VERSION_"
-        };
+                let data = {
+                    authenticationId: authenticationId,
+                    authenticationToken: jwt,
 
-        return this._restClient.post(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/sessions`, {}, data)
+                    deviceId: this._deviceId,
+                    platform: /*browserInfo.name*/ "javascript",
+                    platformVersion: browserInfo.version,
+                    sdkType: /*"javascript"*/ "native",
+                    sdkVersion: "_SDK_VERSION_"
+                };
+
+                return this._restClient.post(url, {}, data);
+            })
             .then(function (result) {
                 return Promise.resolve(<ISessionInfo>result.response);
             });
@@ -205,7 +202,13 @@ export class SessionManager implements ISessionManager {
      * @returns {Promise} - Returns a promise
      */
     private _startAuth(): Promise<ISessionStartResponse> {
-        return this._restClient.get(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/sessions/start`)
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.sessionStart, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.get(url)
             .then(result => {
                 return Promise.resolve(<ISessionStartResponse>result.response);
             });
@@ -222,7 +225,13 @@ export class SessionManager implements ISessionManager {
             "authorization": this.getAuthHeader(),
         };
 
-        return this._restClient.delete(`${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/sessions/${this._sessionInfo.session.id}`, headers)
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.session, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            sessionId: this.sessionInfo.session.id,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.delete(url, headers)
             .then(result => {
                 return Promise.resolve(true);
             });
@@ -231,41 +240,28 @@ export class SessionManager implements ISessionManager {
 
     /**
      * Internal function to load in an existing session if available 
-     * @returns {ISessionInfo} - returns session info if available 
-     */
-    private _getSession(): ISessionInfo {
-        let sessionInfo: ISessionInfo = this._localStorageData.getObject("session") as ISessionInfo;
-        if (sessionInfo) {
-            this._sessionInfo = sessionInfo;
-        }
-        return sessionInfo;
-    }
-
-    /**
-     * Internal function to load in an existing session if available 
      * @returns {boolean} - returns boolean reault 
      */
-    private _setSession(sessionInfo: ISessionInfo) {
+    private _setSession(sessionInfo: ISessionInfo): Promise<boolean> {
 
-        let expiry = new Date(sessionInfo.session.expiresOn);
-
-        let now = new Date();
-
-        if (expiry < now) {
+        if (this.hasExpired(sessionInfo.session.expiresOn)) {
             this._logger.error("Was given an expired token ;-(");
         }
 
         this._sessionInfo = sessionInfo;
-        this._localStorageData.setObject("session", sessionInfo);
+        return this._localStorageData.setObject("session", sessionInfo);
     }
 
     /**
      * Internal function to remove an existing session 
      * @returns {boolean} - returns boolean reault 
      */
-    private _removeSession() {
-        this._localStorageData.remove("session");
-        this._sessionInfo = undefined;
+    private _removeSession(): Promise<Boolean> {
+        return this._localStorageData.remove("session")
+            .then(result => {
+                this._sessionInfo = undefined;
+                return result;
+            });
     }
 
 
@@ -275,4 +271,67 @@ export class SessionManager implements ISessionManager {
     private getAuthHeader() {
         return `Bearer ${this.sessionInfo.token}`;
     }
+
+
+    /**
+     * Create one if not available ...
+     */
+    private getDeviceId(): Promise<string> {
+
+        if (this._deviceId) {
+            return Promise.resolve(this._deviceId);
+        } else {
+            return this._localStorageData.getString("deviceId")
+                .then(value => {
+                    if (value === null) {
+                        this._deviceId = Utils.uuid();
+                        return this._localStorageData.setString("deviceId", this._deviceId)
+                            .then(result => {
+                                return Promise.resolve(this._deviceId);
+                            });
+
+                    } else {
+                        this._deviceId = value;
+                        return Promise.resolve(this._deviceId);
+                    }
+                });
+        }
+    }
+
+    /**
+     * Check an iso date is not in the past ...
+     * @param expiresOn 
+     */
+    private hasExpired(expiresOn: string): boolean {
+        let now = new Date();
+        let expiry = new Date(expiresOn);
+
+        return now > expiry;
+    }
+
+    /**
+     * Checks validity of session based on expiry and matching apiSpace
+     * @param sessionInfo 
+     */
+    private isSessionValid(sessionInfo: ISessionInfo): boolean {
+
+        let valid = false;
+
+        if (!this.hasExpired(sessionInfo.session.expiresOn)) {
+
+            // check that the token matches 
+            if (sessionInfo.token) {
+                let bits = sessionInfo.token.split(".");
+                if (bits.length === 3) {
+                    let payload = JSON.parse(atob(bits[1]));
+                    if (payload.apiSpaceId === this._comapiConfig.apiSpaceId) {
+                        valid = true;
+                    }
+                }
+            }
+        }
+
+        return valid;
+    }
+
 }

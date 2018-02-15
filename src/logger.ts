@@ -1,7 +1,9 @@
+import { injectable, inject, optional } from "inversify";
 import { ILogger, LogLevels, ILogEvent, IEventManager, ILocalStorageData } from "./interfaces";
 
 import { IndexedDBLogger } from "./indexedDBLogger";
-
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+@injectable()
 export class Logger implements ILogger {
 
     private _logLevel: LogLevels = LogLevels.Debug;
@@ -12,7 +14,6 @@ export class Logger implements ILogger {
     private _maxLocalStorageLogSize: number = 1024;
     private _localStorageKey: string = "rollingLogfile";
 
-
     /**        
      * Logger class constructor.
      * @class Logger
@@ -22,9 +23,9 @@ export class Logger implements ILogger {
      * @param {ILocalStorageData} [localStorageData] - local storage interface  - for publishing log events 
      * @param {IndexedDB} [indexedDB] - indexedDB interface - assumed to be open and ready to go 
      */
-    constructor(private _eventManager?: IEventManager,
-        private _localStorageData?: ILocalStorageData,
-        private _indexedDB?: IndexedDBLogger) { }
+    constructor( @inject(INTERFACE_SYMBOLS.EventManager) private _eventManager?: IEventManager,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData?: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.IndexedDBLogger) @optional() private _indexedDB?: IndexedDBLogger) { }
 
     /**
      * Getter to get the log level
@@ -187,27 +188,32 @@ export class Logger implements ILogger {
 
                 if (this._indexedDB) {
 
-                    this._indexedDB.addRecord(logEvent).then(function (index) {
-                        resolve(true);
-                    });
+                    this._indexedDB.addRecord(logEvent)
+                        .then(index => {
+                            resolve(true);
+                        });
 
                 } else if (this._localStorageData) {
                     // fall back to using local storage
-                    let log = this._localStorageData.getString(this._localStorageKey);
+                    this._localStorageData.getString(this._localStorageKey)
+                        .then(log => {
 
-                    if (log !== null) {
-                        log += formattedMessage;
-                    } else {
-                        log = formattedMessage;
-                    }
+                            if (log !== null) {
+                                log += formattedMessage;
+                            } else {
+                                log = formattedMessage;
+                            }
 
-                    if (log.length > this._maxLocalStorageLogSize) {
-                        log = log.substring(formattedMessage.length);
-                    }
+                            if (log.length > this._maxLocalStorageLogSize) {
+                                log = log.substring(formattedMessage.length);
+                            }
 
-                    this._localStorageData.setString(this._localStorageKey, log);
+                            this._localStorageData.setString(this._localStorageKey, log)
+                                .then(() => {
+                                    resolve(true);
+                                });
+                        });
 
-                    resolve(true);
 
                 } else {
                     resolve(true);

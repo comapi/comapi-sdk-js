@@ -25,12 +25,13 @@ import { InterfaceContainer } from "./inversify.config";
 
 import { ContentData } from "./contentData";
 import { Mutex } from "./mutex";
+import { Utils } from "./utils";
 
 
 /*
  * Exports to be added to COMAPI namespace
  */
-export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, ContentData, Mutex }
+export { ComapiConfig, MessageStatusBuilder, ConversationBuilder, MessageBuilder, ContentData, Mutex, Utils }
 
 export class Foundation implements IFoundation {
 

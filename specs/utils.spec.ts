@@ -167,13 +167,13 @@ describe("Utils tests", () => {
 
     it("should debounce a function", (done) => {
 
-        var count = 0;
+        let count = 0;
 
-        var debouncedMethod = Utils.debounce(function () {
+        let debouncedMethod = Utils.debounce(function () {
             count++;
         }, 50);
 
-        for (var i = 0; i < 10; i++) {
+        for (let i = 0; i < 10; i++) {
             debouncedMethod();
         }
 
@@ -183,5 +183,4 @@ describe("Utils tests", () => {
         }, 100);
 
     });
-
 });

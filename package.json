@@ -24,7 +24,7 @@
     "karma-teamcity-reporter": "0.1.2",
     "karma-typescript": "3.0.4",
     "reflect-metadata": "^0.1.10",
-    "typescript": "latest"
+    "typescript": "2.3.4"
   },
   "devDependencies": {
     "body-parser": "^1.15.0",

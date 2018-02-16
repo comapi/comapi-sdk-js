@@ -24,13 +24,18 @@ module.exports = function (config) {
 
         reporters: ["progress", "karma-typescript", "teamcity"],
 
-        browsers: ["Chrome"],
+        browsers: ["ChromeHeadless"],
 
         customLaunchers: {
-            ChromeNoSandbox: {
+            ChromeHeadless: {
                 base: 'Chrome',
                 flags: [
-                    '--no-sandbox'  // required to run without privileges in docker
+                    '--no-sandbox',
+                    // See https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md
+                    '--headless',
+                    '--disable-gpu',
+                    // Without a remote debugging port, Google Chrome exits immediately.
+                    ' --remote-debugging-port=9222',
                 ]
             }
         },

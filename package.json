@@ -2,7 +2,7 @@
   "name": "comapi-sdk-js",
   "version": "1.0.3",
   "scripts": {
-    "test": "karma start --browsers=Chrome"
+    "test": "karma start --browsers=ChromeHeadless"
   },
   "repository": {
     "type": "git",

@@ -26,6 +26,15 @@ module.exports = function (config) {
 
         browsers: ["Chrome"],
 
+        customLaunchers: {
+            ChromeNoSandbox: {
+                base: 'Chrome',
+                flags: [
+                    '--no-sandbox'  // required to run without privileges in docker
+                ]
+            }
+        },
+
         // level of logging
         // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
         logLevel: config.LOG_DEBUG,

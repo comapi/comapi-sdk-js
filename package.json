@@ -2,7 +2,7 @@
   "name": "comapi-sdk-js",
   "version": "1.0.3",
   "scripts": {
-    "test": "karma start karma.conf.js"
+    "test": "karma start --browsers=Chrome"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,7 @@
     "karma-cli": "^1.0.1",
     "karma-jasmine": "^1.0.2",
     "karma-phantomjs-launcher": "^1.0.2",
-    "karma-teamcity-reporter": "^1.0.0",
+    "karma-teamcity-reporter": "0.1.2",
     "karma-typescript": "3.0.4",
     "reflect-metadata": "^0.1.10",
     "typescript": "latest"

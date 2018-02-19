@@ -228,7 +228,7 @@ module.exports = function (grunt) {
 
     // Just create the docs ...    
     grunt.registerTask('compile', [
-        'clean',
+        //  'clean',
         'tslint',
         'buildnumber',
         'buildfolder',
@@ -249,6 +249,7 @@ module.exports = function (grunt) {
 
     // Just create the docs ...    
     grunt.registerTask('test', [
+        'clean',
         'express:dev',
         'express:ws',
         'run:karma_typescript',

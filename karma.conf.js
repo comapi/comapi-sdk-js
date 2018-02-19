@@ -51,14 +51,11 @@ module.exports = function (config) {
         karmaTypescriptConfig: {
             reports:
                 {
-                    "cobertura": {
-                        "directory": "coverage",
-                        "filename": "coverage.xml",
-                        "subdirectory": "cobertura"
+                    "html": {
+                        "directory": "coverage",    // optional, defaults to 'coverage'
+                        "subdirectory": "report" // optional, defaults to the name of the browser running the tests
                     },
-                    "html": "coverage",
-                    "text-summary": "",
-                    "teamcity": ""
+                    "text-summary": ""
                 },
             coverageOptions: {
                 instrumentation: true

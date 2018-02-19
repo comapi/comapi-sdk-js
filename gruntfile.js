@@ -2,6 +2,8 @@ module.exports = function (grunt) {
 
     console.log(grunt.cli.tasks);
 
+    console.log("##### Build starting ###### ");
+
     var pkg = grunt.file.readJSON('package.json');
 
     // these will get overwritten ...

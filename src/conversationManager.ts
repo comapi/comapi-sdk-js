@@ -36,7 +36,7 @@ export class ConversationManager implements IConversationManager {
      * @parameter {IComapiConfig} ComapiConfig 
      * @parameter {ISessionManager} sessionManager 
      */
-    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+    constructor(@inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
         @inject(INTERFACE_SYMBOLS.AuthenticatedRestClient) private _restClient: IRestClient,
         @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
         @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig,
@@ -271,6 +271,11 @@ export class ConversationManager implements IConversationManager {
         return this._restClient.post(url, {}, {})
             .then(result => {
                 this.isTypingInfo[conversationId] = new Date().toISOString();
+
+                if (this.isTypingOffInfo[conversationId]) {
+                    delete this.isTypingOffInfo[conversationId];
+                }
+
                 return Promise.resolve(true);
             });
     }
@@ -306,6 +311,11 @@ export class ConversationManager implements IConversationManager {
         return this._restClient.delete(url, {})
             .then(result => {
                 this.isTypingOffInfo[conversationId] = new Date().toISOString();
+
+                if (this.isTypingInfo[conversationId]) {
+                    delete this.isTypingInfo[conversationId];
+                }
+
                 return Promise.resolve(true);
             });
     }

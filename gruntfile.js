@@ -208,7 +208,7 @@ module.exports = function (grunt) {
 
     // the default task can be run just by typing "grunt" on the command line - this does everything
     grunt.registerTask('default', [
-        //  'clean',
+        // 'clean',
         'tslint',
         'buildnumber',
         'buildfolder',

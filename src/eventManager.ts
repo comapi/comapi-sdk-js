@@ -1,10 +1,11 @@
+import { injectable } from "inversify";
 import { IEventManager } from "./interfaces";
 
 interface IEventSubscription {
     eventType: string;
     handler: Function;
 }
-
+@injectable()
 export class EventManager implements IEventManager {
 
     // array of subscribers to SDK events

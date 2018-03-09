@@ -65,7 +65,7 @@ app.post('/testBadRequest', function (req, res, next) {
     res.status(400).json(req.body);
 });
 
-app.post('/testUnauthorized', function (req, res, next) {
+function testUnauthorized(req, res) {
 
     if (req.headers.authorization) {
         // don't really care what it is set to ;-)
@@ -88,13 +88,20 @@ app.post('/testUnauthorized', function (req, res, next) {
         console.log("testUnauthorized no jwt");
         res.sendStatus(401);
     }
+}
+app.get('/testUnauthorized', function (req, res, next) {
+    testUnauthorized(req, res);
+});
+
+app.post('/testUnauthorized', function (req, res, next) {
+    testUnauthorized(req, res);
 });
 
 app.post('/testServerError', function (req, res, next) {
     res.sendStatus(500);
 });
 
-var profileId = "1375DD09-F19E-4A5B-A14F-6F71B5CF52DF";
+// var profileId = "1375DD09-F19E-4A5B-A14F-6F71B5CF52DF";
 
 Date.prototype.addDays = function (days) {
     var dat = new Date(this.valueOf());
@@ -110,11 +117,16 @@ app.post('/apispaces/:appSpaceId/sessions', function (req, res, next) {
 
     if (req.body.authenticationId !== undefined && req.body.authenticationToken !== undefined) {
 
+
+        var verified = njwt.verify(req.body.authenticationToken, signingKey);
+
+
         // some garbage claims ...
         var claims = {
-            iss: "issuer",
-            sub: "username",
-            aud: "audience"
+            iss: verified.body.iss,
+            sub: verified.body.sub,
+            aud: verified.body.aud,
+            apiSpaceId: req.params.appSpaceId
         }
 
         var jwt = njwt.create(claims, signingKey);
@@ -123,7 +135,7 @@ app.post('/apispaces/:appSpaceId/sessions', function (req, res, next) {
             "token": jwt.compact(),
             "session": {
                 "id": "56D3B29F-B783-4873-9B8E-DEE28A68CB98",
-                "profileId": profileId,
+                "profileId": verified.body.sub,
                 "deviceId": req.body.deviceId,
                 "platform": req.body.platform,
                 "platformVersion": req.body.platformVersion,
@@ -137,8 +149,8 @@ app.post('/apispaces/:appSpaceId/sessions', function (req, res, next) {
         };
 
 
-        profiles[profileId] = {
-            id: profileId
+        profiles[verified.body.sub] = {
+            id: verified.body.sub
         };
 
         res.status(200).json(sessionInfo);
@@ -197,8 +209,6 @@ function getConversationEtagValue(conversationInfo) {
 }
 
 
-
-
 /**
  * UPDATE
  */
@@ -235,9 +245,45 @@ app.put('/apispaces/:appSpaceId/profiles/:id', function (req, res, next) {
     } else {
         res.sendStatus(401);
     }
-
-
 });
+
+/**
+ * PATCH
+ */
+app.patch('/apispaces/:appSpaceId/profiles/:id', function (req, res, next) {
+
+    var id = req.params.id;
+
+    if (profiles[id] !== undefined) {
+        var ifMatchHeader = req.headers['if-match'];
+
+        if (ifMatchHeader) {
+
+            var storedEtag = etag(JSON.stringify(profiles[id]));
+
+            if (storedEtag != ifMatchHeader) {
+                console.log("There was a concurrency issue updating a profile please refresh and try again");
+                res.status(412).send("There was a concurrency issue updating a profile please refresh and try again");
+                return;
+            }
+        }
+
+        let patched = Object.assign(profiles[req.body.id], req.body);
+        setEtagHeader(res, patched);
+        var response = clone(patched);
+
+        // TODO: see if we need this
+        response.id = req.body.id,
+            response._createdOn = "2016-04-22T12:08:29.534Z";
+        response._updatedOn = "2016-04-22T12:08:29.534Z";
+
+        res.status(201).json(response);
+
+    } else {
+        res.sendStatus(401);
+    }
+});
+
 
 
 /**
@@ -272,7 +318,11 @@ app.get('/apispaces/:appSpaceId/profiles', function (req, res, next) {
 
     console.log("query: ", query);
 
-    var response = [profiles[profileId]];
+    var response = [];
+    for (var profileId in profiles) {
+        response.push(profiles[profileId]);
+    }
+
 
     res.status(200).json(response);
 });
@@ -341,8 +391,8 @@ app.get('/refresh', function (req, res, next) {
 
 var http = require('http').Server(app);
 
-http.listen(6969, function () {
-    console.log('Node app is running on port', 6969);
+http.listen(6971, function () {
+    console.log('Node app is running on port', 6971);
 });
 
 
@@ -814,5 +864,21 @@ app.post('/apispaces/:appSpaceId/channels/facebook/state', function (req, res, n
     res.send("688E1E43-4899-47D3-A44D-09414880A5A6");
 });
 
+/**
+ * Dummy content
+ */
+app.post('/apispaces/:appSpaceId/content', function (req, res, next) {
+    console.log(req.body.data);
+
+    res.status(200).json({
+        folder: "content",
+        id: "3518A974-9770-4081-823A-E984E2642F7A",
+        type: "image/png",
+        url: "http://content/3518A974-9770-4081-823A-E984E2642F7A",
+        size: 1234,
+        name: "image.png"
+    });
+
+});
 
 

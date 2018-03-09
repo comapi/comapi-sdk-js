@@ -21,7 +21,7 @@ describe("Message Pager tests", () => {
     let messageManager: MockMessageManager;
 
     beforeEach(() => {
-        let localStorageData = new LocalStorageData();
+        let localStorageData = new LocalStorageData(undefined);
         orphanedEventNamager = new LocalStorageOrphanedEventManager(localStorageData);
         messageManager = new MockMessageManager();
         messagePager = new MessagePager(new Logger(), localStorageData, messageManager, orphanedEventNamager);

@@ -1,17 +1,23 @@
 {
     "compileOnSave": false,
+    "files": [
+        "build/src/*.ts"
+    ],
     "compilerOptions": {
         "lib": [
-            "es2017",
+            "es6",
             "dom"
         ],
         "module": "commonjs",
         "noImplicitAny": false,
-        "outDir": "tmp",
-        "target": "ES5",
+        "target": "es5",
         "sourceMap": true,
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
         "types": [
-            "jasmine"
+            "jasmine",
+            "reflect-metadata"
         ]
     },
     "exclude": [

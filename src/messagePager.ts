@@ -1,3 +1,4 @@
+import { injectable, inject } from "inversify";
 
 import {
     ILogger,
@@ -8,15 +9,16 @@ import {
     IGetMessagesResponse,
     IOrphanedEventManager,
     IConversationMessageEvent,
-    IConversationMessagesResult
+    IConversationMessagesResult,
+    IMessagePager
 } from "./interfaces";
 
-// import { IndexedDBOrphanedEventManager } from "./indexedDBOrphanedEventManager";
-// import { LocalStorageOrphanedEventManager } from "./LocalStorageOrphanedEventManager";
-
 import { Utils } from "./utils";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
-export class MessagePager {
+
+@injectable()
+export class MessagePager implements IMessagePager {
 
     /**        
      * MessagePager class constructor.
@@ -27,9 +29,11 @@ export class MessagePager {
      * @parameter {ILocalStorageData} _localStorage 
      * @parameter {IMessageManager} _messageManager 
      */
-    constructor(private _logger: ILogger, private _localStorage: ILocalStorageData, private _messageManager: IMessageManager, private _orphanedEventManager: IOrphanedEventManager) {
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorage: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.MessageManager) private _messageManager: IMessageManager,
+        @inject(INTERFACE_SYMBOLS.OrphanedEventManager) private _orphanedEventManager: IOrphanedEventManager) {
     }
-
 
     /**
      * Get a page of messages, internally deal with orphaned events etc ...

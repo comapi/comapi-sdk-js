@@ -1,9 +1,15 @@
+import { injectable, inject } from "inversify";
+
 import {
     IComapiConfig,
     IRestClient,
     IFacebookManager
 } from "./interfaces";
 
+import { Utils } from "./utils";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
+@injectable()
 export class FacebookManager implements IFacebookManager {
 
     /**        
@@ -14,15 +20,20 @@ export class FacebookManager implements IFacebookManager {
      * @parameter {IRestClient} restClient 
      * @parameter {IComapiConfig} comapiConfig 
      */
-    constructor(private _restClient: IRestClient,
-        private _comapiConfig: IComapiConfig) {
+    constructor( @inject(INTERFACE_SYMBOLS.AuthenticatedRestClient) private _restClient: IRestClient,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig) {
     }
 
     /**
      * @param {any} [data] - the data to post
      */
     public createSendToMessengerState(data?: any): Promise<any> {
-        let url = `${this._comapiConfig.urlBase}/apispaces/${this._comapiConfig.apiSpaceId}/channels/facebook/state`;
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.facebook, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
         return this._restClient.post(url, {}, data || {});
     }
 }

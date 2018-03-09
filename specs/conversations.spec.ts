@@ -337,7 +337,7 @@ describe("Conversations tests", () => {
     /**
      * Typing indicators should only actually get send every x seconds ...
      */
-    it("should send typing idicators correctly", done => {
+    it("should send typing indicators correctly", done => {
         console.log("Creating a conversation ...", conversationDetails);
         foundation.services.appMessaging.createConversation(conversationDetails)
             .then(result => {
@@ -365,7 +365,37 @@ describe("Conversations tests", () => {
     /**
      * Typing off indicators should only actually get send every x seconds ...
      */
-    it("should send typing Off idicators correctly", done => {
+    it("should send typing Off indicators correctly", done => {
+        console.log("Creating a conversation ...", conversationDetails);
+        foundation.services.appMessaging.createConversation(conversationDetails)
+            .then(result => {
+                return foundation.services.appMessaging.sendIsTyping(conversationDetails.id);
+            })
+            .then(sent1 => {
+                expect(sent1).toBeTruthy();
+                return foundation.services.appMessaging.sendIsTypingOff(conversationDetails.id);
+            })
+            .then(sent2 => {
+                expect(sent2).toBeTruthy();
+                return foundation.services.appMessaging.sendIsTyping(conversationDetails.id);
+            })
+            .then(sent3 => {
+                expect(sent3).toBeTruthy();
+                return foundation.services.appMessaging.sendIsTypingOff(conversationDetails.id);
+            })
+            .then(sent4 => {
+                expect(sent4).toBeTruthy();
+                done();
+            })
+            .catch(error => {
+                fail(error);
+            });
+    });
+
+    /**
+     * Typing off indicators should only actually get send every x seconds ...
+     */
+    it("should send typing on and off indicators correctly", done => {
         console.log("Creating a conversation ...", conversationDetails);
         foundation.services.appMessaging.createConversation(conversationDetails)
             .then(result => {
@@ -389,6 +419,7 @@ describe("Conversations tests", () => {
                 fail(error);
             });
     });
+
 
 });
 

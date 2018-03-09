@@ -1,9 +1,12 @@
+import { injectable, inject } from "inversify";
+
 import {
     IOrphanedEventManager,
     IConversationMessageEvent,
     ILocalStorageData
 } from "./interfaces";
 
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
 interface IOrphanedEventInfo {
     conversationId: string;
@@ -20,131 +23,174 @@ interface IOrphanedEventContainer {
 };
 
 
+@injectable()
 export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
 
-    private _orphanedEevnts = {
+    private _initialised: Promise<boolean>;
+
+    private _orphanedEvents = {
         // IOrphanedEventContainer will be keyed off a conversationId property
     };
 
     /**
      * 
      */
-    constructor(private _localStorage: ILocalStorageData) {
-        this._orphanedEevnts = this._localStorage.getObject("orphanedEevnts") || {};
+    constructor( @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorage: ILocalStorageData) {
     }
 
     /**
      * 
      */
     public clearAll(): Promise<boolean> {
-        this._orphanedEevnts = {};
-        this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
-        return Promise.resolve(true);
+        return this.ensureInitialised()
+            .then(initialised => {
+                this._orphanedEvents = {};
+                return this._localStorage.setObject("orphanedEvents", this._orphanedEvents);
+            });
     }
 
     /**
      * 
      */
     public clear(conversationId: string): Promise<boolean> {
-        this._orphanedEevnts[conversationId] = {
-            orphanedEvents: []
-        };
-        this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
-        return Promise.resolve(true);
+        return this.ensureInitialised()
+            .then(initialised => {
+                this._orphanedEvents[conversationId] = {
+                    orphanedEvents: []
+                };
+                return this._localStorage.setObject("orphanedEvents", this._orphanedEvents);
+            });
     }
 
     /**
      * 
      */
     public getContinuationToken(conversationId: string): Promise<number> {
-        let container: IOrphanedEventContainer = this._orphanedEevnts[conversationId];
-        return Promise.resolve(container ? container.continuationToken : null);
+        return this.ensureInitialised()
+            .then(initialised => {
+                let container: IOrphanedEventContainer = this._orphanedEvents[conversationId];
+                return Promise.resolve(container ? container.continuationToken : null);
+            });
     }
 
     /**
      * 
      */
     public setContinuationToken(conversationId: string, continuationToken: number): Promise<boolean> {
-
-        let _info: IOrphanedEventInfo = this._orphanedEevnts[conversationId];
-        if (_info) {
-            _info.continuationToken = continuationToken;
-        } else {
-            this._orphanedEevnts[conversationId] = {
-                continuationToken: continuationToken,
-                orphanedEvents: []
-            };
-        }
-        return Promise.resolve(true);
+        return this.ensureInitialised()
+            .then(initialised => {
+                let _info: IOrphanedEventInfo = this._orphanedEvents[conversationId];
+                if (_info) {
+                    _info.continuationToken = continuationToken;
+                } else {
+                    this._orphanedEvents[conversationId] = {
+                        continuationToken: continuationToken,
+                        orphanedEvents: []
+                    };
+                }
+                return Promise.resolve(true);
+            });
     }
 
     /**
      * 
      */
     public addOrphanedEvent(event: IConversationMessageEvent): Promise<boolean> {
+        return this.ensureInitialised()
+            .then(initialised => {
+                let info: IOrphanedEventContainer = this._orphanedEvents[event.conversationId];
 
-        let info: IOrphanedEventContainer = this._orphanedEevnts[event.conversationId];
+                if (info) {
 
-        if (info) {
+                    // check for dupe 
+                    let found: IConversationMessageEvent[] = info.orphanedEvents.filter(e => e.eventId === event.eventId);
 
-            // check for dupe 
-            let found: IConversationMessageEvent[] = info.orphanedEvents.filter(e => e.eventId === event.eventId);
+                    if (found.length === 0) {
+                        // insert
+                        info.orphanedEvents.unshift(event);
 
-            if (found.length === 0) {
-                // insert
-                info.orphanedEvents.unshift(event);
+                        // sort
+                        info.orphanedEvents = info.orphanedEvents.sort((e1, e2) => {
+                            if (e1.conversationEventId > e2.conversationEventId) {
+                                return 1;
+                            } else if (e1.conversationEventId < e2.conversationEventId) {
+                                return -1;
+                            } else {
+                                return 0;
+                            }
+                        });
 
-                // sort
-                info.orphanedEvents = info.orphanedEvents.sort((e1, e2) => {
-                    if (e1.conversationEventId > e2.conversationEventId) {
-                        return 1;
-                    } else if (e1.conversationEventId < e2.conversationEventId) {
-                        return -1;
+                        // save
+                        return this._localStorage.setObject("orphanedEvents", this._orphanedEvents);
+
                     } else {
-                        return 0;
+                        return Promise.resolve(false);
                     }
-                });
 
-                // save
-                this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
-            }
-
-        } else {
-            return Promise.reject<boolean>({ message: `No container for conversation ${event.conversationId}` });
-        }
+                } else {
+                    return Promise.reject<boolean>({ message: `No container for conversation ${event.conversationId}` });
+                }
+            });
     }
 
     /**
      * 
      */
     public removeOrphanedEvent(event: IConversationMessageEvent): Promise<boolean> {
-        let info: IOrphanedEventContainer = this._orphanedEevnts[event.conversationId];
+        return this.ensureInitialised()
+            .then(initialised => {
+                let info: IOrphanedEventContainer = this._orphanedEvents[event.conversationId];
 
-        if (info) {
+                if (info) {
 
-            for (let i = info.orphanedEvents.length - 1; i >= 0; i--) {
-                let e = info.orphanedEvents[i];
-                if (e.eventId === event.eventId) {
-                    info.orphanedEvents.splice(i, 1);
-                    break;
+                    for (let i = info.orphanedEvents.length - 1; i >= 0; i--) {
+                        let e = info.orphanedEvents[i];
+                        if (e.eventId === event.eventId) {
+                            info.orphanedEvents.splice(i, 1);
+                            break;
+                        }
+                    }
+
+                    // save
+                    return this._localStorage.setObject("orphanedEvents", this._orphanedEvents);
+
+                } else {
+                    return Promise.reject<boolean>({ message: `No container for conversation ${event.conversationId}` });
                 }
-            }
-
-            // save
-            this._localStorage.setObject("orphanedEevnts", this._orphanedEevnts);
-
-            return Promise.resolve(true);
-
-        } else {
-            return Promise.reject<boolean>({ message: `No container for conversation ${event.conversationId}` });
-        }
+            });
     }
 
     /**
      * 
      */
     public getOrphanedEvents(conversationId: string): Promise<IConversationMessageEvent[]> {
-        let info: IOrphanedEventContainer = this._orphanedEevnts[conversationId];
-        return Promise.resolve(info ? info.orphanedEvents : []);
+        return this.ensureInitialised()
+            .then(initialised => {
+                let info: IOrphanedEventContainer = this._orphanedEvents[conversationId];
+                return Promise.resolve(info ? info.orphanedEvents : []);
+            });
     }
+
+
+    private ensureInitialised() {
+        if (!this._initialised) {
+            // this is a promise instance to ensure it's only called once
+            this._initialised = this.initialise();
+        }
+        return this._initialised;
+    }
+
+    /**
+     * 
+     */
+    private initialise(): Promise<boolean> {
+
+        return this._localStorage.getObject("orphanedEvents")
+            .then(result => {
+                this._orphanedEvents = result || {};
+                return true;
+            });
+
+    }
+
 }

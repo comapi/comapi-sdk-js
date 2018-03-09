@@ -12,7 +12,7 @@ describe("Local Storage basic log logging tests", () => {
     let data;
 
     beforeEach(function (done) {
-        data = new LocalStorageData();
+        data = new LocalStorageData(undefined);
         logger = new Logger(undefined, data, undefined);
 
         // this will actually be synchronous with the eventlog ...
@@ -23,8 +23,10 @@ describe("Local Storage basic log logging tests", () => {
     });
 
     it("should log", done => {
-        logger.log("This is a log message");
-        logger.getLog(logger)
+        logger.log("This is a log message")
+            .then(result => {
+                return logger.getLog();
+            })
             .then(logfile => {
                 expect(logfile.indexOf("This is a log message") >= 0).toBeTruthy();
                 done();
@@ -32,21 +34,28 @@ describe("Local Storage basic log logging tests", () => {
     });
 
     it("should warn", done => {
-        logger.warn("This is a warning message");
-        logger.getLog(logger)
+        logger.warn("This is a warning message")
+            .then(result => {
+                return logger.getLog();
+            })
             .then(logfile => {
                 expect(logfile.indexOf("This is a warning message") >= 0).toBeTruthy();
                 done();
             });
+
+
     });
 
     it("should error", done => {
-        logger.error("This is an error message");
-        logger.getLog(logger)
+        logger.error("This is an error message")
+            .then(result => {
+                return logger.getLog();
+            })
             .then(logfile => {
                 expect(logfile.indexOf("This is an error message") >= 0).toBeTruthy();
                 done();
             });
+
     });
 
 });
@@ -64,15 +73,12 @@ describe("IndexedDBLogger basic logging tests", () => {
 
         myIndexedDBLogger = new IndexedDBLogger();
 
-        myIndexedDBLogger.openDatabase()
-            .then(() => {
-                data = new LocalStorageData();
-                logger = new Logger(undefined, data, myIndexedDBLogger);
+        data = new LocalStorageData(undefined);
+        logger = new Logger(undefined, data, myIndexedDBLogger);
 
-                logger.clearLog().then(() => {
-                    done();
-                });
-            });
+        logger.clearLog().then(() => {
+            done();
+        });
     });
 
     afterEach(() => {
@@ -134,15 +140,13 @@ describe("IndexedDBLogger purge test", () => {
 
         myIndexedDBLogger = new IndexedDBLogger();
 
-        myIndexedDBLogger.openDatabase()
-            .then(() => {
-                data = new LocalStorageData();
-                logger = new Logger(undefined, data, myIndexedDBLogger);
+        data = new LocalStorageData(undefined);
+        logger = new Logger(undefined, data, myIndexedDBLogger);
 
-                logger.clearLog().then(() => {
-                    done();
-                });
-            });
+        logger.clearLog().then(() => {
+            done();
+        });
+
     });
 
     afterEach(() => {

@@ -1,12 +1,21 @@
+import { injectable, inject } from "inversify";
+
 import {
     ILocalStorageData,
+    IProfile,
     IProfileManager,
     INetworkManager
 } from "./interfaces";
 
-export class Profile {
+import { Utils } from "./utils";
 
-    /**        
+
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
+@injectable()
+export class Profile implements IProfile {
+
+    /**
      * Profile class constructor.
      * @class Profile
      * @classdesc Class that implements Profile.
@@ -14,7 +23,9 @@ export class Profile {
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IProfileManager} profileManager 
      */
-    constructor(private _networkManager: INetworkManager, private _localStorage: ILocalStorageData, private _profileManager: IProfileManager) { }
+    constructor( @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorage: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.ProfileManager) private _profileManager: IProfileManager) { }
 
     /**
      * Get a profile
@@ -24,7 +35,7 @@ export class Profile {
      */
     public getProfile(profileId: string): Promise<any> {
 
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._profileManager.getProfile(profileId);
             });
@@ -37,7 +48,7 @@ export class Profile {
      * @returns {Promise} 
      */
     public queryProfiles(query?: string): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._profileManager.queryProfiles(query);
             });
@@ -52,9 +63,24 @@ export class Profile {
      * @returns {Promise} 
      */
     public updateProfile(profileId: string, profile: any, eTag?: string): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
                 return this._profileManager.updateProfile(profileId, profile, eTag);
+            });
+    }
+
+    /**
+     * Function to patch a profile
+     * @method Profile#updateProfile    
+     * @param {string} profileId - the id of the profile to update
+     * @param {any} profile - the profile to patch
+     * @param {string} [eTag] - the eTag (returned in headers from getProfile())
+     * @returns {Promise} 
+     */
+    public patchProfile(profileId: string, profile: Object, eTag?: string): Promise<any> {
+        return this._networkManager.ensureSession()
+            .then((sessionInfo) => {
+                return this._profileManager.patchProfile(profileId, profile, eTag);
             });
     }
 
@@ -65,16 +91,17 @@ export class Profile {
      * @returns {Promise} - returns a Promise  
      */
     public getMyProfile(useEtag: boolean = true): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
-                return this._profileManager.getProfile(sessionInfo.session.profileId)
-                    .then(result => {
-                        if (useEtag) {
-                            this._localStorage.setString("MyProfileETag", result.headers.ETag);
-                        }
-                        return Promise.resolve(result.response);
-                    });
+                return this._profileManager.getProfile(sessionInfo.session.profileId);
+            })
+            .then(result => {
+                if (useEtag) {
+                    this._localStorage.setString("MyProfileETag", Utils.getHeaderValue(result.headers, "ETag"));
+                }
+                return Promise.resolve(result.response);
             });
+
     }
 
     /**
@@ -85,18 +112,56 @@ export class Profile {
      * @returns {Promise} - returns a Promise  
      */
     public updateMyProfile(profile: any, useEtag: boolean = true): Promise<any> {
-        return this._networkManager.ensureSessionAndSocket()
+        return this._networkManager.ensureSession()
             .then((sessionInfo) => {
+                return Promise.all([sessionInfo, this.getMyProfileETag(useEtag)]);
+            })
+            .then(([sessionInfo, eTag]) => {
                 return this._profileManager.updateProfile(sessionInfo.session.profileId,
                     profile,
-                    useEtag ? this._localStorage.getString("MyProfileETag") : undefined)
-                    .then(result => {
-                        if (useEtag) {
-                            this._localStorage.setString("MyProfileETag", result.headers.ETag);
-                        }
-                        return Promise.resolve(result.response);
-                    });
+                    eTag);
+            })
+            .then(result => {
+                if (useEtag) {
+                    this._localStorage.setString("MyProfileETag", Utils.getHeaderValue(result.headers, "ETag"));
+                }
+                return Promise.resolve(result.response);
             });
+    }
 
+    /**
+     * Patch current user's profile
+     * @method Profile#patchMyProfile
+     * @param {any} profile - the profile of the logged in user to update
+     * @returns {Promise} - returns a Promise  
+     */
+    public patchMyProfile(profile: any, useEtag: boolean): Promise<any> {
+        return this._networkManager.ensureSession()
+            .then((sessionInfo) => {
+                return Promise.all([sessionInfo, this.getMyProfileETag(useEtag)]);
+            })
+            .then(([sessionInfo, eTag]) => {
+                return this._profileManager.patchProfile(sessionInfo.session.profileId,
+                    profile,
+                    eTag);
+            })
+            .then(result => {
+                if (useEtag) {
+                    this._localStorage.setString("MyProfileETag", Utils.getHeaderValue(result.headers, "ETag"));
+                }
+                return Promise.resolve(result.response);
+            });
+    }
+
+    /**
+     * 
+     * @param useEtag 
+     */
+    private getMyProfileETag(useEtag: boolean): Promise<string> {
+        if (useEtag) {
+            return this._localStorage.getString("MyProfileETag");
+        } else {
+            return Promise.resolve(undefined);
+        }
     }
 }

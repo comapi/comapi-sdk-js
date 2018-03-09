@@ -1,13 +1,7 @@
+import { injectable, inject } from "inversify";
+
 import {
-    IConversationDeletedEventData,
-    IConversationUndeletedEventData,
-    IConversationUpdatedEventData,
-    IParticipantAddedEventData,
-    IParticipantRemovedEventData,
-    IParticipantTypingEventData,
-    IParticipantTypingOffEventData,
-    IConversationMessageEvent,
-    IProfileUpdatedEvent,
+    IEventMapper,
     IWebSocketManager,
     ISessionManager,
     IEventManager,
@@ -15,8 +9,89 @@ import {
     ILocalStorageData,
     IComapiConfig
 } from "./interfaces";
+import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
+
+
+// https://github.com/vitalets/controlled-promise/blob/master/src/index.js
+class MyPromise<T> {
+
+    private _promise: Promise<T> = null;
+    private _resolve = null;
+    private _reject = null;
+    private _isPending = false;
+    private _value = null;
+
+    /**
+     *
+     * @returns {Boolean}
+     */
+    get promise(): Promise<T> {
+        return this._promise;
+    }
+
+    /**
+     *
+     * @returns {Boolean}
+     */
+    get value(): T {
+        return this._value;
+    }
+
+    /**
+     * 
+     * @param fn 
+     */
+    public call(fn: Function): Promise<T> {
+
+        if (!this._isPending) {
+
+            this._isPending = true;
+            this._promise = new Promise((resolve, reject) => {
+                this._resolve = resolve;
+                this._reject = reject;
+
+                fn();
+            });
+        }
+
+        return this._promise;
+    }
+
+    /**
+     * Returns true if promise is pending.
+     *
+     * @returns {Boolean}
+     */
+    get isPending() {
+        return this._isPending;
+    }
+
+    /**
+     * 
+     * @param value 
+     */
+    public resolve(value: T) {
+        this._isPending = false;
+        this._value = value;
+        this._resolve(value);
+    }
+
+    /**
+     * 
+     * @param value 
+     */
+    public reject(value: any) {
+        this._isPending = false;
+        this._reject(value);
+    }
+}
+
+
+
 
 // https://gist.github.com/strife25/9310539
+// https://github.com/vitalets/websocket-as-promised/blob/master/src/index.js
+@injectable()
 export class WebSocketManager implements IWebSocketManager {
 
     // ready state code mapping ...
@@ -28,15 +103,76 @@ export class WebSocketManager implements IWebSocketManager {
     ];
 
     private webSocket: WebSocket;
-    private manuallyClosed: boolean = false;
-    // current state of socket connetcion
-    private connected: boolean = false;
-    // whether socket ever connected - set to true on first connect and used to determine whether to reconnect on close if not a manual close
-    private didConnect: boolean = false;
-    private attempts: number = 1;
+
     private echoIntervalId: number;
     // TODO: make configurable ...
-    private echoIntervalTimeout: number = 1000 * 60 * 3; // 3 minutes
+    private echoIntervalTimeout: number = 1000 * 60; // 1 minute
+
+
+    private STATE = {
+        CLOSED: 3,
+        CLOSING: 2,
+        CONNECTING: 0,
+        OPEN: 1,
+    };
+
+    private _opening: MyPromise<boolean>;
+    private _closing: MyPromise<boolean>;
+
+    // can use _opening._value for equivalent functionality
+    private manuallyClosed: boolean = false;
+    // whether socket ever connected - set to true on first connect and used to determine whether to reconnect on close if not a manual close
+    private didConnect: boolean = false;
+    private reconnecting: boolean = false;
+    private attempts: number = 0;
+
+
+
+    /**
+     * Is WebSocket connection in opening state.
+     *
+     * @returns {Boolean}
+     */
+    get isOpening() {
+        return Boolean(this.webSocket && this.webSocket.readyState === this.STATE.CONNECTING);
+    }
+
+    /**
+     * Is WebSocket connection opened.
+     *
+     * @returns {Boolean}
+     */
+    get isOpened() {
+        return Boolean(this.webSocket && this.webSocket.readyState === this.STATE.OPEN);
+    }
+
+    /**
+     * Is WebSocket connection in closing state.
+     *
+     * @returns {Boolean}
+     */
+    get isClosing() {
+        return Boolean(this.webSocket && this.webSocket.readyState === this.STATE.CLOSING);
+    }
+
+    /**
+     * Is WebSocket connection closed.
+     *
+     * @returns {Boolean}
+     */
+    get isClosed() {
+        return Boolean(!this.webSocket || this.webSocket.readyState === this.STATE.CLOSED);
+    }
+
+
+    /**
+     * Function to determine te connection state of the websocket - rturns hether ther socket `did` connect rather than the current status as there is reconnection logic running.
+     * @method WebSocketManager#isConnected
+     * @returns {boolean} 
+     */
+    public isConnected(): boolean {
+        return this.isOpened;
+    }
 
 
     /**          
@@ -50,30 +186,51 @@ export class WebSocketManager implements IWebSocketManager {
      * @param {ISessionManager} _sessionManager 
      * @param {IEventManager} _eventManager 
      */
-    constructor(private _logger: ILogger,
-        private _localStorageData: ILocalStorageData,
-        private _comapiConfig: IComapiConfig,
-        private _sessionManager: ISessionManager,
-        private _eventManager: IEventManager) {
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
+        @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig,
+        @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
+        @inject(INTERFACE_SYMBOLS.EventManager) private _eventManager: IEventManager,
+        @inject(INTERFACE_SYMBOLS.EventMapper) private _eventMapper: IEventMapper) {
+
+        // start this here just once
+        this.echoIntervalId = setInterval(() => this.echo(), this.echoIntervalTimeout);
     }
 
     /**
      * Function to connect websocket
      * @method WebSocketManager#connect
-     * @returns {Promise} 
      */
     public connect(): Promise<boolean> {
 
-        this._logger.log("WebSocketManager.connect();");
+        if (this.isClosing) {
+            return Promise.reject(new Error(`Can't open WebSocket while closing.`));
+        }
 
-        return new Promise((resolve, reject) => {
+        // User calls connect and already connected
+        if (this.isOpened) {
+            return this._opening.promise;
+        }
+
+        // we have started to open, so return this and everyone can wait on it ....
+        if (this._opening && this._opening.isPending) {
+            return this._opening.promise;
+        }
+
+        this._opening = new MyPromise<boolean>();
+
+        return this._opening.call(() => {
+
+            this._logger.log("WebSocketManager.connect();");
 
             if (!this.webSocket) {
 
                 this._logger.log("WebSocketManager.connect()");
+                let _token: string;
 
                 this._sessionManager.getValidToken()
                     .then((token) => {
+                        _token = token;
 
                         this._logger.log("WebSocketManager.connect() - got auth token", token);
 
@@ -90,80 +247,41 @@ export class WebSocketManager implements IWebSocketManager {
 
                         this.webSocket = new WebSocket(fullUrl);
 
-                        this.echoIntervalId = setInterval(() => this.echo(), this.echoIntervalTimeout);
+                        this.webSocket.onopen = this._handleOpen.bind(this);
+                        this.webSocket.onerror = this._handleError.bind(this);
+                        this.webSocket.onclose = this._handleClose.bind(this);
+                        this.webSocket.onmessage = this._handleMessage.bind(this);
 
-                        /**
-                         * 
-                         */
-                        this.webSocket.onopen = () => {
-                            this._logger.log("websocket onopen");
-                            this.connected = true;
-                            if (this.didConnect === false) {
-                                this.didConnect = true;
-                                this._logger.log("resolving connect() promise");
-                                resolve(true);
-                            }
-                            // this._eventManager.publishLocalEvent("WebsocketOpened", { timestamp: new Date().toISOString() });
-                        };
-
-                        this.webSocket.onerror = (event) => {
-                            this._logger.log(`websocket onerror - readystate: ${this.readystates[this.webSocket.readyState]}`);
-
-                        };
-
-                        this.webSocket.onmessage = (event) => {
-                            let message: any;
-
-                            try {
-                                message = JSON.parse(event.data);
-                            } catch (e) {
-                                this._logger.error("socket onmessage: (not JSON)", event.data);
-                            }
-
-                            if (message) {
-                                this._logger.log("websocket onmessage: ", message);
-                                this.publishWebsocketEvent(message);
-                            }
-                        };
-
-                        this.webSocket.onclose = () => {
-                            this.connected = false;
-                            this.webSocket = undefined;
-                            this._logger.log("WebSocket Connection closed.");
-                            // this._eventManager.publishLocalEvent("WebsocketClosed", { timestamp: new Date().toISOString() });
-                            if (this.didConnect === false) {
-                                reject();
-                            }
-
-                            // only retry if we didng manually close it and it actually connected in the first place
-                            if (!this.manuallyClosed && this.didConnect) {
-
-                                this._logger.log("socket not manually closed, reconnecting ...");
-
-                                let time = this.generateInterval(this.attempts);
-
-                                setTimeout(() => {
-                                    // We've tried to reconnect so increment the attempts by 1
-                                    this.attempts++;
-
-                                    // Connection has closed so try to reconnect every 10 seconds.
-                                    this._logger.log("reconnecting ...");
-                                    this.connect();
-                                }, time);
-                            }
-                        };
-
+                    })
+                    .catch(error => {
+                        this._opening.reject({
+                            code: error.code,
+                            message: _token ? "Websocket Error" : "Failed to get Valid Token",
+                        });
                     });
-
-            } else {
-                if (this.didConnect) {
-                    resolve(true);
-                } else {
-                    reject();
-                }
             }
         });
+    }
 
+    /**
+     * Function to disconnect websocket
+     * @method WebSocketManager#disconnect
+     * @returns {Promise} 
+     */
+    public disconnect(): Promise<boolean> {
+
+        if (this.isClosed) {
+            return Promise.resolve(true);
+        }
+
+        this._logger.log("WebSocketManager.disconnect();");
+
+        this._closing = new MyPromise<boolean>();
+
+        return this._closing.call(() => {
+            this.manuallyClosed = true;
+            this.webSocket.close();
+        });
     }
 
     /**
@@ -173,18 +291,9 @@ export class WebSocketManager implements IWebSocketManager {
      * @returns {Promise} 
      */
     public send(data: any): void {
-        if (this.webSocket) {
+        if (this.isOpened) {
             this.webSocket.send(JSON.stringify(data));
         }
-    }
-
-    /**
-     * Function to determine te connection state of the websocket - rturns hether ther socket `did` connect rather than the current status as there is reconnection logic running.
-     * @method WebSocketManager#isConnected
-     * @returns {boolean} 
-     */
-    public isConnected(): boolean {
-        return this.didConnect;
     }
 
     /**
@@ -196,42 +305,6 @@ export class WebSocketManager implements IWebSocketManager {
         return this.webSocket ? true : false;
     }
 
-
-    /**
-     * Function to disconnect websocket
-     * @method WebSocketManager#disconnect
-     * @returns {Promise} 
-     */
-    public disconnect(): Promise<boolean> {
-
-        this._logger.log("WebSocketManager.disconnect();");
-
-        return new Promise((resolve, reject) => {
-
-            if (this.webSocket) {
-
-                // overwrite the onclose callback so we can use it ... 
-
-                this.webSocket.onclose = () => {
-                    this.connected = false;
-                    this.didConnect = false;
-                    this._logger.log("socket closed.");
-                    // TODO: will this crater it ?
-                    this.webSocket = undefined;
-                    resolve(true);
-                };
-
-                clearInterval(this.echoIntervalId);
-                this.manuallyClosed = true;
-                this.webSocket.close();
-            } else {
-                resolve(false);
-            }
-
-        });
-
-
-    }
 
     /**
      * Function to generate an interval for reconnecton purposes
@@ -254,17 +327,159 @@ export class WebSocketManager implements IWebSocketManager {
 
     /**
      * 
+     * @param event 
      */
-    private echo(): void {
-        if (this.connected) {
-            this.send({
-                name: "echo",
-                payload: {
+    private _handleOpen(event: Event) {
+        console.log("_handleOpen", event);
+        this.didConnect = true;
+        this._eventManager.publishLocalEvent("WebsocketOpened", { timestamp: new Date().toISOString() });
 
-                },
-                publishedOn: new Date().toISOString(),
+        if (this._opening) {
+            this._opening.resolve(true);
+        }
+
+    }
+
+    /**
+     * 
+     * @param event 
+     */
+    private _handleMessage(event: MessageEvent) {
+        console.log("_handleMessage", event);
+        let message: any;
+
+        try {
+            message = JSON.parse(event.data);
+        } catch (e) {
+            this._logger.error("socket onmessage: (not JSON)", event.data);
+        }
+
+        if (message) {
+            this._logger.log("websocket onmessage: ", message);
+            this.publishWebsocketEvent(message);
+        }
+    }
+
+    /**
+     * 
+     * @param event 
+     */
+    private _handleError(event: Event) {
+        console.log("_handleError", event);
+        this._logger.log(`websocket onerror - readystate: ${this.readystates[this.webSocket.readyState]}`, event);
+
+    }
+
+    /**
+     * 
+     * @param event 
+     */
+    private _handleClose(event: CloseEvent) {
+        console.log("_handleClose", event);
+
+        this.webSocket = undefined;
+        this._logger.log("WebSocket Connection closed.");
+        this._eventManager.publishLocalEvent("WebsocketClosed", { timestamp: new Date().toISOString() });
+
+        // This is the failed to connect flow ...
+        if (this._opening.isPending) {
+            this._opening.reject({
+                code: event.code,
+                message: `WebSocket closed with reason: ${event.reason} (${event.code}).`,
             });
         }
+
+        // This is the manually closed flow
+        if (this._closing && this._closing.isPending) {
+            this._closing.resolve(true);
+            this.didConnect = false;
+        }
+
+        // only retry if we didn't manually close it and it actually connected in the first place
+        if (!this.manuallyClosed && this.didConnect && !this.reconnecting) {
+            this._logger.log("socket not manually closed, reconnecting ...");
+            this.reconnecting = true;
+            this.reconnect();
+        }
+    }
+
+    /**
+     * 
+     */
+    private echo(): void {
+        this.send({
+            name: "echo",
+            payload: {},
+            publishedOn: new Date().toISOString(),
+        });
+    }
+
+    /**
+     * 
+     */
+    private reconnect(): void {
+        let time = this.generateInterval(this.attempts);
+
+        setTimeout(() => {
+            this.attempts++;
+            this._logger.log(`reconnecting (${this.attempts}) ...`);
+            this.connect()
+                .then(() => {
+                    this._logger.log("socket reconnected");
+                    this.attempts = 0;
+                    this.reconnecting = false;
+                })
+                .catch((e) => {
+                    this._logger.log("socket recycle failed", e);
+                    this.reconnect();
+                });
+        }, time);
+    }
+
+    /**
+     * 
+     * @param name 
+     */
+    private mapEventName(name): string {
+
+        // // TODO: make this configurable
+        // let eventAliasInfo: IEventMapping = {
+        //     conversation: ["conversation", "chat"],
+        //     conversationMessage: ["conversationMessage", "chatMessage"],
+        //     profile: ["profile"]
+        // };
+
+        if (this._comapiConfig.eventMapping) {
+            if (name) {
+
+                let split = name.split(".");
+
+                // for conversation.delete, category is conversation, type is delete
+                let category = split[0];
+                let type = split[1];
+
+
+                for (let eventCategory in this._comapiConfig.eventMapping) {
+
+                    if (this._comapiConfig.eventMapping.hasOwnProperty(eventCategory)) {
+
+                        // propertyName is what you want
+                        // you can get the value like this: myObject[propertyName]
+
+                        let aliases = this._comapiConfig.eventMapping[eventCategory];
+
+                        // go through the
+                        for (let val of aliases) {
+                            if (val === category) {
+                                return eventCategory + "." + type;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return name;
     }
 
     /**
@@ -272,179 +487,92 @@ export class WebSocketManager implements IWebSocketManager {
      */
     private publishWebsocketEvent(event): void {
 
-        switch (event.name) {
+        let mappedName = this.mapEventName(event.name);
+
+        switch (mappedName) {
 
             case "conversation.delete":
                 {
-                    let conversationDeletedEventData: IConversationDeletedEventData = {
-                        conversationId: event.conversationId,
-                        createdBy: event.context.createdBy,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationDeleted", conversationDeletedEventData);
+                    this._eventManager.publishLocalEvent("conversationDeleted",
+                        this._eventMapper.conversationDeleted(event));
                 }
                 break;
 
             case "conversation.undelete":
                 {
-                    let conversationUndeletedEventData: IConversationUndeletedEventData = {
-                        conversationId: event.conversationId,
-                        createdBy: event.context.createdBy,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationUndeleted", conversationUndeletedEventData);
+                    this._eventManager.publishLocalEvent("conversationUndeleted",
+                        this._eventMapper.conversationUndeleted(event));
                 }
                 break;
 
             case "conversation.update":
                 {
-                    let conversationUpdatedEventData: IConversationUpdatedEventData = {
-                        conversationId: event.conversationId,
-                        // the user who updated the conversation
-                        createdBy: event.context.createdBy,
-                        description: event.payload.description,
-                        eTag: event.etag,
-                        isPublic: event.payload.isPublic,
-                        name: event.payload.name,
-                        roles: event.payload.roles,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationUpdated", conversationUpdatedEventData);
+                    this._eventManager.publishLocalEvent("conversationUpdated",
+                        this._eventMapper.conversationUpdated(event));
                 }
                 break;
 
 
             case "conversation.participantAdded":
                 {
-                    let participantAddedEventData: IParticipantAddedEventData = {
-                        conversationId: event.conversationId,
-                        createdBy: event.context.createdBy,
-                        profileId: event.payload.profileId,
-                        role: event.payload.role,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("participantAdded", participantAddedEventData);
+                    this._eventManager.publishLocalEvent("participantAdded",
+                        this._eventMapper.participantAdded(event));
                 }
                 break;
 
 
             case "conversation.participantRemoved":
                 {
-                    let participantRemovedEventData: IParticipantRemovedEventData = {
-                        conversationId: event.conversationId,
-                        createdBy: event.context.createdBy,
-                        profileId: event.payload.profileId,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("participantRemoved", participantRemovedEventData);
+                    this._eventManager.publishLocalEvent("participantRemoved",
+                        this._eventMapper.participantRemoved(event));
                 }
                 break;
 
             case "conversation.participantTyping":
                 {
-                    let participantTypingEventData: IParticipantTypingEventData = {
-                        conversationId: event.payload.conversationId,
-                        createdBy: event.context.createdBy,
-                        profileId: event.payload.profileId,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("participantTyping", participantTypingEventData);
+                    this._eventManager.publishLocalEvent("participantTyping",
+                        this._eventMapper.participantTyping(event));
                 }
                 break;
 
 
             case "conversation.participantTypingOff":
                 {
-                    let participantTypingOffEventData: IParticipantTypingOffEventData = {
-                        conversationId: event.payload.conversationId,
-                        createdBy: event.context.createdBy,
-                        profileId: event.payload.profileId,
-                        timestamp: event.publishedOn,
-                    };
-
-                    this._eventManager.publishLocalEvent("participantTypingOff", participantTypingOffEventData);
+                    this._eventManager.publishLocalEvent("participantTypingOff",
+                        this._eventMapper.participantTypingOff(event));
                 }
                 break;
 
 
             case "conversationMessage.sent":
                 {
-                    let _event: IConversationMessageEvent = {
-
-                        conversationEventId: event.conversationEventId,
-                        conversationId: event.payload.context.conversationId,
-                        eventId: event.eventId,
-                        name: "conversationMessage.sent",
-                        payload: {
-                            alert: event.payload.alert,
-                            context: event.payload.context,
-                            messageId: event.payload.messageId,
-                            metadata: event.payload.metadata,
-                            parts: event.payload.parts,
-                        }
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationMessageEvent", _event);
+                    this._eventManager.publishLocalEvent("conversationMessageEvent",
+                        this._eventMapper.conversationMessageSent(event));
                 }
                 break;
 
             case "conversationMessage.read":
                 {
-
-                    let _event: IConversationMessageEvent = {
-                        conversationEventId: event.conversationEventId,
-                        conversationId: event.payload.conversationId,
-                        eventId: event.eventId,
-                        name: "conversationMessage.read",
-                        payload: {
-                            conversationId: event.payload.conversationId,
-                            messageId: event.payload.messageId,
-                            profileId: event.payload.profileId,
-                            timestamp: event.payload.timestamp
-                        }
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationMessageEvent", _event);
+                    this._eventManager.publishLocalEvent("conversationMessageEvent",
+                        this._eventMapper.conversationMessageRead(event));
                 }
                 break;
 
             case "conversationMessage.delivered":
                 {
-                    let _event: IConversationMessageEvent = {
-                        conversationEventId: event.conversationEventId,
-                        conversationId: event.payload.conversationId,
-                        eventId: event.eventId,
-                        name: "conversationMessage.delivered",
-                        payload: {
-                            conversationId: event.payload.conversationId,
-                            messageId: event.payload.messageId,
-                            profileId: event.payload.profileId,
-                            timestamp: event.payload.timestamp
-                        }
-                    };
-
-                    this._eventManager.publishLocalEvent("conversationMessageEvent", _event);
+                    this._eventManager.publishLocalEvent("conversationMessageEvent",
+                        this._eventMapper.conversationMessageDelivered(event));
                 }
                 break;
 
             case "profile.update":
                 {
-                    let _event: IProfileUpdatedEvent = {
-                        eTag: event.eTag,
-                        profile: event.payload
-                    };
-
                     if (event.eTag) {
                         this._localStorageData.setString("MyProfileETag", event.eTag);
                     }
 
-                    this._eventManager.publishLocalEvent("profileUpdated", _event);
+                    this._eventManager.publishLocalEvent("profileUpdated",
+                        this._eventMapper.profileUpdated(event));
                 }
                 break;
 

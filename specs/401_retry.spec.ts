@@ -1,5 +1,8 @@
+import "reflect-metadata";
+
 import { INetworkManager, ISessionInfo, ISession } from "../src/interfaces";
 import { RestClient } from "../src/restClient";
+import { AuthenticatedRestClient } from "../src/authenticatedRestClient";
 import { Logger } from "../src/logger";
 
 /**
@@ -7,7 +10,7 @@ import { Logger } from "../src/logger";
  */
 describe("REST API 401 retry tests", () => {
 
-    let restClient: RestClient;
+    let restClient: AuthenticatedRestClient;
 
     let data = {
         key1: "val1",
@@ -42,12 +45,12 @@ describe("REST API 401 retry tests", () => {
         };
 
         get session(): ISession { return this._sessionInfo.session; }
-        public getValidToken(): Promise<string> { return Promise.resolve(this._sessionInfo.token); }
+        // an invalid token
+        public getValidToken(): Promise<string> { return Promise.resolve(""); }
         public startSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
         public restartSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
         public endSession(): Promise<boolean> { return Promise.resolve(true); }
         public ensureSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
-        public ensureSessionAndSocket(): Promise<ISessionInfo> { return Promise.reject<ISessionInfo>({ message: "Not implemented" }); }
     }
 
     let networkManager: MockNetworkManager;
@@ -55,7 +58,8 @@ describe("REST API 401 retry tests", () => {
     beforeEach(done => {
         let logger = new Logger();
         networkManager = new MockNetworkManager();
-        restClient = new RestClient(logger, networkManager);
+        let rc = new RestClient(logger);
+        restClient = new AuthenticatedRestClient(logger, rc, networkManager);
         done();
     });
 
@@ -69,7 +73,7 @@ describe("REST API 401 retry tests", () => {
 
         spyOn(networkManager, "restartSession").and.callThrough();
 
-        restClient.post("http://localhost:6969/testUnauthorized", headers, data)
+        restClient.post("http://localhost:6971/testUnauthorized", headers, data)
             .then(result => {
 
                 expect(networkManager.restartSession).toHaveBeenCalled();

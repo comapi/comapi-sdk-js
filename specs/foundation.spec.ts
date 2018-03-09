@@ -1,4 +1,5 @@
 import { Foundation } from "../src/foundation";
+import { IComapiConfig, LogPersistences } from "../src/interfaces";
 import { Config } from "./config";
 
 
@@ -6,9 +7,10 @@ describe("Foundation tests", () => {
 
     let foundation: Foundation;
 
-    let comapiConfig = {
+    let comapiConfig: IComapiConfig = {
         apiSpaceId: undefined,
         authChallenge: Config.authChallenge,
+        logPersistence: LogPersistences.IndexedDB,
         logRetentionHours: 1,
         urlBase: Config.getUrlBase(),
         webSocketBase: Config.getWebSocketBase(),

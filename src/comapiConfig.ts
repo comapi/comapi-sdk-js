@@ -2,8 +2,13 @@ import {
     IComapiConfig,
     IAuthChallenge,
     LogLevels,
-    LogPersistences
+    LogPersistences,
+    OrphanedEventPersistences,
+    IFoundationRestUrls,
+    IEventMapping
 } from "./interfaces";
+
+import { FoundationRestUrls } from "./urlConfig";
 
 
 export class ComapiConfig implements IComapiConfig {
@@ -17,6 +22,10 @@ export class ComapiConfig implements IComapiConfig {
     public logPersistence: LogPersistences = LogPersistences.LocalStorage;
     public isTypingTimeout: number = 10;
     public isTypingOffTimeout: number = 10;
+    public foundationRestUrls: IFoundationRestUrls = new FoundationRestUrls();
+    public eventMapping: IEventMapping;
+    public localStoragePrefix: string;
+    public orphanedEventPersistence: OrphanedEventPersistences = OrphanedEventPersistences.IndexedDbIfSupported;
 
     /**
      * ComapiConfig class constructor.
@@ -31,7 +40,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {string} id - the api space id 
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withApiSpace(id: string): ComapiConfig {
+    public withApiSpace(id: string) {
         this.apiSpaceId = id;
         return this;
     }
@@ -42,7 +51,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {number} hours - the log retention time in hours
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withLogRetentionTime(hours: number): ComapiConfig {
+    public withLogRetentionTime(hours: number) {
         this.logRetentionHours = hours;
         return this;
     }
@@ -53,7 +62,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {IAuthChallenge} authChallenge - the authentication challenge
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withAuthChallenge(authChallenge: IAuthChallenge): ComapiConfig {
+    public withAuthChallenge(authChallenge: IAuthChallenge) {
         this.authChallenge = authChallenge;
         return this;
     }
@@ -64,7 +73,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {string} urlBase - the url base
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withUrlBase(urlBase: string): ComapiConfig {
+    public withUrlBase(urlBase: string) {
         this.urlBase = urlBase;
         return this;
     }
@@ -75,7 +84,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {string} webSocketBase - the web socket base
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withWebSocketBase(webSocketBase: string): ComapiConfig {
+    public withWebSocketBase(webSocketBase: string) {
         this.webSocketBase = webSocketBase;
         return this;
     }
@@ -86,7 +95,7 @@ export class ComapiConfig implements IComapiConfig {
      * @param {LogLevels} withLogLevel - the logLevel
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withLogLevel(logLevel: LogLevels): ComapiConfig {
+    public withLogLevel(logLevel: LogLevels) {
         this.logLevel = logLevel;
         return this;
     }
@@ -97,8 +106,52 @@ export class ComapiConfig implements IComapiConfig {
      * @param {LogPersistences} logPersistence - the logPersistence
      * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
      */
-    public withLogPersistence(logPersistence: LogPersistences): ComapiConfig {
+    public withLogPersistence(logPersistence: LogPersistences) {
         this.logPersistence = logPersistence;
+        return this;
+    }
+
+    /**
+     * Function to override foundationRestUrls 
+     * @method ComapiConfig#withFoundationRestUrls
+     * @param {IFoundationRestUrls} foundationRestUrls - the foundationRestUrls
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+    public withFoundationRestUrls(foundationRestUrls: IFoundationRestUrls) {
+        this.foundationRestUrls = foundationRestUrls;
+        return this;
+    }
+
+    /**
+     * Function to override eventMapping 
+     * @method ComapiConfig#withEventMapping
+     * @param {IEventMapping} eventMapping - the eventMapping
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+    public withEventMapping(eventMapping: IEventMapping) {
+        this.eventMapping = eventMapping;
+        return this;
+    }
+
+    /**
+     * Function to override localStoragePrefix 
+     * @method ComapiConfig#withLocalStoragePrefix
+     * @param {string} localStoragePrefix - the localStoragePrefix
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+    public withLocalStoragePrefix(localStoragePrefix: string) {
+        this.localStoragePrefix = localStoragePrefix;
+        return this;
+    }
+
+    /**
+     * Function to override orphanedEventPersistence 
+     * @method ComapiConfig#withOrphanedEventPersistence
+     * @param {string} orphanedEventPersistence - the orphanedEventPersistence
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+    public withOrphanedEventPersistence(orphanedEventPersistence: OrphanedEventPersistences) {
+        this.orphanedEventPersistence = orphanedEventPersistence;
         return this;
     }
 

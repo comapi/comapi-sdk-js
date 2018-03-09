@@ -1,6 +1,6 @@
 import { Logger } from "../src/logger";
 import { RestClient } from "../src/restClient";
-
+import { Utils } from "../src/utils";
 /**
  * 
  */
@@ -34,7 +34,7 @@ describe("REST API TESTS", () => {
 
     it("should handle a DELETE", done => {
 
-        restClient.delete("http://localhost:6969/testDelete", headers)
+        restClient.delete("http://localhost:6971/testDelete", headers)
             .then(result => {
                 expect(result.statusCode).toBe(204);
                 done();
@@ -46,7 +46,7 @@ describe("REST API TESTS", () => {
     it("should return what I expect ;-)", done => {
 
 
-        restClient.get("http://localhost:6969/testGet", headers)
+        restClient.get("http://localhost:6971/testGet", headers)
             .then(result => {
 
                 console.log(JSON.stringify(result, null, 4));
@@ -58,11 +58,9 @@ describe("REST API TESTS", () => {
                 // check some headers
                 expect(result.headers !== undefined).toBeTruthy();
 
-
-                expect(result.headers["Access-Control-Allow-Origin"]).toBe("*");
-                expect(result.headers["X-Powered-By"]).toBe("Express");
-                expect(result.headers["Content-Type"]).toBe("application/json; charset=utf-8");
-
+                expect(Utils.getHeaderValue(result.headers, "Access-Control-Allow-Origin")).toBe("*");
+                expect(Utils.getHeaderValue(result.headers, "X-Powered-By")).toBe("Express");
+                expect(Utils.getHeaderValue(result.headers, "Content-Type")).toBe("application/json; charset=utf-8");
 
                 done();
             });
@@ -71,7 +69,7 @@ describe("REST API TESTS", () => {
 
     it("should return what was POSTED", done => {
 
-        restClient.post("http://localhost:6969/testPost", headers, data)
+        restClient.post("http://localhost:6971/testPost", headers, data)
             .then(result => {
 
                 console.log(JSON.stringify(result, null, 4));
@@ -87,7 +85,7 @@ describe("REST API TESTS", () => {
 
     it("should return what was PUT", done => {
 
-        restClient.put("http://localhost:6969/testPut", headers, data)
+        restClient.put("http://localhost:6971/testPut", headers, data)
             .then(result => {
 
                 console.log(JSON.stringify(result, null, 4));
@@ -104,7 +102,7 @@ describe("REST API TESTS", () => {
 
     it("should handle bad requests", done => {
 
-        restClient.post("http://localhost:6969/testBadRequest", headers, data)
+        restClient.post("http://localhost:6971/testBadRequest", headers, data)
             .catch(result => {
 
                 console.log(JSON.stringify(result, null, 4));
@@ -122,7 +120,7 @@ describe("REST API TESTS", () => {
 
     it("should handle unauthorized", done => {
 
-        restClient.post("http://localhost:6969/testUnauthorized", headers, data)
+        restClient.post("http://localhost:6971/testUnauthorized", headers, data)
             .catch(result => {
 
                 console.log(JSON.stringify(result, null, 4));
@@ -136,7 +134,7 @@ describe("REST API TESTS", () => {
 
     it("should 404 correctly", done => {
 
-        restClient.post("http://localhost:6969/missingEndpoint", headers, data)
+        restClient.post("http://localhost:6971/missingEndpoint", headers, data)
             .catch(result => {
                 console.log(JSON.stringify(result, null, 4));
                 expect(result.statusCode).toBe(404);
@@ -146,7 +144,7 @@ describe("REST API TESTS", () => {
 
     it("should 500 correctly", done => {
 
-        restClient.post("http://localhost:6969/testServerError", headers, data)
+        restClient.post("http://localhost:6971/testServerError", headers, data)
             .catch(result => {
                 console.log(JSON.stringify(result, null, 4));
                 expect(result.statusCode).toBe(500);

@@ -34,7 +34,7 @@ export class SessionManager implements ISessionManager {
      * @parameter {ILocalStorageData} localStorageData 
      * @parameter {IComapiConfig} comapiConfig 
      */
-    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+    constructor(@inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
         @inject(INTERFACE_SYMBOLS.RestClient) private _restClient: IRestClient,
         @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
         @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig) {
@@ -148,10 +148,10 @@ export class SessionManager implements ISessionManager {
             if (this._sessionInfo) {
                 this._endAuth()
                     .then((result) => {
-                        this._removeSession();
+                        this.removeSession();
                         resolve(true);
                     }).catch((error) => {
-                        this._removeSession();
+                        this.removeSession();
                         resolve(false);
                     });
             } else {
@@ -160,6 +160,37 @@ export class SessionManager implements ISessionManager {
         });
     }
 
+    /**
+     * Retrieves details about a session
+     * @method SessionManager#requestSession
+     * @returns {Promise} - Returns a promise
+     */
+    public requestSession(): Promise<any> {
+        let headers = {
+            "Content-Type": "application/json",
+            "authorization": this.getAuthHeader(),
+        };
+
+        let url = Utils.format(this._comapiConfig.foundationRestUrls.session, {
+            apiSpaceId: this._comapiConfig.apiSpaceId,
+            sessionId: this.sessionInfo.session.id,
+            urlBase: this._comapiConfig.urlBase,
+        });
+
+        return this._restClient.get(url, headers);
+    }
+
+    /**
+     * Internal function to remove an existing cached session 
+     * @returns {Promise} - returns boolean result
+     */
+    public removeSession(): Promise<boolean> {
+        return this._localStorageData.remove("session")
+            .then(result => {
+                this._sessionInfo = undefined;
+                return result;
+            });
+    }
 
     /**
      * Internal function to create an authenticated session
@@ -251,19 +282,6 @@ export class SessionManager implements ISessionManager {
         this._sessionInfo = sessionInfo;
         return this._localStorageData.setObject("session", sessionInfo);
     }
-
-    /**
-     * Internal function to remove an existing session 
-     * @returns {boolean} - returns boolean reault 
-     */
-    private _removeSession(): Promise<Boolean> {
-        return this._localStorageData.remove("session")
-            .then(result => {
-                this._sessionInfo = undefined;
-                return result;
-            });
-    }
-
 
     /**
      * 

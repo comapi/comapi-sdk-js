@@ -211,6 +211,8 @@ export interface ISessionManager {
     getValidToken(): Promise<string>;
     startSession(): Promise<ISessionInfo>;
     endSession(): Promise<boolean>;
+    requestSession(): Promise<any>;
+    removeSession(): Promise<boolean>;
 }
 
 /**

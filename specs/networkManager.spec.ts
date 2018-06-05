@@ -48,6 +48,9 @@ describe("networkManager tests", () => {
         public startSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
         public endSession(): Promise<boolean> { return Promise.resolve(true); }
         public ensureSession(): Promise<ISessionInfo> { return Promise.resolve(this.sessionInfo); }
+        public requestSession(): Promise<ISessionInfo> { return Promise.resolve(this.sessionInfo); }
+        public removeSession() { return Promise.resolve(false); }
+
     }
 
     class MockWebSocketManager implements IWebSocketManager {

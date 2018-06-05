@@ -51,6 +51,9 @@ describe("REST API 401 retry tests", () => {
         public restartSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
         public endSession(): Promise<boolean> { return Promise.resolve(true); }
         public ensureSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
+        public requestSession(): Promise<ISessionInfo> { return Promise.resolve(this._sessionInfo); }
+        public removeSession() { return Promise.resolve(false); }
+
     }
 
     let networkManager: MockNetworkManager;

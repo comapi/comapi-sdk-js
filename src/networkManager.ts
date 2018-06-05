@@ -21,7 +21,7 @@ export class NetworkManager implements INetworkManager {
      * @parameter {ISessionManager} _sessionManager 
      * @parameter {IWebSocketManager} _webSocketManager 
      */
-    constructor( @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
+    constructor(@inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
         @inject(INTERFACE_SYMBOLS.WebSocketManager) private _webSocketManager: IWebSocketManager) { }
 
 
@@ -32,15 +32,35 @@ export class NetworkManager implements INetworkManager {
      */
     public startSession(): Promise<ISessionInfo> {
 
+        let _sessionInfo: ISessionInfo;
         return this._sessionManager.startSession()
             .then((sessionInfo) => {
-                return Promise.all([sessionInfo, this._webSocketManager.connect()]);
+                _sessionInfo = sessionInfo;
+                return this._webSocketManager.connect();
             })
-            .then(([sessionInfo, connected]) => {
-                if (!connected) {
+            .then(connected => {
+                if (connected) {
+                    return _sessionInfo;
+                } else {
                     console.error("Failed to connect web socket");
+
+                    // Is the session invalid even though it hadn't expired ? 
+                    //  - perhaps the auth settings have changes since the token was issued ?
+                    return this._sessionManager.requestSession()
+                        .then(session => {
+                            // all good, websocket connection failure was just a blip and will automatically reconnect ...
+                            return _sessionInfo;
+                        })
+                        .catch(error2 => {
+                            // session was bad
+                            console.error("failed to request session", error2);
+                            // delete old cached session and re-auth ...
+                            return this._sessionManager.removeSession()
+                                .then(result => {
+                                    return this._sessionManager.startSession();
+                                });
+                        });
                 }
-                return sessionInfo;
             });
     }
 
@@ -53,6 +73,9 @@ export class NetworkManager implements INetworkManager {
     public restartSession(): Promise<ISessionInfo> {
 
         return this._webSocketManager.disconnect()
+            .then((succeeded) => {
+                return this._sessionManager.removeSession();
+            })
             .then((succeeded) => {
                 return this._sessionManager.startSession();
             })

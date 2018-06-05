@@ -5,6 +5,7 @@ import {
     IWebSocketManager,
     ISessionInfo,
     ISession,
+    ILogger,
     INetworkManager
 } from "./interfaces";
 
@@ -21,7 +22,8 @@ export class NetworkManager implements INetworkManager {
      * @parameter {ISessionManager} _sessionManager 
      * @parameter {IWebSocketManager} _webSocketManager 
      */
-    constructor( @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
+    constructor(@inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+        @inject(INTERFACE_SYMBOLS.SessionManager) private _sessionManager: ISessionManager,
         @inject(INTERFACE_SYMBOLS.WebSocketManager) private _webSocketManager: IWebSocketManager) { }
 
 
@@ -32,15 +34,35 @@ export class NetworkManager implements INetworkManager {
      */
     public startSession(): Promise<ISessionInfo> {
 
+        let _sessionInfo: ISessionInfo;
         return this._sessionManager.startSession()
             .then((sessionInfo) => {
-                return Promise.all([sessionInfo, this._webSocketManager.connect()]);
+                _sessionInfo = sessionInfo;
+                return this._webSocketManager.connect();
             })
-            .then(([sessionInfo, connected]) => {
-                if (!connected) {
-                    console.error("Failed to connect web socket");
+            .then(connected => {
+                if (connected) {
+                    return _sessionInfo;
+                } else {
+                    this._logger.error("Failed to connect web socket");
+
+                    // Is the session invalid even though it hadn't expired ? 
+                    //  - perhaps the auth settings have changes since the token was issued ?
+                    return this._sessionManager.requestSession()
+                        .then(session => {
+                            // all good, websocket connection failure was just a blip and will automatically reconnect ...
+                            return _sessionInfo;
+                        })
+                        .catch(error => {
+                            // session was bad
+                            this._logger.error("failed to request session", error);
+                            // delete old cached session and re-auth ...
+                            return this._sessionManager.removeSession()
+                                .then(result => {
+                                    return this._sessionManager.startSession();
+                                });
+                        });
                 }
-                return sessionInfo;
             });
     }
 
@@ -54,6 +76,9 @@ export class NetworkManager implements INetworkManager {
 
         return this._webSocketManager.disconnect()
             .then((succeeded) => {
+                return this._sessionManager.removeSession();
+            })
+            .then((succeeded) => {
                 return this._sessionManager.startSession();
             })
             .then((sessionInfo) => {
@@ -61,7 +86,7 @@ export class NetworkManager implements INetworkManager {
             })
             .then(([sessionInfo, connected]) => {
                 if (!connected) {
-                    console.error("Failed to connect web socket");
+                    this._logger.error("Failed to connect web socket");
                 }
 
                 return sessionInfo;

@@ -45,6 +45,9 @@ describe("webSocket Manager tests", () => {
         public startSession(): Promise<ISessionInfo> { return Promise.resolve(null); }
         public endSession(): Promise<boolean> { return Promise.resolve(true); }
         public ensureSession(): Promise<ISessionInfo> { return Promise.resolve(this.sessionInfo); }
+        public requestSession(): Promise<ISessionInfo> { return Promise.resolve(this.sessionInfo); }
+        public removeSession() { return Promise.resolve(false); }
+
     }
 
     /**
@@ -259,14 +262,11 @@ describe("webSocket Manager tests", () => {
         comapiConfig.webSocketBase = "ws://junk";
 
         webSocketManager.connect()
-            .then(function () {
-                fail("Should not be in here");
-                done();
-            })
-            .catch(function () {
+            .then(function (connected) {
                 let isConnected = webSocketManager.isConnected();
                 console.log("isConnected = " + isConnected);
                 expect(isConnected).toBeFalsy();
+                expect(connected).toBeFalsy();
                 done();
             });
     });

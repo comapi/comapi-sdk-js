@@ -9,6 +9,9 @@ import {
     INetworkManager
 } from "../src/interfaces";
 
+import { Logger } from "../src/logger";
+
+
 /**
  * 
  */
@@ -65,7 +68,8 @@ describe("networkManager tests", () => {
     beforeEach(done => {
         sessionManager = new MockSessionmanager();
         socketManager = new MockWebSocketManager();
-        networkManager = new NetworkManager(sessionManager, socketManager);
+        let logger = new Logger();
+        networkManager = new NetworkManager(logger, sessionManager, socketManager);
         done();
     });
 

@@ -63,7 +63,7 @@ describe("AUTHENTICATED REST API TESTS", () => {
         let eventMapper = new EventMapper();
         let webSocketManager = new WebSocketManager(logger, localStorageData, comapiConfig, sessionManager, eventManager, eventMapper);
 
-        let networkManager = new NetworkManager(sessionManager, webSocketManager);
+        let networkManager = new NetworkManager(logger, sessionManager, webSocketManager);
 
         authenticatedRestClient = new AuthenticatedRestClient(logger, restClient, networkManager);
 

@@ -29,7 +29,7 @@ export class MessagePager implements IMessagePager {
      * @parameter {ILocalStorageData} _localStorage 
      * @parameter {IMessageManager} _messageManager 
      */
-    constructor( @inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
+    constructor(@inject(INTERFACE_SYMBOLS.Logger) private _logger: ILogger,
         @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorage: ILocalStorageData,
         @inject(INTERFACE_SYMBOLS.MessageManager) private _messageManager: IMessageManager,
         @inject(INTERFACE_SYMBOLS.OrphanedEventManager) private _orphanedEventManager: IOrphanedEventManager) {
@@ -117,8 +117,11 @@ export class MessagePager implements IMessagePager {
 
         let mapped: IConversationMessageEvent[] = orphanedEvents.map(e => { return this.mapOrphanedEvent(e); });
 
+        // filter out any delete events... (as have no conversationId)
+        let filtered: IConversationMessageEvent[] = mapped.filter(e => { return e.conversationId !== undefined; });
+
         // add them into the store 
-        return Utils.eachSeries(mapped, (event: IConversationMessageEvent) => {
+        return Utils.eachSeries(filtered, (event: IConversationMessageEvent) => {
             return this._orphanedEventManager.addOrphanedEvent(event);
         })
             .then(done => {

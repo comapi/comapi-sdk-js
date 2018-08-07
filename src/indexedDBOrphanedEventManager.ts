@@ -149,8 +149,8 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
                     let request = store.put(event);
 
                     request.onerror = function (e: any) {
-                        console.error("Error", e.target.error.name);
-                        reject({ message: "add failed: " + e.target.error.name });
+                        // console.error("Error", e.target.error.name);
+                        return Promise.resolve(false);
                     };
 
                     request.onsuccess = function (e) {

@@ -340,7 +340,20 @@ describe("Message Pager tests", () => {
                                     "eventId": "8605dbd1-6a10-4405-8966-1eb7dfaefea4",
                                     "profileId": "alex"
                                 }
-                            }
+                            },
+                            {
+                                "id": 6,
+                                "data": {
+                                    "name": "delete",
+                                    "payload": {
+                                        "messageId": "268d11da-db5a-4bdd-a1b6-da6573216d11",
+                                        "date": "2018-08-01T04:00:00.314Z",
+                                        "by": "system:ParagonSystem"
+                                    },
+                                    "eventId": "c6b56437-34b1-4d6d-bbb2-8a1cf2dbf2b6",
+                                    "createdBy": "session:stevan.lepojevic@gmail.com"
+                                }
+                            },
                         ]
                     };
 

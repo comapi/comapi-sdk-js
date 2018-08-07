@@ -35,7 +35,7 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
     /**
      * 
      */
-    constructor( @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorage: ILocalStorageData) {
+    constructor(@inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorage: ILocalStorageData) {
     }
 
     /**
@@ -128,7 +128,7 @@ export class LocalStorageOrphanedEventManager implements IOrphanedEventManager {
                     }
 
                 } else {
-                    return Promise.reject<boolean>({ message: `No container for conversation ${event.conversationId}` });
+                    return Promise.resolve(false);
                 }
             });
     }

@@ -57,5 +57,58 @@ describe("Event tests ...", () => {
         done();
     });
 
+    it("event handlers should be removable in bulk", done => {
+
+        function myHandler1() {
+            // shouldn't end up in here
+            fail("Event handler incorrectly called");
+        }
+
+        function myHandler2() {
+            // shouldn't end up in here
+            fail("Event handler incorrectly called");
+        }
+
+        eventManager.subscribeToLocalEvent("TestEvent", myHandler1);
+        eventManager.subscribeToLocalEvent("TestEvent", myHandler2);
+
+        expect(eventManager.isSubscribedToLocalEvent("TestEvent")).toBeTruthy();
+
+        eventManager.unsubscribeFromLocalEvent("TestEvent");
+
+        expect(eventManager.isSubscribedToLocalEvent("TestEvent")).toBeFalsy();
+
+        eventManager.publishLocalEvent("TestEvent", data);
+
+        expect(true).toBe(true);
+        done();
+    });
+
+    it("event handlers should be removable in individually", done => {
+
+        function myHandler1() {
+            // shouldn't end up in here
+            expect(true).toBe(true);
+            done();
+        }
+
+        function myHandler2() {
+            // shouldn't end up in here
+            fail("Event handler incorrectly called");
+        }
+
+        eventManager.subscribeToLocalEvent("TestEvent", myHandler1);
+        eventManager.subscribeToLocalEvent("TestEvent", myHandler2);
+
+        expect(eventManager.isSubscribedToLocalEvent("TestEvent")).toBeTruthy();
+
+        eventManager.unsubscribeFromLocalEvent("TestEvent", myHandler2);
+
+        expect(eventManager.isSubscribedToLocalEvent("TestEvent")).toBeTruthy();
+
+        eventManager.publishLocalEvent("TestEvent", data);
+
+    });
+
 
 });  

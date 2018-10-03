@@ -61,13 +61,22 @@ export class EventManager implements IEventManager {
      * @param {Function} [handler] - The callback (optional - if not specified, all associated callbacks will be unregistered)
      */
     public unsubscribeFromLocalEvent(eventType: string, handler?: Function): void {
+
+
         for (let i: number = this.eventSubscribers.length - 1; i >= 0; i--) {
             let subscriber: IEventSubscription = this.eventSubscribers[i];
-
-            if (handler && subscriber.handler === handler && subscriber.eventType === eventType) {
-                this.eventSubscribers.splice(i, 1);
-            } else if (subscriber.eventType === eventType) {
-                this.eventSubscribers.splice(i, 1);
+            if (handler) {
+                // looking for a single handler                
+                if (subscriber.handler === handler && subscriber.eventType === eventType) {
+                    this.eventSubscribers.splice(i, 1);
+                    break;
+                }
+            }
+            else {
+                // remove ANY subscribing to `eventType`
+                if (subscriber.eventType === eventType) {
+                    this.eventSubscribers.splice(i, 1);
+                }
             }
         }
     }

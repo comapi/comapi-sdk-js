@@ -106,7 +106,10 @@ export class ContentManager {
                     xhr.onprogress = (evt) => {
                         if (evt.lengthComputable) {
                             let percentComplete = (evt.loaded / evt.total) * 100;
-                            console.log("onprogress: " + percentComplete + " %");
+                            if (this._logger) {
+                                this._logger.log("onprogress: " + percentComplete + " %");
+                            }
+                            
                         }
                     };
                 });

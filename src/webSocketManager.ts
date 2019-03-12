@@ -330,7 +330,7 @@ export class WebSocketManager implements IWebSocketManager {
      * @param event 
      */
     private _handleOpen(event: Event) {
-        console.log("_handleOpen", event);
+        this._logger.log("_handleOpen", event);
         this.didConnect = true;
         this._eventManager.publishLocalEvent("WebsocketOpened", { timestamp: new Date().toISOString() });
 
@@ -345,7 +345,7 @@ export class WebSocketManager implements IWebSocketManager {
      * @param event 
      */
     private _handleMessage(event: MessageEvent) {
-        console.log("_handleMessage", event);
+        this._logger.log("_handleMessage", event);
         let message: any;
 
         try {
@@ -365,9 +365,7 @@ export class WebSocketManager implements IWebSocketManager {
      * @param event 
      */
     private _handleError(event: Event) {
-        console.log("_handleError", event);
         this._logger.log(`websocket onerror - readystate: ${this.readystates[this.webSocket.readyState]}`, event);
-
     }
 
     /**
@@ -375,10 +373,8 @@ export class WebSocketManager implements IWebSocketManager {
      * @param event 
      */
     private _handleClose(event: CloseEvent) {
-        console.log("_handleClose", event);
-
         this.webSocket = undefined;
-        this._logger.log("WebSocket Connection closed.");
+        this._logger.log("WebSocket Connection closed.", event);
         this._eventManager.publishLocalEvent("WebsocketClosed", { timestamp: new Date().toISOString() });
 
         // This is the failed to connect flow ...

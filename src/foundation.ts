@@ -9,7 +9,8 @@ import {
     IChannels,
     IFoundation,
     INetworkManager,
-    ISessionManager
+    ISessionManager,
+    LogLevels
 } from "./interfaces";
 
 import { ConversationBuilder } from "./conversationBuilder";
@@ -123,9 +124,7 @@ export class Foundation implements IFoundation {
 
         let logger: ILogger = container.getInterface<ILogger>(INTERFACE_SYMBOLS.Logger);
 
-        if (comapiConfig.logLevel) {
-            logger.logLevel = comapiConfig.logLevel;
-        }
+        logger.logLevel = comapiConfig.logLevel in LogLevels ? comapiConfig.logLevel : 0;
 
         let networkManager: INetworkManager = container.getInterface<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
 

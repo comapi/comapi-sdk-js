@@ -208,7 +208,19 @@ export class SessionManager implements ISessionManager {
 
         return this.getDeviceId()
             .then(() => {
-                let browserInfo = Utils.getBrowserInfo();
+                let platformVersion = "Unknown";
+                
+                if(typeof navigator !== "undefined"){
+                    if(navigator.product === "ReactNative"){
+                        platformVersion = "ReactNative";
+                    }else if(navigator.userAgent){
+                        let browserInfo = Utils.getBrowserInfo();
+                        if(browserInfo.version){
+                            platformVersion = browserInfo.version;
+                        }                        
+                    }    
+                }
+
 
                 let data = {
                     authenticationId: authenticationId,
@@ -216,7 +228,7 @@ export class SessionManager implements ISessionManager {
 
                     deviceId: this._deviceId,
                     platform: /*browserInfo.name*/ "javascript",
-                    platformVersion: browserInfo.version,
+                    platformVersion: platformVersion,
                     sdkType: /*"javascript"*/ "native",
                     sdkVersion: "_SDK_VERSION_"
                 };

@@ -211,16 +211,8 @@ export class SessionManager implements ISessionManager {
                 let platformVersion = "Unknown";
                 
                 if(typeof navigator !== "undefined"){
-                    if(navigator.product === "ReactNative"){
-                        platformVersion = "ReactNative";
-                    }else if(navigator.userAgent){
-                        let browserInfo = Utils.getBrowserInfo();
-                        if(browserInfo.version){
-                            platformVersion = browserInfo.version;
-                        }                        
-                    }    
+                    platformVersion = (navigator.product !== "undefined" ? navigator.product : "Unknown") + (navigator.userAgent !== "undefined" ? " : " + navigator.userAgent : "");
                 }
-
 
                 let data = {
                     authenticationId: authenticationId,

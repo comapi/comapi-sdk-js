@@ -50,6 +50,6 @@
     "webpack": "^1.13.3",
     "ws": "^3.3.1"
   },
-  "build": "327",
+  "build": "328",
   "license": "MIT"
 }

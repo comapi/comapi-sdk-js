@@ -75,7 +75,8 @@ describe("webSocket Manager tests", () => {
         let eventMapper = new EventMapper();
 
         webSocketManager = new WebSocketManager(logger, data, comapiConfig, sessionManager, eventManager, eventMapper);
-        webSocketManager['enabled'] = true;
+        /* tslint:disable:no-string-literal */
+        webSocketManager["enabled"] = true;
         console.log("created new websocket for test");
         done();
     });

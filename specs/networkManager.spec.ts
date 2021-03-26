@@ -63,6 +63,7 @@ describe("networkManager tests", () => {
         public hasSocket(): boolean { return false; };
         public send(data: any): void { console.log("send"); };
         public generateInterval(k: number): number { return 1000; };
+        public setWebsocketEnabled(enable: boolean) { return Promise.resolve(enable); };
     }
 
     beforeEach(done => {

@@ -68,7 +68,7 @@ export class Foundation implements IFoundation {
      * @param {IComapiConfig} comapiConfig - the app config (use `ComapiConfig` to create)
      * @returns {Promise} - returns promise
      */
-    public static initialiseShared(comapiConfig: IComapiConfig): Promise<IFoundation> {
+    public static initialiseShared(comapiConfig: IComapiConfig): Promise<Foundation> {
         return Foundation._initialise(comapiConfig, true);
     }
 
@@ -78,7 +78,7 @@ export class Foundation implements IFoundation {
      * @param {IComapiConfig} comapiConfig - the app config (use `ComapiConfig` to create)
      * @returns {Promise} - returns promise
      */
-    public static initialise(comapiConfig: IComapiConfig): Promise<IFoundation> {
+    public static initialise(comapiConfig: IComapiConfig): Promise<Foundation> {
         return Foundation._initialise(comapiConfig, false);
     }
 
@@ -95,7 +95,7 @@ export class Foundation implements IFoundation {
      * @param comapiConfig 
      * @param indexedDBLogger 
      */
-    private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<IFoundation> {
+    private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
 
         if (doSingleton && Foundation._foundation) {
             return Promise.resolve(Foundation._foundation);

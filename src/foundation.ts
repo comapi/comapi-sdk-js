@@ -68,7 +68,7 @@ export class Foundation implements IFoundation {
      * @param {IComapiConfig} comapiConfig - the app config (use `ComapiConfig` to create)
      * @returns {Promise} - returns promise
      */
-    public static initialiseShared(comapiConfig: IComapiConfig): Promise<Foundation> {
+    public static initialiseShared(comapiConfig: IComapiConfig): Promise<IFoundation> {
         return Foundation._initialise(comapiConfig, true);
     }
 
@@ -78,7 +78,7 @@ export class Foundation implements IFoundation {
      * @param {IComapiConfig} comapiConfig - the app config (use `ComapiConfig` to create)
      * @returns {Promise} - returns promise
      */
-    public static initialise(comapiConfig: IComapiConfig): Promise<Foundation> {
+    public static initialise(comapiConfig: IComapiConfig): Promise<IFoundation> {
         return Foundation._initialise(comapiConfig, false);
     }
 
@@ -95,7 +95,7 @@ export class Foundation implements IFoundation {
      * @param comapiConfig 
      * @param indexedDBLogger 
      */
-    private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
+    private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<IFoundation> {
 
         if (doSingleton && Foundation._foundation) {
             return Promise.resolve(Foundation._foundation);
@@ -140,7 +140,14 @@ export class Foundation implements IFoundation {
         let sessionManager = container.getInterface<ISessionManager>(INTERFACE_SYMBOLS.SessionManager);
 
         return sessionManager.initialise()
-            .then(result => {
+            .then(_ => {
+                if (comapiConfig.enableWebsocketForNonChatUsage) {
+                    return networkManager.setWebsocketEnabled(true);
+                } else {
+                    return Promise.resolve(false);
+                }
+            })
+            .then(_ => {
                 return Promise.resolve(foundation);
             });
     }

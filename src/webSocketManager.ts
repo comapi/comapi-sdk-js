@@ -94,6 +94,8 @@ class MyPromise<T> {
 @injectable()
 export class WebSocketManager implements IWebSocketManager {
 
+    private enabled = false;
+
     // ready state code mapping ...
     private readystates: string[] = [
         "Connecting",   // 0 
@@ -198,10 +200,32 @@ export class WebSocketManager implements IWebSocketManager {
     }
 
     /**
+     * Function to enable or disable websocket connections.
+     * @method WebSocketManager#setWebsocketEnabled
+     * @param {boolean} enable
+     * @returns {Promise} 
+     */
+    public setWebsocketEnabled(enable: boolean): Promise<boolean> {
+        if (this.enabled !== enable) {
+            this.enabled = enable;
+            if (this.enabled && !this.isConnected()) {
+                return this.connect();
+            } else if (!this.enabled && this.isConnected()) {
+                return this.disconnect();
+            }
+        }
+        return Promise.resolve(this.enabled);
+    }
+
+    /**
      * Function to connect websocket
      * @method WebSocketManager#connect
      */
     public connect(): Promise<boolean> {
+
+        if (!this.enabled) {
+            return Promise.resolve(false);
+        }
 
         if (this.isClosing) {
             return Promise.reject(new Error(`Can't open WebSocket while closing.`));
@@ -411,6 +435,11 @@ export class WebSocketManager implements IWebSocketManager {
      * 
      */
     private reconnect(): void {
+
+        if (!this.enabled) {
+            return;
+        }
+
         let time = this.generateInterval(this.attempts);
 
         setTimeout(() => {

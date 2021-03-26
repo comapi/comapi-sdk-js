@@ -127,5 +127,8 @@ export class NetworkManager implements INetworkManager {
         return this._sessionManager.startSession();
     }
 
+    public setWebsocketEnabled(enable: boolean): Promise<boolean> {
+        return this._webSocketManager.setWebsocketEnabled(enable);
+    }
 }
 

@@ -7,6 +7,6 @@ jasmine.teamcity.log
 tests/
 .grunt/
 _SpecRunner.html
-JSDoc/
+JSdoc/
 coverage/
 .tscache/

@@ -32,11 +32,20 @@ export class AppMessaging {
      * @param {IConversationManager} conversationManager 
      * @param {IMessageManager} messageManager 
      */
-    constructor( @inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
+    constructor(@inject(INTERFACE_SYMBOLS.NetworkManager) private _networkManager: INetworkManager,
         @inject(INTERFACE_SYMBOLS.ConversationManager) private _conversationManager: IConversationManager,
         @inject(INTERFACE_SYMBOLS.MessageManager) private _messageManager: IMessageManager,
         @inject(INTERFACE_SYMBOLS.MessagePager) private _messagePager: IMessagePager,
         @inject(INTERFACE_SYMBOLS.ContentManager) private _contentManager: IContentManager) { }
+
+    /**
+     * Function to enable socket connections.
+     * @method AppMessaging#enableSocket
+     * @returns {Promise} 
+     */
+    public enableSocket(): Promise<boolean> {
+        return this._networkManager.setWebsocketEnabled(true);
+    }
 
     /**
      * Function to create a conversation

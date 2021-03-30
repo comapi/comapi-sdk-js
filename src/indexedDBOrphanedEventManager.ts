@@ -182,7 +182,6 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
                     };
 
                     request.onsuccess = (e) => {
-                        console.log("store.delete", (<IDBRequest>e.target).result);
                         resolve(true);
                     };
                 });
@@ -333,7 +332,6 @@ export class IndexedDBOrphanedEventManager implements IOrphanedEventManager {
             };
 
             request.onsuccess = (event) => {
-                console.log("store.delete", (<IDBRequest>event.target).result);
                 resolve(true);
             };
         });

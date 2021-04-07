@@ -217,6 +217,10 @@ export class WebSocketManager implements IWebSocketManager {
         return Promise.resolve(this.enabled);
     }
 
+    public get isEnabled() {
+        return this.enabled;
+    }
+
     /**
      * Function to connect websocket
      * @method WebSocketManager#connect
@@ -447,7 +451,11 @@ export class WebSocketManager implements IWebSocketManager {
             this._logger.log(`reconnecting (${this.attempts}) ...`);
             this.connect()
                 .then(connected => {
-                    if (connected) {
+                    if (!this.enabled) {
+                        this._logger.log("socket disabled");
+                        this.attempts = 0;
+                        this.reconnecting = false;
+                    } else if (connected) {
                         this._logger.log("socket reconnected");
                         this.attempts = 0;
                         this.reconnecting = false;

@@ -564,6 +564,7 @@ export interface IEventMapper {
  * 
  */
 export interface IWebSocketManager {
+    readonly isEnabled: boolean;
     connect(): Promise<boolean>;
     disconnect(): Promise<boolean>;
     isConnected(): boolean;

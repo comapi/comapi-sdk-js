@@ -57,6 +57,7 @@ describe("networkManager tests", () => {
     }
 
     class MockWebSocketManager implements IWebSocketManager {
+        public readonly isEnabled: boolean;
         public connect(): Promise<boolean> { return Promise.resolve(true); };
         public disconnect(): Promise<boolean> { return Promise.resolve(true); };
         public isConnected(): boolean { return false; };

@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 
-import { IServices, IAppMessaging, IProfile } from "./interfaces";
+import { IServices, IAppMessaging, IAppMessagingInternal, IProfile } from "./interfaces";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
@@ -14,7 +14,7 @@ export class Services implements IServices {
      * @parameter {AppMessaging} _appMessaging 
      * @parameter {Profile} _profile 
      */
-    constructor( @inject(INTERFACE_SYMBOLS.AppMessaging) private _appMessaging: IAppMessaging,
+    constructor(@inject(INTERFACE_SYMBOLS.AppMessaging) private _appMessaging: IAppMessagingInternal,
         @inject(INTERFACE_SYMBOLS.Profile) private _profile: IProfile) {
     }
 
@@ -24,6 +24,7 @@ export class Services implements IServices {
      * @returns {AppMessaging} - Returns AppMessaging interface
      */
     public get appMessaging(): IAppMessaging {
+        this._appMessaging.enableSocket();
         return this._appMessaging;
     }
 

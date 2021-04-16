@@ -18,13 +18,13 @@ import {
     IMessageManager,
     IOrphanedEventManager,
     OrphanedEventPersistences,
-    IAppMessaging,
     IProfile,
     IServices,
     IDevice,
     IChannels,
     IMessagePager,
-    IEventMapper
+    IEventMapper,
+    IAppMessagingInternal
 } from "./interfaces";
 
 import { EventManager } from "./eventManager";
@@ -108,7 +108,7 @@ export class InterfaceContainer {
         }
 
         this._container.bind<IMessageManager>(INTERFACE_SYMBOLS.MessageManager).to(MessageManager).inSingletonScope();
-        this._container.bind<IAppMessaging>(INTERFACE_SYMBOLS.AppMessaging).to(AppMessaging).inSingletonScope();
+        this._container.bind<IAppMessagingInternal>(INTERFACE_SYMBOLS.AppMessaging).to(AppMessaging).inSingletonScope();
         this._container.bind<IProfile>(INTERFACE_SYMBOLS.Profile).to(Profile).inSingletonScope();
         this._container.bind<IServices>(INTERFACE_SYMBOLS.Services).to(Services).inSingletonScope();
         this._container.bind<IDevice>(INTERFACE_SYMBOLS.Device).to(Device).inSingletonScope();

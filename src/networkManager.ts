@@ -41,7 +41,7 @@ export class NetworkManager implements INetworkManager {
                 return this._webSocketManager.connect();
             })
             .then(connected => {
-                if (connected) {
+                if (connected || !this._webSocketManager.isEnabled) {
                     return _sessionInfo;
                 } else {
                     this._logger.error("Failed to connect web socket");
@@ -127,5 +127,8 @@ export class NetworkManager implements INetworkManager {
         return this._sessionManager.startSession();
     }
 
+    public setWebsocketEnabled(enable: boolean): Promise<boolean> {
+        return this._webSocketManager.setWebsocketEnabled(enable);
+    }
 }
 

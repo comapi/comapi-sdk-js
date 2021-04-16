@@ -140,7 +140,14 @@ export class Foundation implements IFoundation {
         let sessionManager = container.getInterface<ISessionManager>(INTERFACE_SYMBOLS.SessionManager);
 
         return sessionManager.initialise()
-            .then(result => {
+            .then(_ => {
+                if (comapiConfig.enableWebsocketForNonChatUsage) {
+                    return networkManager.setWebsocketEnabled(true);
+                } else {
+                    return Promise.resolve(false);
+                }
+            })
+            .then(_ => {
                 return Promise.resolve(foundation);
             });
     }

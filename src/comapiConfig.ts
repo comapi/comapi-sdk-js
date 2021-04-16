@@ -26,6 +26,7 @@ export class ComapiConfig implements IComapiConfig {
     public eventMapping: IEventMapping;
     public localStoragePrefix: string;
     public orphanedEventPersistence: OrphanedEventPersistences = OrphanedEventPersistences.IndexedDbIfSupported;
+    public enableWebsocketForNonChatUsage: boolean;
 
     /**
      * ComapiConfig class constructor.
@@ -152,6 +153,17 @@ export class ComapiConfig implements IComapiConfig {
      */
     public withOrphanedEventPersistence(orphanedEventPersistence: OrphanedEventPersistences) {
         this.orphanedEventPersistence = orphanedEventPersistence;
+        return this;
+    }
+
+    /**
+     * Function to override enableWebsocketForNonChatUsage 
+     * @method ComapiConfig#withEnabledNonChatSocket
+     * @param {string} enabled - enabled
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+     public withEnabledNonChatSocket(enabled: boolean){
+        this.enableWebsocketForNonChatUsage = enabled;
         return this;
     }
 

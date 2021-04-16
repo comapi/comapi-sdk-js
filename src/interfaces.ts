@@ -225,6 +225,7 @@ export interface INetworkManager {
     restartSession(): Promise<ISessionInfo>;
     endSession(): Promise<boolean>;
     ensureSession(): Promise<ISessionInfo>;
+    setWebsocketEnabled(enable: boolean): Promise<boolean>;
 }
 
 
@@ -304,7 +305,7 @@ export interface IComapiConfig {
     interfaceContainer?: any;
     localStoragePrefix?: string;
     orphanedEventPersistence?: OrphanedEventPersistences;
-
+    enableWebsocketForNonChatUsage?: boolean;
 };
 
 export interface IContentData {
@@ -563,12 +564,14 @@ export interface IEventMapper {
  * 
  */
 export interface IWebSocketManager {
+    readonly isEnabled: boolean;
     connect(): Promise<boolean>;
     disconnect(): Promise<boolean>;
     isConnected(): boolean;
     hasSocket(): boolean;
     send(data: any): void;
     generateInterval(k: number): number;
+    setWebsocketEnabled(enable: boolean): Promise<boolean>;
 }
 
 // payload for conversationMessage.sent
@@ -709,6 +712,10 @@ export interface IAppMessaging {
     sendIsTyping(conversationId: string): Promise<boolean>;
     sendIsTypingOff(conversationId: string): Promise<boolean>;
     uploadContent(content: IContentData, folder?: string): Promise<IUploadContentResult>;
+}
+
+export interface IAppMessagingInternal extends IAppMessaging {
+    enableSocket(): void;
 }
 
 export interface IProfile {

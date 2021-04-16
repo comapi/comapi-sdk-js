@@ -57,12 +57,14 @@ describe("networkManager tests", () => {
     }
 
     class MockWebSocketManager implements IWebSocketManager {
+        public readonly isEnabled: boolean;
         public connect(): Promise<boolean> { return Promise.resolve(true); };
         public disconnect(): Promise<boolean> { return Promise.resolve(true); };
         public isConnected(): boolean { return false; };
         public hasSocket(): boolean { return false; };
         public send(data: any): void { console.log("send"); };
         public generateInterval(k: number): number { return 1000; };
+        public setWebsocketEnabled(enable: boolean) { return Promise.resolve(enable); };
     }
 
     beforeEach(done => {

@@ -90,7 +90,6 @@ export class IndexedDBLogger {
                         let self = this;
 
                         req.onsuccess = function () {
-                            console.log("Deleted database " + self._name + " successfully");
                             resolve(true);
                         };
 
@@ -308,7 +307,6 @@ export class IndexedDBLogger {
                 let openRequest = indexedDB.open(this._name, this._version);
 
                 openRequest.onupgradeneeded = function (e: any) {
-                    console.log("Upgrading database...");
                     let thisDB = e.target.result;
 
                     if (!thisDB.objectStoreNames.contains(self._store)) {

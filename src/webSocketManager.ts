@@ -330,7 +330,6 @@ export class WebSocketManager implements IWebSocketManager {
      * @param event 
      */
     private _handleOpen(event: Event) {
-        this._logger.log("_handleOpen", event);
         this.didConnect = true;
         this._eventManager.publishLocalEvent("WebsocketOpened", { timestamp: new Date().toISOString() });
 
@@ -345,7 +344,6 @@ export class WebSocketManager implements IWebSocketManager {
      * @param event 
      */
     private _handleMessage(event: MessageEvent) {
-        this._logger.log("_handleMessage", event);
         let message: any;
 
         try {
@@ -374,7 +372,7 @@ export class WebSocketManager implements IWebSocketManager {
      */
     private _handleClose(event: CloseEvent) {
         this.webSocket = undefined;
-        this._logger.log("WebSocket Connection closed.", event);
+        this._logger.log("WebSocket Connection closed.");
         this._eventManager.publishLocalEvent("WebsocketClosed", { timestamp: new Date().toISOString() });
 
         // This is the failed to connect flow ...
@@ -440,7 +438,7 @@ export class WebSocketManager implements IWebSocketManager {
      */
     private mapEventName(name): string {
 
-        // // TODO: make this configurable
+        // TODO: make this configurable
         // let eventAliasInfo: IEventMapping = {
         //     conversation: ["conversation", "chat"],
         //     conversationMessage: ["conversationMessage", "chatMessage"],
@@ -562,7 +560,6 @@ export class WebSocketManager implements IWebSocketManager {
                         this._eventMapper.conversationMessageDelivered(event));
                 }
                 break;
-
             case "profile.update":
                 {
                     if (event.eTag) {
@@ -573,7 +570,6 @@ export class WebSocketManager implements IWebSocketManager {
                         this._eventMapper.profileUpdated(event));
                 }
                 break;
-
             default:
                 this._logger.warn("Unknown Event", event);
                 this._eventManager.publishLocalEvent("webSocketEvent", event);

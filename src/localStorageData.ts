@@ -89,7 +89,6 @@ export class LocalStorageData implements ILocalStorageData {
             let stringified = JSON.stringify(data);
             this.setString(key, stringified);
         } catch (e) {
-            console.log("caught exception in LocalStorageData.set(" + key + "): " + e);
             succeeded = false;
         }
         return Promise.resolve(succeeded);

@@ -11,7 +11,7 @@ import {
     IParticipantTypingEventData,
     IParticipantTypingOffEventData,
     IConversationMessageEvent,
-    IProfileUpdatedEvent,
+    IProfileUpdatedEvent
 } from "./interfaces";
 
 @injectable()
@@ -136,5 +136,4 @@ export class EventMapper implements IEventMapper {
             profile: event.payload
         };
     }
-
 }

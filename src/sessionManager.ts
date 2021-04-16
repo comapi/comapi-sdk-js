@@ -209,7 +209,7 @@ export class SessionManager implements ISessionManager {
         return this.getDeviceId()
             .then(() => {
                 let platformVersion = "Unknown";
-                
+
                 if(typeof navigator !== "undefined"){
                     platformVersion = (navigator.product !== "undefined" ? navigator.product : "Unknown") + (navigator.userAgent !== "undefined" ? " : " + navigator.userAgent : "");
                 }

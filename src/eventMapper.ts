@@ -11,8 +11,7 @@ import {
     IParticipantTypingEventData,
     IParticipantTypingOffEventData,
     IConversationMessageEvent,
-    IProfileUpdatedEvent,
-    ITeamChangedEvent,
+    IProfileUpdatedEvent
 } from "./interfaces";
 
 @injectable()
@@ -135,19 +134,6 @@ export class EventMapper implements IEventMapper {
         return {
             eTag: event.eTag,
             profile: event.payload
-        };
-    }
-
-    public chatTeamChanged(event: any): ITeamChangedEvent {
-        return {
-            channelId: event.payload.channelId,
-            chatStatus: event.payload.chatStatus,
-            conversationId: event.chatId,
-            createdBy: event.context.createdBy,
-            profileId: event.payload.profileId,
-            role: event.payload.role,
-            teamId: event.payload.teamId,
-            timestamp: event.publishedOn,
         };
     }
 }

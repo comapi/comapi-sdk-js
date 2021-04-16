@@ -557,7 +557,6 @@ export interface IEventMapper {
     conversationMessageRead(event: any): IConversationMessageEvent;
     conversationMessageDelivered(event: any): IConversationMessageEvent;
     profileUpdated(event: any): IProfileUpdatedEvent;
-    chatTeamChanged(event: any): ITeamChangedEvent;
 }
 
 /**
@@ -681,20 +680,6 @@ export interface IParticipantTypingOffEventData {
 export interface IProfileUpdatedEvent {
     eTag: string;
     profile: any;
-}
-
-/**
- * 
- */
- export interface ITeamChangedEvent {
-    channelId: string;
-    conversationId: string;
-    createdBy: string;
-    profileId: string;
-    role: string;
-    chatStatus: string;
-    teamId: string;
-    timestamp: string;
 }
 
 /**

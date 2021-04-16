@@ -560,11 +560,6 @@ export class WebSocketManager implements IWebSocketManager {
                         this._eventMapper.conversationMessageDelivered(event));
                 }
                 break;
-            case "conversation.teamChanged":
-                {
-                    this._eventManager.publishLocalEvent("chatTeamChanged", this._eventMapper.chatTeamChanged(event));
-                }
-	            break;
             case "profile.update":
                 {
                     if (event.eTag) {
@@ -575,21 +570,6 @@ export class WebSocketManager implements IWebSocketManager {
                         this._eventMapper.profileUpdated(event));
                 }
                 break;
-            case "presenceAppMessaging.online":
-				{
-					this._eventManager.publishLocalEvent("presenceAppMessaging.online", event);
-				}
-				break;
-			case "presenceAppMessaging.offline":
-				{
-					this._eventManager.publishLocalEvent("presenceAppMessaging.offline", event);
-				}
-				break;
-			case "profileNavigation.update":
-				{
-					this._eventManager.publishLocalEvent("profileNavigation.update", event);
-				}
-				break;
             default:
                 this._logger.warn("Unknown Event", event);
                 this._eventManager.publishLocalEvent("webSocketEvent", event);

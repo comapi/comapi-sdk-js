@@ -87,7 +87,7 @@ export class Foundation implements IFoundation {
      * @method Foundation#version
      */
     public static get version(): string {
-        return "1.0.2.121";
+        return "_SDK_VERSION_";
     }
 
     /**

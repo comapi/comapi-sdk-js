@@ -1,6 +1,6 @@
 {
   "name": "comapi-sdk-js",
-  "version": "1.1.6",
+  "version": "1.2.0-beta",
   "scripts": {
     "test": "karma start --browsers=ChromeHeadless",
     "build": "grunt compile"
@@ -52,6 +52,6 @@
     "webpack": "^1.13.3",
     "ws": "^3.3.1"
   },
-  "build": "332",
+  "build": "1",
   "license": "MIT"
 }

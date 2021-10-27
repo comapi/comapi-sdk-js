@@ -15,13 +15,14 @@ You will however need a push notification plugin. The SDK implements push in a s
 Here are some snippets showing how to send the registrationId to Comapi
 
 Retrieving the push registrationId is an asynchronous task that will be performed AFTER the cordova `deviceready` event has fired.
-This needs to be passed to Comapi and can only be passed after the SDK is initialised and a valid session has been created.
-There is potential for a race condition here so i will split the two tasks apart and save the registrationId to localStorage for the purposes of this snippet.
+This needs to be passed to Comapi and can be passed via ComapiConfig or after the SDK is initialised and a valid session has been created.
 
 ## Getting the registrationId
-This snippet is using the `Push` plugin from Ionic Native to retrieve the registrationId and setup a notification handler. There is no Comapi code in here.
+This snippet is using the `Push` plugin from Ionic Native to retrieve the registrationId and then initialise the sdk
 ```javascript
 import { Push } from 'ionic-native';
+import { Foundation, Environment, ComapiConfig, IPushConfig } from "@comapi/sdk-js-foundation";
+
 
 platform.ready().then(() => {
 
@@ -35,9 +36,35 @@ platform.ready().then(() => {
 
     push.on('registration', (data) => {
         console.log("got a registrationId", data.registrationId);
-        localStorage.setItem("registrationId", data.registrationId);
-    });
 
+        let pushConfig: IPushConfig;
+        // NOTE: you cannot set both apns and fcm 
+        // - identify the platform and set the appropriate device specific config
+        if (platform.is('ios')) {
+            pushConfig = {
+                apns: {
+                    bundleId: "com.dotdigital.pushtest", 
+                    environment: Environment.development, 
+                    token: data.registrationId
+                }
+            }
+        }
+
+        var comapiConfig = new ComapiConfig()
+            .withApiSpace(AppSettings.APP_SPACE_ID)
+            .withAuthChallenge(challengeHandler)
+            .withPushConfiguration(pushConfig);
+
+        const _comapiSDK;
+
+        Foundation.initialise(comapiConfig)
+            .then(function (result) {
+                _comapiSDK = result;
+                console.log("Initialised, starting session ...")
+                return _comapiSDK.startSession();
+            });
+    });
+ 
     push.on('notification', (data) => {
         console.log("got a pushNotification", data);
     });
@@ -47,44 +74,11 @@ platform.ready().then(() => {
 
 ## Sending the registrationId to Comapi
 This snippet shows how to send the registrationId to Comapi.
-The assumption is that you have an initialised SDK and a valid session at this point. Note the Environment import.
 ```javascript
-import { Environment } from "@comapi/sdk-js-foundation";
 
-// Put this somewhere appropriate in your app (at the end of you initialisation/login flow)
 
-let registrationId = localStorage.getItem("registrationId");
-// skip if registrationId hasn't been collected
-if(registrationId){
 
-    // There are separate methods to call depending on platform ...
-    if (platform.is('ios')) {
 
-        // You will need to create an APNS cert. in the apple developer portal.
-        // Then you must upload it to your API space in the Comapi portal.
-        // Can be a development or production cert, hence the environment parameter
-        sdk.device.setAPNSPushDetails(">>> My Bundle Id <<<", Environment.development, registrationId)
-        .then(result => {
-            console.log("setAPNSPushDetails() succeeded", result);
-        })
-        .catch(error => {
-            console.error("setAPNSPushDetails() failed", error);
-        });
-
-    }else if(platform.is('android')){
-
-        sdk.device.setFCMPushDetails(">>> My Package Name <<<", registrationId)
-        .then(result => {
-            console.log("setFCMPushDetails() succeeded", result);
-        })
-        .catch(error => {
-            console.error("setFCMPushDetails() failed", error);
-        });
-
-    }
-}else{
-    console.error("no registrationId ;-(");
-}
 ```
 
 ## Push Payloads

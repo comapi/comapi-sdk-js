@@ -201,6 +201,22 @@ export enum Environment {
     production
 };
 
+/**
+ * Environment enum
+ */
+ export interface IPushConfig {
+     fcm?: {
+        package: string, 
+        registrationId: string
+     };
+     apns?: {
+        bundleId: string, 
+        environment: Environment, 
+        token: string
+     };
+};
+
+
 
 /**
  * Session manager interface
@@ -306,6 +322,7 @@ export interface IComapiConfig {
     localStoragePrefix?: string;
     orphanedEventPersistence?: OrphanedEventPersistences;
     enableWebsocketForNonChatUsage?: boolean;
+    pushConfig?: IPushConfig;
 };
 
 export interface IContentData {

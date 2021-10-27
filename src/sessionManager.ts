@@ -8,7 +8,9 @@ import {
     ILocalStorageData,
     IComapiConfig,
     IRestClient,
-    ISessionStartResponse
+    ISessionStartResponse,
+    IPushConfig,
+    Environment
 } from "./interfaces";
 
 import { Utils } from "./utils";
@@ -192,6 +194,21 @@ export class SessionManager implements ISessionManager {
             });
     }
 
+    private _buildPushPayload(config: IPushConfig): any{
+        if(config && config.apns){
+            return {
+                "apns": {
+                    "bundleId": config.apns.bundleId,
+                    // need to stringify the numeric enum value 
+                    "environment": Environment[config.apns.environment],
+                    "token": config.apns.token
+                }
+            };
+        }else{
+            return config;
+        }
+    }
+
     /**
      * Internal function to create an authenticated session
      * @param (String) jwt - the jwt retrieved from the integrator
@@ -221,8 +238,9 @@ export class SessionManager implements ISessionManager {
                     deviceId: this._deviceId,
                     platform: /*browserInfo.name*/ "javascript",
                     platformVersion: platformVersion,
+                    push: this._buildPushPayload(this._comapiConfig.pushConfig),
                     sdkType: /*"javascript"*/ "native",
-                    sdkVersion: "_SDK_VERSION_"
+                    sdkVersion: "_SDK_VERSION_",
                 };
 
                 return this._restClient.post(url, {}, data);

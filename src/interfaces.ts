@@ -247,7 +247,7 @@ export interface INetworkManager {
 
 
 /**
- * Session manager interface
+ * Device manager interface
  */
 export interface IDeviceManager {
     setFCMPushDetails(sessionId: string, packageName: string, registrationId: string): Promise<boolean>;
@@ -256,12 +256,28 @@ export interface IDeviceManager {
 }
 
 /**
- * Session manager interface
+ * Facebook manager interface
  */
 export interface IFacebookManager {
     createSendToMessengerState(data?: any): Promise<any>;
 }
 
+/**
+ * Reporting manager interface
+ */
+
+// /apispaces/:apiSpaceId/reporting/push
+
+/* doesnt matter to customer
+{
+    type: "deepLinkClick",
+    trackingId,
+    // clickedOn: "iso date string" // backend should add this (in UTC) 
+}
+*/
+ export interface IReportingManager {
+    handleDeepLinkClick(trackingId:string): Promise<any>;
+}
 
 /**
  * Auth Challenge options definition
@@ -291,6 +307,7 @@ export interface IFoundationRestUrls {
     statusUpdates: string;
     profiles: string;
     profile: string;
+    reporting: string;
     sessions: string;
     sessionStart: string;
     session: string;
@@ -748,6 +765,7 @@ export interface IProfile {
 export interface IServices {
     appMessaging: IAppMessaging;
     profile: IProfile;
+    reporting: IReportingManager;
 }
 
 export interface IDevice {

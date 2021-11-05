@@ -32,4 +32,7 @@ export class FoundationRestUrls implements IFoundationRestUrls {
     public sessionStart: string = "{{urlBase}}/apispaces/{{apiSpaceId}}/sessions/start";
     public session: string = "{{urlBase}}/apispaces/{{apiSpaceId}}/sessions/{{sessionId}}";
 
+    // reporting
+    public reporting: string = "{{urlBase}}/apispaces/{{apiSpaceId}}/reporting";
+
 }

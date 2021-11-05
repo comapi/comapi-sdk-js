@@ -62,6 +62,7 @@ export class Foundation implements IFoundation {
      */
     private _channels: IChannels;
 
+
     /**
      * Factory method to create a singleton instance of Foundation
      * @method Foundation#initialise

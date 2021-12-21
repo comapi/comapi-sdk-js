@@ -25,7 +25,6 @@ import {
     IMessagePager,
     IEventMapper,
     IAppMessagingInternal,
-    IReportingManager
 } from "./interfaces";
 
 import { EventManager } from "./eventManager";

@@ -263,23 +263,6 @@ export interface IFacebookManager {
 }
 
 /**
- * Reporting manager interface
- */
-
-// /apispaces/:apiSpaceId/reporting/push
-
-/* doesnt matter to customer
-{
-    type: "deepLinkClick",
-    trackingId,
-    // clickedOn: "iso date string" // backend should add this (in UTC) 
-}
-*/
- export interface IReportingManager {
-    handleDeepLinkClick(trackingId:string): Promise<any>;
-}
-
-/**
  * Auth Challenge options definition
  */
 export interface IAuthChallengeOptions {
@@ -307,7 +290,6 @@ export interface IFoundationRestUrls {
     statusUpdates: string;
     profiles: string;
     profile: string;
-    reporting: string;
     sessions: string;
     sessionStart: string;
     session: string;
@@ -765,7 +747,6 @@ export interface IProfile {
 export interface IServices {
     appMessaging: IAppMessaging;
     profile: IProfile;
-    reporting: IReportingManager;
 }
 
 export interface IDevice {

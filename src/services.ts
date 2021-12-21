@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 
-import { IServices, IAppMessaging, IAppMessagingInternal, IProfile, IReportingManager } from "./interfaces";
+import { IServices, IAppMessaging, IAppMessagingInternal, IProfile } from "./interfaces";
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
@@ -15,7 +15,7 @@ export class Services implements IServices {
      * @parameter {Profile} _profile 
      */
     constructor(@inject(INTERFACE_SYMBOLS.AppMessaging) private _appMessaging: IAppMessagingInternal,
-        @inject(INTERFACE_SYMBOLS.Profile) private _profile: IProfile, @inject(INTERFACE_SYMBOLS.Reporting) private _reporting: IReportingManager) {
+        @inject(INTERFACE_SYMBOLS.Profile) private _profile: IProfile) {
     }
 
     /**
@@ -35,15 +35,6 @@ export class Services implements IServices {
      */
     public get profile(): IProfile {
         return this._profile;
-    }
-
-    /**
-     * Method to get Reporting interface
-     * @method Services#reporting
-     * @returns {Reporting} - Returns Reporting interface
-     */
-     public get reporting(): IReportingManager {
-        return this._reporting;
     }
 
 }

@@ -46,7 +46,6 @@ import { LocalStorageOrphanedEventManager } from "./localStorageOrphanedEventMan
 import { MessagePager } from "./messagePager";
 import { AppMessaging } from "./appMessaging";
 import { Profile } from "./profile";
-import { ReportingManager } from "./reporting";
 import { Services } from "./services";
 import { Device } from "./device";
 import { Channels } from "./channels";
@@ -113,7 +112,6 @@ export class InterfaceContainer {
         this._container.bind<IMessageManager>(INTERFACE_SYMBOLS.MessageManager).to(MessageManager).inSingletonScope();
         this._container.bind<IAppMessagingInternal>(INTERFACE_SYMBOLS.AppMessaging).to(AppMessaging).inSingletonScope();
         this._container.bind<IProfile>(INTERFACE_SYMBOLS.Profile).to(Profile).inSingletonScope();
-        this._container.bind<IReportingManager>(INTERFACE_SYMBOLS.Reporting).to(ReportingManager).inSingletonScope();        
         this._container.bind<IServices>(INTERFACE_SYMBOLS.Services).to(Services).inSingletonScope();
         this._container.bind<IDevice>(INTERFACE_SYMBOLS.Device).to(Device).inSingletonScope();
         this._container.bind<IChannels>(INTERFACE_SYMBOLS.Channels).to(Channels).inSingletonScope();

@@ -19,7 +19,6 @@ let INTERFACE_SYMBOLS = {
     OrphanedEventManager: "OrphanedEventManager",
     Profile: "Profile",
     ProfileManager: "ProfileManager",
-    Reporting: "Reporting",
     RestClient: "RestClient",
     Services: "Services",
     SessionManager: "SessionManager",

@@ -37,17 +37,22 @@ platform.ready().then(() => {
     push.on('registration', (data) => {
         console.log("got a registrationId", data.registrationId);
 
-        let pushConfig: IPushConfig;
+        let pushConfig: IPushConfig = {};
+
         // NOTE: you cannot set both apns and fcm 
         // - identify the platform and set the appropriate device specific config
-        if (platform.is('ios')) {
-            pushConfig = {
-                apns: {
-                    bundleId: "com.dotdigital.pushtest", 
-                    environment: Environment.development, 
-                    token: data.registrationId
-                }
-            }
+        // this device object is from cordova-plugin-device
+        if (device.platform === 'iOS') {
+            pushConfig.apns = {
+                bundleId: "myBundleId",
+                environment: Environment.development, 
+                token: data.registrationId
+            };       
+        } else if (device.platform === 'Android') {
+            pushConfig.fcm = {
+                package: "MyPackageName",
+                registrationId: data.registrationId
+            };
         }
 
         var comapiConfig = new ComapiConfig()

@@ -126,7 +126,6 @@ export class Utils {
      */
     public static getHeaderValue(headers: Object, key: string) {
 
-        let result = undefined;
         for(const _key in headers){
             if(_key.toLowerCase() === key.toLowerCase()){
                 return headers[_key];

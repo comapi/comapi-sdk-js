@@ -184,4 +184,24 @@ describe("Utils tests", () => {
         }, 100);
 
     });
+
+    it("Shoud corretly query requst headers", () => {
+        
+        const headers:Object = {
+            authorization: "Bearer xxx",
+            Accept: "application/json",
+            "Content-Type" : "text/plain",
+            "If-Match": "737060cd8c284d8af7ad3082f209582d"
+        };
+
+        expect(Utils.getHeaderValue(headers, "???")).toBeUndefined();
+        expect(Utils.getHeaderValue(headers, "authorization")).toEqual("Bearer xxx");
+        expect(Utils.getHeaderValue(headers, "Authorization")).toEqual("Bearer xxx");
+        expect(Utils.getHeaderValue(headers, "accept")).toEqual("application/json");
+        expect(Utils.getHeaderValue(headers, "aCcepT")).toEqual("application/json");
+        expect(Utils.getHeaderValue(headers, "Content-Type")).toEqual("text/plain");
+        expect(Utils.getHeaderValue(headers, "content-type")).toEqual("text/plain");
+        expect(Utils.getHeaderValue(headers, "If-Match")).toEqual("737060cd8c284d8af7ad3082f209582d");
+        expect(Utils.getHeaderValue(headers, "if-match")).toEqual("737060cd8c284d8af7ad3082f209582d");
+    })
 });

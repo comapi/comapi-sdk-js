@@ -125,7 +125,14 @@ export class Utils {
      * @param key 
      */
     public static getHeaderValue(headers: Object, key: string) {
-        return headers[key] || headers[key.toLowerCase()];
+
+        let result = undefined;
+        for(const _key in headers){
+            if(_key.toLowerCase() === key.toLowerCase()){
+                return headers[_key];
+            }
+        }
+        return undefined;
     }
 
     /**

@@ -122,8 +122,9 @@ export class Profile implements IProfile {
                     eTag);
             })
             .then(result => {
-                if (useEtag) {
-                    this._localStorage.setString("MyProfileETag", Utils.getHeaderValue(result.headers, "ETag"));
+                const myProfileETag = Utils.getHeaderValue(result.headers, "ETag");
+                if (useEtag && myProfileETag) {
+                    this._localStorage.setString("MyProfileETag", myProfileETag);
                 }
                 return Promise.resolve(result.response);
             });
@@ -146,8 +147,9 @@ export class Profile implements IProfile {
                     eTag);
             })
             .then(result => {
-                if (useEtag) {
-                    this._localStorage.setString("MyProfileETag", Utils.getHeaderValue(result.headers, "ETag"));
+                const myProfileETag = Utils.getHeaderValue(result.headers, "ETag");
+                if (useEtag && myProfileETag) {
+                    this._localStorage.setString("MyProfileETag", myProfileETag);
                 }
                 return Promise.resolve(result.response);
             });
@@ -157,7 +159,7 @@ export class Profile implements IProfile {
      * 
      * @param useEtag 
      */
-    private getMyProfileETag(useEtag: boolean): Promise<string> {
+    private getMyProfileETag(useEtag: boolean): Promise<string|undefined>{
         if (useEtag) {
             return this._localStorage.getString("MyProfileETag");
         } else {

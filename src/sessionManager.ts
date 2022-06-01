@@ -16,6 +16,8 @@ import {
 import { Utils } from "./utils";
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
+declare let window: any;
+
 @injectable()
 export class SessionManager implements ISessionManager {
 
@@ -242,6 +244,11 @@ export class SessionManager implements ISessionManager {
                     sdkType: /*"javascript"*/ "native",
                     sdkVersion: "_SDK_VERSION_",
                 };
+
+                if(window && window.cordova && window.cordova.plugins && window.cordova.plugins.dotdigitalPlugin){
+                    const pluginVersion = window.cordova.plugins.dotdigitalPlugin.version();
+                    data.sdkVersion += ` - ${pluginVersion}`;
+                }
 
                 return this._restClient.post(url, {}, data);
             })

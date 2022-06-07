@@ -60,9 +60,9 @@ describe("Utils tests", () => {
          * @param val 
          */
         function asyncMethod2(val: number) {
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 executing = true;
-                setTimeout(function () {
+                setTimeout(() => {
                     console.log(`asyncMethod(${val})`);
                     executing = false;
                     resolve();

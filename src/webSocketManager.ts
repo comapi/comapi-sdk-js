@@ -196,7 +196,7 @@ export class WebSocketManager implements IWebSocketManager {
         @inject(INTERFACE_SYMBOLS.EventMapper) private _eventMapper: IEventMapper) {
 
         // start this here just once
-        this.echoIntervalId = setInterval(() => this.echo(), this.echoIntervalTimeout);
+        this.echoIntervalId = window.setInterval(() => this.echo(), this.echoIntervalTimeout);
     }
 
     /**

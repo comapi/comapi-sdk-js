@@ -39,7 +39,12 @@ export class Foundation implements IFoundation {
     /**
      * Singleton Foundation instance
      */
-    private static _foundation: IFoundation;
+    private static _foundation: Foundation;
+
+    /**
+     * Mutex to prevent re-entrancy during initialisation
+     */
+    private static _mutex: Mutex = new Mutex();
 
     /**
      * @name Foundation#_services
@@ -96,61 +101,64 @@ export class Foundation implements IFoundation {
      * @param comapiConfig 
      * @param indexedDBLogger 
      */
-    private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
+     private static _initialise(comapiConfig: IComapiConfig, doSingleton: boolean): Promise<Foundation> {
 
-        if (doSingleton && Foundation._foundation) {
-            return Promise.resolve(Foundation._foundation);
-        }
+        return Foundation._mutex.runExclusive(() => {
 
-        if (comapiConfig.foundationRestUrls === undefined) {
-            comapiConfig.foundationRestUrls = new FoundationRestUrls();
-        }
-
-        let container: InterfaceContainer = comapiConfig.interfaceContainer ? comapiConfig.interfaceContainer : new InterfaceContainer();
-
-        if (comapiConfig.interfaceContainer) {
-            container = comapiConfig.interfaceContainer;
-        } else {
-            container = new InterfaceContainer();
-            container.initialise(comapiConfig);
-            container.bindComapiConfig(comapiConfig);
-        }
-
-        if (comapiConfig.logPersistence &&
-            comapiConfig.logPersistence === LogPersistences.IndexedDB) {
-            container.bindIndexedDBLogger();
-        }
-
-        let eventManager: IEventManager = container.getInterface<IEventManager>(INTERFACE_SYMBOLS.EventManager);
-
-        let logger: ILogger = container.getInterface<ILogger>(INTERFACE_SYMBOLS.Logger);
-
-        logger.logLevel = comapiConfig.logLevel in LogLevels ? comapiConfig.logLevel : 0;
-
-        let networkManager: INetworkManager = container.getInterface<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
-
-        let services = container.getInterface<IServices>(INTERFACE_SYMBOLS.Services);
-        let device = container.getInterface<IDevice>(INTERFACE_SYMBOLS.Device);
-        let channels = container.getInterface<IChannels>(INTERFACE_SYMBOLS.Channels);
-
-        let foundation = new Foundation(eventManager, logger, networkManager, services, device, channels);
-
-        if (doSingleton) { Foundation._foundation = foundation; }
-
-        // adopt a cached session if there is one
-        let sessionManager = container.getInterface<ISessionManager>(INTERFACE_SYMBOLS.SessionManager);
-
-        return sessionManager.initialise()
-            .then(_ => {
-                if (comapiConfig.enableWebsocketForNonChatUsage) {
-                    return networkManager.setWebsocketEnabled(true);
-                } else {
-                    return Promise.resolve(false);
-                }
-            })
-            .then(_ => {
-                return Promise.resolve(foundation);
-            });
+            if (doSingleton && Foundation._foundation) {
+                return Promise.resolve(Foundation._foundation);
+            }
+    
+            if (comapiConfig.foundationRestUrls === undefined) {
+                comapiConfig.foundationRestUrls = new FoundationRestUrls();
+            }
+    
+            let container: InterfaceContainer = comapiConfig.interfaceContainer ? comapiConfig.interfaceContainer : new InterfaceContainer();
+    
+            if (comapiConfig.interfaceContainer) {
+                container = comapiConfig.interfaceContainer;
+            } else {
+                container = new InterfaceContainer();
+                container.initialise(comapiConfig);
+                container.bindComapiConfig(comapiConfig);
+            }
+    
+            if (comapiConfig.logPersistence &&
+                comapiConfig.logPersistence === LogPersistences.IndexedDB) {
+                container.bindIndexedDBLogger();
+            }
+    
+            let eventManager: IEventManager = container.getInterface<IEventManager>(INTERFACE_SYMBOLS.EventManager);
+    
+            let logger: ILogger = container.getInterface<ILogger>(INTERFACE_SYMBOLS.Logger);
+    
+            logger.logLevel = comapiConfig.logLevel in LogLevels ? comapiConfig.logLevel : 0;
+    
+            let networkManager: INetworkManager = container.getInterface<INetworkManager>(INTERFACE_SYMBOLS.NetworkManager);
+    
+            let services = container.getInterface<IServices>(INTERFACE_SYMBOLS.Services);
+            let device = container.getInterface<IDevice>(INTERFACE_SYMBOLS.Device);
+            let channels = container.getInterface<IChannels>(INTERFACE_SYMBOLS.Channels);
+    
+            let foundation = new Foundation(eventManager, logger, networkManager, services, device, channels);
+    
+            if (doSingleton) { Foundation._foundation = foundation; }
+    
+            // adopt a cached session if there is one
+            let sessionManager = container.getInterface<ISessionManager>(INTERFACE_SYMBOLS.SessionManager);
+    
+            return sessionManager.initialise()
+                .then(_ => {
+                    if (comapiConfig.enableWebsocketForNonChatUsage) {
+                        return networkManager.setWebsocketEnabled(true);
+                    } else {
+                        return Promise.resolve(false);
+                    }
+                })
+                .then(_ => {
+                    return Promise.resolve(foundation);
+                });
+        }, "initialise");
     }
 
 

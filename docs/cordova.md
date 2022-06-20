@@ -44,13 +44,13 @@ platform.ready().then(() => {
         // this device object is from cordova-plugin-device
         if (device.platform === 'iOS') {
             pushConfig.apns = {
-                bundleId: "myBundleId",
+                bundleId: ">>> My Bundle Id <<<",
                 environment: Environment.development, 
                 token: data.registrationId
             };       
         } else if (device.platform === 'Android') {
             pushConfig.fcm = {
-                package: "MyPackageName",
+                package: ">>> My Package Name <<<",
                 registrationId: data.registrationId
             };
         }
@@ -78,12 +78,38 @@ platform.ready().then(() => {
 ```
 
 ## Sending the registrationId to Comapi
-This snippet shows how to send the registrationId to Comapi.
+The registrationId can either be passed at initialisation time as in the above snippet or passed separately depending on your requirements.
+
+This function snippet shows how to send the registrationId to Comapi manually
+
+
 ```javascript
+function setPushDetails(sdk, registrationId){
+    // There are separate methods to call depending on platform ...
+    if (platform.is('ios')) {
 
+        // You will need to create an APNS cert. in the apple developer portal.
+        // Then you must upload it to your API space in the Comapi portal.
+        // Can be a development or production cert, hence the environment parameter
+        sdk.device.setAPNSPushDetails(">>> My Bundle Id <<<", Environment.development, registrationId)
+        .then(result => {
+            console.log("setAPNSPushDetails() succeeded", result);
+        })
+        .catch(error => {
+            console.error("setAPNSPushDetails() failed", error);
+        });
 
+    }else if(platform.is('android')){
 
-
+        sdk.device.setFCMPushDetails(">>> My Package Name <<<", registrationId)
+        .then(result => {
+            console.log("setFCMPushDetails() succeeded", result);
+        })
+        .catch(error => {
+            console.error("setFCMPushDetails() failed", error);
+        });
+    }
+}
 ```
 
 ## Push Payloads

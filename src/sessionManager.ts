@@ -304,7 +304,9 @@ export class SessionManager implements ISessionManager {
      */
     private _setSession(sessionInfo: ISessionInfo): Promise<boolean> {
 
-        if (this.hasExpired(sessionInfo.session.expiresOn)) {
+        const payload = this.extractTokenPayload(sessionInfo.token);
+
+        if (payload && this.hasExpired(payload.exp)) {
             this._logger.error("Was given an expired token ;-(");
         }
 
@@ -346,14 +348,28 @@ export class SessionManager implements ISessionManager {
     }
 
     /**
-     * Check an iso date is not in the past ...
-     * @param expiresOn 
+     * Check a token exp property not in the past ...
+     * @param token 
      */
-    private hasExpired(expiresOn: string): boolean {
+    private hasExpired(exp: number): boolean {
         let now = new Date();
-        let expiry = new Date(expiresOn);
-
+        let expiry = new Date(exp * 1000);
         return now > expiry;
+    }
+
+    /**
+     * Extract payload from a jwt
+     * @param token 
+     * @returns payload object
+     */
+    private extractTokenPayload(token: string): any{
+        if(token){
+            let bits = token.split(".");
+            if (bits.length === 3) {
+                return JSON.parse(atob(bits[1]));
+            }    
+        }
+        return null;
     }
 
     /**
@@ -364,18 +380,14 @@ export class SessionManager implements ISessionManager {
 
         let valid = false;
 
-        if (!this.hasExpired(sessionInfo.session.expiresOn)) {
-
-            // check that the token matches 
-            if (sessionInfo.token) {
-                let bits = sessionInfo.token.split(".");
-                if (bits.length === 3) {
-                    let payload = JSON.parse(atob(bits[1]));
-                    if (payload.apiSpaceId === this._comapiConfig.apiSpaceId) {
-                        valid = true;
-                    }
+        const payload = this.extractTokenPayload(sessionInfo.token);
+        if(payload){
+            if (!this.hasExpired(payload.exp)) {
+                // check that the token matches 
+                if (payload.apiSpaceId === this._comapiConfig.apiSpaceId) {
+                    valid = true;
                 }
-            }
+            }    
         }
 
         return valid;

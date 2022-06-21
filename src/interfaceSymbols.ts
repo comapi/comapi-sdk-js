@@ -22,7 +22,7 @@ let INTERFACE_SYMBOLS = {
     RestClient: "RestClient",
     Services: "Services",
     SessionManager: "SessionManager",
-    WebSocketManager: "WebSocketManager",
+    WebSocketManager: "WebSocketManager"
 };
 
 export { INTERFACE_SYMBOLS };

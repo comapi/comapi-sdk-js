@@ -5,7 +5,8 @@ import {
     LogPersistences,
     OrphanedEventPersistences,
     IFoundationRestUrls,
-    IEventMapping
+    IEventMapping,
+    IPushConfig
 } from "./interfaces";
 
 import { FoundationRestUrls } from "./urlConfig";
@@ -27,6 +28,7 @@ export class ComapiConfig implements IComapiConfig {
     public localStoragePrefix: string;
     public orphanedEventPersistence: OrphanedEventPersistences = OrphanedEventPersistences.IndexedDbIfSupported;
     public enableWebsocketForNonChatUsage: boolean;
+    public pushConfig?: IPushConfig;
 
     /**
      * ComapiConfig class constructor.
@@ -164,6 +166,17 @@ export class ComapiConfig implements IComapiConfig {
      */
      public withEnabledNonChatSocket(enabled: boolean){
         this.enableWebsocketForNonChatUsage = enabled;
+        return this;
+    }
+
+    /**
+     * Function to specify push configuration
+     * @method ComapiConfig#withPushConfiguration
+     * @param {IPushConfig} config - config
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+     public withPushConfiguration(config: IPushConfig){
+        this.pushConfig = config;
         return this;
     }
 

@@ -1,13 +1,9 @@
 import { injectable, inject, optional } from "inversify";
-import { ILogger, IRestClient, IRestClientResult, INetworkManager } from "./interfaces";
+import { ILogger, IRestClient, IRestClientResult } from "./interfaces";
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";
 
 @injectable()
 export class RestClient implements IRestClient {
-
-    // TODO: Needs review ... this generates a circular dependency ...
-    protected networkManager: INetworkManager;
-
 
     private _readyStates: string[] = [
         "request not initialized",
@@ -23,11 +19,8 @@ export class RestClient implements IRestClient {
      * @ignore
      * @classdesc Class that implements a RestClient.
      * @param {ILogger} [logger] - the logger 
-     * @param {INetworkManager} [networkManager] - the network Manager 
      */
-    constructor( @inject(INTERFACE_SYMBOLS.Logger) @optional() protected logger?: ILogger,
-        /*@inject("NetworkManager") @optional() protected networkManager?: INetworkManager*/) { }
-
+    constructor( @inject(INTERFACE_SYMBOLS.Logger) @optional() protected logger?: ILogger) { }
 
 
     /**

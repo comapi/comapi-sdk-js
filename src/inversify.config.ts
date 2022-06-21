@@ -24,7 +24,7 @@ import {
     IChannels,
     IMessagePager,
     IEventMapper,
-    IAppMessagingInternal
+    IAppMessagingInternal,
 } from "./interfaces";
 
 import { EventManager } from "./eventManager";
@@ -51,6 +51,7 @@ import { Channels } from "./channels";
 import { IndexedDBLogger } from "./indexedDBLogger";
 import { EventMapper } from "./eventMapper";
 import { ContentManager } from "./contentManager";
+
 
 
 import { INTERFACE_SYMBOLS } from "./interfaceSymbols";

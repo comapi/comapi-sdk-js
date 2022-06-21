@@ -201,6 +201,22 @@ export enum Environment {
     production
 };
 
+/**
+ * Environment enum
+ */
+ export interface IPushConfig {
+     fcm?: {
+        package: string, 
+        registrationId: string
+     };
+     apns?: {
+        bundleId: string, 
+        environment: Environment, 
+        token: string
+     };
+};
+
+
 
 /**
  * Session manager interface
@@ -231,7 +247,7 @@ export interface INetworkManager {
 
 
 /**
- * Session manager interface
+ * Device manager interface
  */
 export interface IDeviceManager {
     setFCMPushDetails(sessionId: string, packageName: string, registrationId: string): Promise<boolean>;
@@ -240,12 +256,11 @@ export interface IDeviceManager {
 }
 
 /**
- * Session manager interface
+ * Facebook manager interface
  */
 export interface IFacebookManager {
     createSendToMessengerState(data?: any): Promise<any>;
 }
-
 
 /**
  * Auth Challenge options definition
@@ -306,6 +321,7 @@ export interface IComapiConfig {
     localStoragePrefix?: string;
     orphanedEventPersistence?: OrphanedEventPersistences;
     enableWebsocketForNonChatUsage?: boolean;
+    pushConfig?: IPushConfig;
 };
 
 export interface IContentData {

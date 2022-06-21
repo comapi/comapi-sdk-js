@@ -31,13 +31,6 @@ export class DeviceManager implements IDeviceManager {
         @inject(INTERFACE_SYMBOLS.AuthenticatedRestClient) private _restClient: IRestClient,
         @inject(INTERFACE_SYMBOLS.LocalStorageData) private _localStorageData: ILocalStorageData,
         @inject(INTERFACE_SYMBOLS.ComapiConfig) private _comapiConfig: IComapiConfig) {
-
-        // this._deviceId = _localStorageData.getString("deviceId");
-
-        // if (!this._deviceId) {
-        //     this._deviceId = Utils.uuid();
-        //     _localStorageData.setString("deviceId", this._deviceId);
-        // }
     }
 
     /**
@@ -59,6 +52,7 @@ export class DeviceManager implements IDeviceManager {
 
         return this._restClient.put(this.getPushUrl(sessionId), {}, data)
             .then(result => {
+                this._comapiConfig.pushConfig = data;
                 return Promise.resolve(true);
             });
     }
@@ -85,6 +79,13 @@ export class DeviceManager implements IDeviceManager {
 
         return this._restClient.put(this.getPushUrl(sessionId), {}, data)
             .then(result => {
+                this._comapiConfig.pushConfig = {
+                    "apns": {
+                        "bundleId": bundleId,
+                        "environment": environment,
+                        "token": token
+                    }
+                };
                 return Promise.resolve(true);
             });
     }
@@ -96,9 +97,9 @@ export class DeviceManager implements IDeviceManager {
      * @returns {Promise} - Returns a promise
      */
     public removePushDetails(sessionId: string): Promise<boolean> {
-
         return this._restClient.delete(this.getPushUrl(sessionId), {})
             .then(result => {
+                this._comapiConfig.pushConfig = undefined;
                 return Promise.resolve(true);
             });
     }

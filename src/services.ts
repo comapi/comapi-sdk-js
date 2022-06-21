@@ -37,5 +37,4 @@ export class Services implements IServices {
         return this._profile;
     }
 
-
 }

@@ -60,9 +60,9 @@ describe("Utils tests", () => {
          * @param val 
          */
         function asyncMethod2(val: number) {
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 executing = true;
-                setTimeout(function () {
+                setTimeout(() => {
                     console.log(`asyncMethod(${val})`);
                     executing = false;
                     resolve();
@@ -184,4 +184,27 @@ describe("Utils tests", () => {
         }, 100);
 
     });
+
+    it("Shoud corretly query requst headers", () => {
+
+        const headers:Object = {
+            Accept: "application/json",
+            authorization: "Bearer xxx",
+            "Content-Type": "text/plain",
+            etag: "737060cd8c284d8af7ad3082f209582d",
+            "If-Match": "737060cd8c284d8af7ad3082f209582d"
+        };
+
+        expect(Utils.getHeaderValue(headers, "???")).toBeUndefined();
+        expect(Utils.getHeaderValue(headers, "accept")).toEqual("application/json");
+        expect(Utils.getHeaderValue(headers, "aCcepT")).toEqual("application/json");
+        expect(Utils.getHeaderValue(headers, "authorization")).toEqual("Bearer xxx");
+        expect(Utils.getHeaderValue(headers, "Authorization")).toEqual("Bearer xxx");
+        expect(Utils.getHeaderValue(headers, "Content-Type")).toEqual("text/plain");
+        expect(Utils.getHeaderValue(headers, "content-type")).toEqual("text/plain");
+        expect(Utils.getHeaderValue(headers, "ETag")).toEqual("737060cd8c284d8af7ad3082f209582d");
+        expect(Utils.getHeaderValue(headers, "If-Match")).toEqual("737060cd8c284d8af7ad3082f209582d");
+        expect(Utils.getHeaderValue(headers, "if-match")).toEqual("737060cd8c284d8af7ad3082f209582d");
+    });
+
 });

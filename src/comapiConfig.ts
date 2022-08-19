@@ -9,6 +9,8 @@ import {
     IPushConfig
 } from "./interfaces";
 
+import { InterfaceContainer } from "./inversify.config";
+
 import { FoundationRestUrls } from "./urlConfig";
 
 
@@ -29,6 +31,7 @@ export class ComapiConfig implements IComapiConfig {
     public orphanedEventPersistence: OrphanedEventPersistences = OrphanedEventPersistences.IndexedDbIfSupported;
     public enableWebsocketForNonChatUsage: boolean;
     public pushConfig?: IPushConfig;
+    public interfaceContainer?: InterfaceContainer; 
 
     /**
      * ComapiConfig class constructor.
@@ -179,6 +182,18 @@ export class ComapiConfig implements IComapiConfig {
         this.pushConfig = config;
         return this;
     }
+
+    /**
+     * Function to specify push InterfaceContainer
+     * @method ComapiConfig#withInterfaceContainer
+     * @param {InterfaceContainer} interfaceContainer - InterfaceContainer
+     * @returns {ComapiConfig} - Returns reference to itself so methods can be chained
+     */
+     public withInterfaceContainer(interfaceContainer: InterfaceContainer){
+        this.interfaceContainer = interfaceContainer;
+        return this;
+    }
+
 
 }
 

@@ -162,7 +162,7 @@ function authChallenge (options, answerAuthenticationChallenge) {
     };
     var sHeader = JSON.stringify(oHeader);
     var sPayload = JSON.stringify(oPayload);
-    var sJWT = KJUR.jws.JWS.sign("HS256", sHeader, sPayload, "my shared secret");
+    var sJWT = KJUR.jws.JWS.sign("HS256", sHeader, sPayload, {utf8: "my shared secret"});
     answerAuthenticationChallenge(sJWT);
 }
 ```

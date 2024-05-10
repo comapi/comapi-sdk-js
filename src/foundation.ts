@@ -284,13 +284,13 @@ export class Foundation implements IFoundation {
     public handleLink(message) {
         let _this = this;
         return new Promise((resolve, reject) => {
-                _this._handleLink((result) => {
-                    resolve(result);
-                },
-                    (error) => {
-                        reject(error);
-                    }, message);
-            });
+            _this._handleLink((result) => {
+                resolve(result);
+            },
+            (error) => {
+                reject(error);
+            }, message);
+        });
     }
     
     private _handleLink(successCallback, errorCallback, payload) {

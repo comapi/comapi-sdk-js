@@ -294,7 +294,7 @@ export class Foundation implements IFoundation {
     }
     
     private _handleLink(successCallback, errorCallback, payload) {
-        const ddDeepLink = payload.dd_deepLink || payload.additionalData?.dd_deepLink;
+        const ddDeepLink = payload.dd_deepLink || payload.data?.dd_deepLink || payload.additionalData?.dd_deepLink;
         let trackingUrl;
         let url;
         if (typeof ddDeepLink === "string") {

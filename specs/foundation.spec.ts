@@ -57,7 +57,7 @@ describe("Foundation tests", () => {
                 obj["dd_deepLink"] = input;
                 await foundation.handleLink(obj);
                 expect(trackingUrl).toBe("tUrl");
-            })
+            });
             done();
         });
         

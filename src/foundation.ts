@@ -281,7 +281,7 @@ export class Foundation implements IFoundation {
      * @method Foundation#handleLink
      * @param message "FirebasePlugin push message returned from onMessageReceived"
      */
-    public handleLink(message) {
+    public handlePush(message) {
         let _this = this;
         return new Promise((resolve, reject) => {
             _this._handleLink((result) => {

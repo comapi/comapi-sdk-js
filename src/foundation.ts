@@ -299,9 +299,9 @@ export class Foundation implements IFoundation {
         let url;
         if (typeof ddDeepLink === "string") {
             try {
-                let obj = JSON.parse(ddDeepLink);
-                trackingUrl = obj?.trackingUrl;
-                url = obj?.url;
+                let deepLinkData = JSON.parse(ddDeepLink);
+                trackingUrl = deepLinkData?.trackingUrl;
+                url = deepLinkData?.url;
             } catch (e) {
                 errorCallback(e);
                 return;

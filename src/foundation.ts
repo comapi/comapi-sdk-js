@@ -276,5 +276,85 @@ export class Foundation implements IFoundation {
         return this._logger.getLog();
     }
 
+    /**
+     * Track notification click and return deep link url to be opened.
+     * @method Foundation#handleLink
+     * @param message "FirebasePlugin push message returned from onMessageReceived"
+     */
+    public handlePush(message) {
+        let _this = this;
+        return new Promise((resolve, reject) => {
+            _this._handleLink((result) => {
+                resolve(result);
+            },
+            (error) => {
+                reject(error);
+            }, message);
+        });
+    }
+    
+    private _handleLink(successCallback, errorCallback, payload) {
+        const ddDeepLink = payload.dd_deepLink || payload.data?.dd_deepLink || payload.additionalData?.dd_deepLink;
+        let trackingUrl;
+        let url;
+        if (typeof ddDeepLink === "string") {
+            try {
+                let deepLinkData = JSON.parse(ddDeepLink);
+                trackingUrl = deepLinkData?.trackingUrl;
+                url = deepLinkData?.url;
+            } catch (e) {
+                errorCallback(e);
+                return;
+            }
+        } else if (ddDeepLink) {
+            trackingUrl = ddDeepLink.trackingUrl;
+            url = ddDeepLink.url;
+        }
+        if (trackingUrl) {
+            this._get(trackingUrl)
+                .then(() => {
+                    successCallback(url);
+                })
+                .catch((error) => {
+                    errorCallback(error);
+                });
+        } else {
+            successCallback(url);
+        }
+    }
+    
+    private _get(url: string) {
+        return new Promise(function (resolve, reject) {
+            const headers = {};
+            /* tslint:disable:no-string-literal */
+            headers["Content-Type"] = "application/json";
+            headers["Cache-Control"] = "no-cache";
+            headers["Pragma"] = "no-cache";
+            headers["If-Modified-Since"] = "Mon, 26 Jul 1997 05:00:00 GMT";
+            /* tslint:enable:no-string-literal */
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            for (let prop in headers) {
+                if (headers.hasOwnProperty(prop)) {
+                    xhr.setRequestHeader(prop, headers[prop]);
+                }
+            }
+            xhr.onload = function () {
+                const succeeded = xhr.status >= 200 && xhr.status < 300;
+                if (succeeded) {
+                    resolve(xhr.responseText);
+                } else {
+                    reject(xhr.responseText);
+                }
+            };
+            xhr.onerror = function () {
+                reject(xhr.status);
+            };
+            xhr.onabort = function (evt) {
+                reject(xhr);
+            };
+            xhr.send(null);
+        });
+    }
 }
 

@@ -23,31 +23,29 @@ describe("Foundation tests", () => {
         Foundation.initialise(comapiConfig).then(result => {
             foundation = result;
             done();
-        });
+        }).catch(done.fail);
     });
 
-    it("should return a version number", done => {
+    it("should return a version number", () => {
         expect(Foundation.version).toBeDefined();
         expect(foundation).toBeDefined();
-        done();
     });
 
     describe("Foundation tests / deep links", () => {
-        it("should get deep link url", async done => {
+        it("should get deep link url", async () => {
             const inputs = [JSON.stringify({ trackingUrl: "tUrl", url: "url" }), { trackingUrl: "tUrl", url: "url" }];
             inputs.forEach(async input => {
                 foundation["_get"] = (url) => Promise.resolve();
                 let obj = {};
                 obj["dd_deepLink"] = input;
-                let result = await foundation.handleLink(obj);
-                expect(result).toBe("url");
-                done();
-            });
+                let result = await foundation.handlePush(obj);
+                expect(result).toEqual({url: "url", ddOriginated: false});
+            }
         });
     
-        it("should call deep link trackingUrl", async done => {
+        it("should call deep link trackingUrl", async () => {
             const inputs = [JSON.stringify({ trackingUrl: "tUrl", url: "url" }), { trackingUrl: "tUrl", url: "url" }];
-            inputs.forEach(async input => {
+            for (const input of inputs) {
                 let trackingUrl;
                 foundation["_get"] = (url) => {
                     trackingUrl = url;
@@ -55,37 +53,49 @@ describe("Foundation tests", () => {
                 };
                 let obj = {};
                 obj["dd_deepLink"] = input;
-                await foundation.handleLink(obj);
+                await foundation.handlePush(obj);
                 expect(trackingUrl).toBe("tUrl");
-            });
-            done();
+            }
         });
         
-        it("should call deep link trackingUrl in additionalData", async done => {
+        it("should call deep link trackingUrl in additionalData", async () => {
             let trackingUrl;
             foundation["_get"] = (url) => {
                 trackingUrl = url;
                 return Promise.resolve();
             };
-            await foundation.handleLink({ additionalData: { dd_deepLink: { trackingUrl: "tUrl", url: "url" }}});
+            await foundation.handlePush({ additionalData: { dd_deepLink: { trackingUrl: "tUrl", url: "url" }}});
             expect(trackingUrl).toBe("tUrl");
-            done();
         });
 
-        it("should handle payload without dd_deepLink", async done => {
+        it("should handle payload without dd_deepLink", async () => {
             let url;
             let obj = {};
-            await foundation.handleLink(obj);
+            await foundation.handlePush(obj);
             expect(url).toBeUndefined();
-            done();
         });
 
-        it("should handle payload with partial dd_deepLink", async done => {
+        it("should handle payload with partial dd_deepLink", async () => {
             let url;
             let obj = JSON.stringify({ url: "url" });
-            await foundation.handleLink(obj);
+            await foundation.handlePush(obj);
             expect(url).toBeUndefined();
-            done();
+        });
+
+        it("should read dd-originated flag from payload", async () => {
+            foundation["_get"] = (url) => Promise.resolve();
+            let result = await foundation.handlePush({ "dd-originated": true, dd_deepLink: { trackingUrl: "tUrl", url: "url" } });
+            expect(result.ddOriginated).toBe(true);
+        });
+
+        it("should read dd-originated flag from payload without deep link", async () => {
+            let result = await foundation.handlePush({ "dd-originated": true });
+            expect(result.ddOriginated).toBe(true);
+        });
+
+        it("should default dd-originated to false when not present", async () => {
+            let result = await foundation.handlePush({ dd_deepLink: { url: "url" } });
+            expect(result.ddOriginated).toBe(false);
         });
     });
 });

@@ -277,15 +277,16 @@ export class Foundation implements IFoundation {
     }
 
     /**
-     * Track notification click and return deep link url to be opened.
-     * @method Foundation#handleLink
+     * Track notification click and return deep link url to be opened as well as dd-originated flag.
+     * @method Foundation#handlePush
      * @param message "FirebasePlugin push message returned from onMessageReceived"
      */
     public handlePush(message) {
+        const ddOriginated = message["dd-originated"] ?? false;
         let _this = this;
         return new Promise((resolve, reject) => {
-            _this._handleLink((result) => {
-                resolve(result);
+            _this._handleLink((url) => {
+                resolve({ url, ddOriginated });
             },
             (error) => {
                 reject(error);

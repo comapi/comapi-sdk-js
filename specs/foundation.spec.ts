@@ -32,6 +32,7 @@ describe("Foundation tests", () => {
     });
 
     describe("Foundation tests / deep links", () => {
+        
         it("should get deep link url", async () => {
             const inputs = [JSON.stringify({ trackingUrl: "tUrl", url: "url" }), { trackingUrl: "tUrl", url: "url" }];
             inputs.forEach(async input => {
@@ -39,8 +40,19 @@ describe("Foundation tests", () => {
                 let obj = {};
                 obj["dd_deepLink"] = input;
                 let result = await foundation.handlePush(obj);
-                expect(result).toEqual({url: "url", ddOriginated: false});
+                expect(result).toEqual("url");
             }
+        });
+
+        it("should get deep link url", async () => {
+            const inputs = [JSON.stringify({ trackingUrl: "tUrl", url: "url" }), { trackingUrl: "tUrl", url: "url" }];
+            inputs.forEach(async input => {
+                foundation["_get"] = (url) => Promise.resolve();
+                let obj = {};
+                obj["dd_deepLink"] = input;
+                let result = await foundation.handlePushAndGetMessageDetails(obj);
+                expect(result).toEqual({ddOriginated: false, url: "url"});
+            });
         });
     
         it("should call deep link trackingUrl", async () => {
@@ -69,32 +81,42 @@ describe("Foundation tests", () => {
         });
 
         it("should handle payload without dd_deepLink", async () => {
-            let url;
             let obj = {};
-            await foundation.handlePush(obj);
+            let url = await foundation.handlePush(obj);
             expect(url).toBeUndefined();
         });
 
         it("should handle payload with partial dd_deepLink", async () => {
-            let url;
             let obj = JSON.stringify({ url: "url" });
-            await foundation.handlePush(obj);
+            let url = await foundation.handlePush(obj);
             expect(url).toBeUndefined();
+        });
+
+        it("should handle payload without dd_deepLink", async () => {
+            let obj = {};
+            let result = await foundation.handlePushAndGetMessageDetails(obj);
+            expect(result.url).toBeUndefined();
+        });
+
+        it("should handle payload with partial dd_deepLink", async () => {
+            let obj = JSON.stringify({ url: "url" });
+            let result = await foundation.handlePushAndGetMessageDetails(obj);
+            expect(result.url).toBeUndefined();
         });
 
         it("should read dd-originated flag from payload", async () => {
             foundation["_get"] = (url) => Promise.resolve();
-            let result = await foundation.handlePush({ "dd-originated": true, dd_deepLink: { trackingUrl: "tUrl", url: "url" } });
+            let result = await foundation.handlePushAndGetMessageDetails({ "dd_originated": true, dd_deepLink: { trackingUrl: "tUrl", url: "url" } });
             expect(result.ddOriginated).toBe(true);
         });
 
         it("should read dd-originated flag from payload without deep link", async () => {
-            let result = await foundation.handlePush({ "dd-originated": true });
+            let result = await foundation.handlePushAndGetMessageDetails({ "dd_originated": true });
             expect(result.ddOriginated).toBe(true);
         });
 
         it("should default dd-originated to false when not present", async () => {
-            let result = await foundation.handlePush({ dd_deepLink: { url: "url" } });
+            let result = await foundation.handlePushAndGetMessageDetails({ dd_deepLink: { url: "url" } });
             expect(result.ddOriginated).toBe(false);
         });
     });
